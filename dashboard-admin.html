@@ -24,8 +24,8 @@
   <meta name="description" content="Painel administrativo do CuideLar para gestão completa de cuidadores, assistidos, escalas e faturamento." />
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link rel="stylesheet" href="css/global.css?v=7" />
-  <link rel="stylesheet" href="css/admin.css?v=7" />
+  <link rel="stylesheet" href="css/global.css?v=8" />
+  <link rel="stylesheet" href="css/admin.css?v=8" />
 
   <!-- Auth Guard Demo -->
   <script>
@@ -1494,6 +1494,20 @@ window.submitEscala = async (e) => {
     const cuidId = document.getElementById('escCuidador').value;
     const cuidObj = allCuidadores.find(c => c.id === cuidId);
 
+    const startIso = new Date(inicio).toISOString();
+    const endIso = new Date(termino).toISOString();
+
+    // Calcula o status com base na data do plantão
+    const agora = new Date();
+    const startDt = new Date(inicio);
+    const endDt = new Date(termino);
+    let status = 'agendado';
+    if (agora >= startDt && agora <= endDt) {
+      status = 'em_andamento';
+    } else if (agora > endDt) {
+      status = 'concluido';
+    }
+
     if (window._editingEscalaId) {
       const idx = allEscalas.findIndex(x => x.id === window._editingEscalaId);
       if (idx !== -1) {
@@ -1501,10 +1515,11 @@ window.submitEscala = async (e) => {
           ...allEscalas[idx],
           idosos: { nome: idosoObj ? idosoObj.nome : '—' },
           cuidadores: { usuarios: { nome: cuidObj ? cuidObj.usuarios.nome : '—' } },
-          data_inicio: new Date(inicio).toISOString(),
-          data_termino: new Date(termino).toISOString(),
+          data_inicio: startIso,
+          data_termino: endIso,
           valor_hora: valorHora,
           valor_total: valorTotal,
+          status: status,
           observacoes: document.getElementById('escObs').value
         };
       }
@@ -1515,11 +1530,11 @@ window.submitEscala = async (e) => {
         id: 'e' + (allEscalas.length + 1),
         idosos: { nome: idosoObj ? idosoObj.nome : '—' },
         cuidadores: { usuarios: { nome: cuidObj ? cuidObj.usuarios.nome : '—' } },
-        data_inicio: new Date(inicio).toISOString(),
-        data_termino: new Date(termino).toISOString(),
+        data_inicio: startIso,
+        data_termino: endIso,
         valor_hora: valorHora,
         valor_total: valorTotal,
-        status: 'agendado',
+        status: status,
         observacoes: document.getElementById('escObs').value
       };
       allEscalas.unshift(newEsc);
