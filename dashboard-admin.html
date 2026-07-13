@@ -1677,6 +1677,8 @@ window.showSection = (name, el) => {
   // Fecha a sidebar no clique do item se estiver no mobile
   if (window.innerWidth <= 768) {
     document.getElementById('sidebar').classList.remove('mobile-open');
+    const appLayout = document.getElementById('appLayout');
+    if (appLayout) appLayout.classList.remove('menu-open');
     const backdrop = document.getElementById('sidebarBackdrop');
     if (backdrop) backdrop.classList.remove('active');
   }
@@ -1691,8 +1693,10 @@ window.showSection = (name, el) => {
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('sidebarBackdrop');
+  const appLayout = document.getElementById('appLayout');
   if (window.innerWidth <= 768) {
     const isOpen = sidebar.classList.toggle('mobile-open');
+    if (appLayout) appLayout.classList.toggle('menu-open', isOpen);
     if (backdrop) {
       backdrop.classList.toggle('active', isOpen);
     }

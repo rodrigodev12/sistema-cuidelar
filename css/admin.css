@@ -587,6 +587,36 @@
 }
 
 @media (max-width: 768px) {
+  /* Configuração para o Efeito Push Lateral */
+  .app-layout {
+    position: relative;
+    width: 100vw;
+    overflow-x: hidden;
+    transition: transform var(--transition-base);
+  }
+  
+  .app-layout.menu-open {
+    transform: translateX(260px);
+  }
+  
+  .sidebar {
+    position: absolute !important;
+    top: 0;
+    left: -260px !important;
+    width: 260px !important;
+    height: 100% !important;
+    min-height: 100vh;
+    transform: none !important;
+    z-index: 300;
+    transition: none !important; /* Movimentação segue o transform do pai */
+  }
+  
+  .main-content {
+    width: 100vw !important;
+    flex-shrink: 0 !important;
+    margin-left: 0 !important;
+  }
+
   .sidebar-mobile-close {
     display: flex;
     align-items: center;
@@ -610,14 +640,16 @@
 
   .sidebar-backdrop.active {
     display: block;
-    position: fixed;
+    position: absolute;
     top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 250; /* Entre o conteúdo (200) e a sidebar (300) */
+    left: 260px; /* Alinha com a main-content empurrada */
+    width: calc(100vw - 260px);
+    height: 100%;
+    min-height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 280;
+    cursor: pointer;
   }
 }
 
