@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CuideLar — Painel Administrador</title>
+  <meta name="description" content="Painel administrativo do CuideLar para gestão completa de cuidadores, assistidos, escalas e faturamento." />
+
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+
+  <!-- Auth Guard Demo -->
+  <script>
+    (function() {
+      var raw = sessionStorage.getItem('cuideLar_user');
+      if (!raw) { window.location.href = 'index.html'; return; }
+      try {
+        var u = JSON.parse(raw);
+        if (!u || u.tipo !== 'administrador') { window.location.href = 'index.html'; }
+        // Expõe globalmente para os scripts da página
+        window.__cuideLarUser = u;
+      } catch(e) { window.location.href = 'index.html'; }
+    })();
+    window.cuideLarLogout = function() {
+      sessionStorage.removeItem('cuideLar_user');
+      window.location.href = 'index.html';
+    };
+    // Proteção de rota compatível com módulos que importam auth.js
+    window.protectRoute = async function(roles) { return window.__cuideLarUser || null; };
+  </script>
+
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+
+<div class="app-layout" id="appLayout">
+
+  <!-- ======================================================
+       SIDEBAR
+       ====================================================== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">🏠</div>
+      <span class="logo-text">CuideLar</span>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Navegação principal">
+
+      <span class="nav-section-label">Gestão</span>
+
+      <a class="nav-item active" id="nav-dashboard" href="#" onclick="showSection('dashboard',this)">
+        <i data-lucide="layout-dashboard" class="nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Dashboard</span>
+      </a>
+
+      <a class="nav-item" id="nav-agenda" href="#" onclick="showSection('agenda',this)">
+        <i data-lucide="calendar" class="nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Agenda de Plantões</span>
+        <span class="nav-badge" id="badge-agenda">3</span>
+      </a>
+
+      <a class="nav-item" id="nav-escalas" href="#" onclick="showSection('escalas',this)">
+        <i data-lucide="clock" class="nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Escalas</span>
+      </a>
+
+      <span class="nav-section-label">Cadastros</span>
+
+      <a class="nav-item" id="nav-idosos" href="#" onclick="showSection('idosos',this)">
+        <i data-lucide="users" class="nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Assistidos</span>
+      </a>
+
+      <a class="nav-item" id="nav-cuidadores" href="#" onclick="showSection('cuidadores',this)">
+        <i data-lucide="users" class="nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Cuidadores</span>
+      </a>
+
+      <a class="nav-item" id="nav-familias" href="#" onclick="showSection('familias',this)">
+        <i data-lucide="home" class="nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Famílias</span>
+      </a>
+
+      <span class="nav-section-label">Financeiro</span>
+
+      <a class="nav-item" id="nav-relatorios" href="#" onclick="showSection('relatorios',this)">
+        <i data-lucide="bar-chart-2" class="nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Relatórios</span>
+      </a>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebarUser">
+        <div class="avatar" id="userAvatar">A</div>
+        <div class="flex-1" style="overflow:hidden;">
+          <div class="truncate" style="font-weight:600;font-size:0.875rem;" id="userName">Administrador</div>
+          <div class="text-xs text-muted">Administrador</div>
+        </div>
+      </div>
+      <button class="nav-item w-full mt-2" onclick="cuideLarLogout()" style="justify-content:flex-start;">
+        <i data-lucide="log-out" class="nav-icon" aria-hidden="true"></i>
+        <span class="nav-label" style="color:var(--danger)">Sair</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ======================================================
+       MAIN CONTENT
+       ====================================================== -->
+  <main class="main-content" id="mainContent">
+
+    <!-- Mobile Header -->
+    <div class="page-header" id="pageHeader">
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="page-subtitle" id="pageSubtitle">Visão geral do sistema</div>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary btn-icon" id="sidebarToggle" aria-label="Alternar sidebar">
+          <i data-lucide="panel-left" aria-hidden="true"></i>
+        </button>
+        <button class="btn btn-primary btn-sm" id="headerActionBtn" onclick="openQuickModal()">
+          <i data-lucide="plus" aria-hidden="true"></i>
+          Nova Escala
+        </button>
+      </div>
+    </div>
+
+    <!-- =============================================
+         SEÇÃO: DASHBOARD
+         ============================================= -->
+    <section class="page-content section-content" id="section-dashboard">
+
+      <!-- Alertas -->
+      <div id="alertsContainer" class="flex flex-col gap-3 mb-6" style="display:none !important;" aria-live="polite"></div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid mb-8" aria-label="Indicadores principais">
+        <div class="kpi-card animate-fade-in-up">
+          <div class="flex justify-between items-center">
+            <div class="kpi-icon" style="background:rgba(99,102,241,0.15);">👥</div>
+            <span class="badge badge-success">+3 mês</span>
+          </div>
+          <div>
+            <div class="kpi-value" id="kpi-idosos">—</div>
+            <div class="kpi-label">Assistidos Ativos</div>
+          </div>
+          <div class="kpi-change positive">
+            <i data-lucide="trending-up" style="width:14px;height:14px"></i>
+            +15% este mês
+          </div>
+        </div>
+
+        <div class="kpi-card animate-fade-in-up delay-100">
+          <div class="flex justify-between items-center">
+            <div class="kpi-icon" style="background:rgba(6,182,212,0.15);">👨‍⚕️</div>
+            <span class="badge badge-info">Escalados</span>
+          </div>
+          <div>
+            <div class="kpi-value" id="kpi-cuidadores">—</div>
+            <div class="kpi-label">Cuidadores Ativos</div>
+          </div>
+          <div class="kpi-change positive">
+            <i data-lucide="trending-up" style="width:14px;height:14px"></i>
+            2 novos esta semana
+          </div>
+        </div>
+
+        <div class="kpi-card animate-fade-in-up delay-200">
+          <div class="flex justify-between items-center">
+            <div class="kpi-icon" style="background:rgba(16,185,129,0.15);">💰</div>
+            <span class="badge badge-success">Julho</span>
+          </div>
+          <div>
+            <div class="kpi-value" id="kpi-faturamento">—</div>
+            <div class="kpi-label">Faturamento Mês</div>
+          </div>
+          <div class="kpi-change positive">
+            <i data-lucide="trending-up" style="width:14px;height:14px"></i>
+            +8% vs. mês anterior
+          </div>
+        </div>
+
+        <div class="kpi-card animate-fade-in-up delay-300">
+          <div class="flex justify-between items-center">
+            <div class="kpi-icon" style="background:rgba(245,158,11,0.15);">⚠️</div>
+            <span class="badge badge-warning" id="kpi-alertas-badge">0</span>
+          </div>
+          <div>
+            <div class="kpi-value" id="kpi-alertas">—</div>
+            <div class="kpi-label">Plantões sem Cuidador(a)</div>
+          </div>
+          <div class="kpi-change negative" id="alertaDesc">
+            <i data-lucide="alert-triangle" style="width:14px;height:14px"></i>
+            Requer atenção
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts + Lista -->
+      <div class="charts-grid mb-8">
+
+        <!-- Gráfico Faturamento -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Faturamento Mensal</div>
+              <div class="chart-subtitle">Últimos 7 meses</div>
+            </div>
+            <select class="form-select chart-period" style="width:auto" id="chartPeriod">
+              <option value="7">7 meses</option>
+              <option value="12">12 meses</option>
+            </select>
+          </div>
+          <canvas id="chartFaturamento" height="220"></canvas>
+        </div>
+
+        <!-- Gráfico Status Escalas -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Escalas por Status</div>
+              <div class="chart-subtitle">Este mês</div>
+            </div>
+          </div>
+          <canvas id="chartEscalas" height="180"></canvas>
+          <div class="calendar-legend mt-4" id="chartEscalasLegend"></div>
+        </div>
+
+      </div>
+
+      <!-- Escalas do Dia + Alertas -->
+      <div style="display:grid; grid-template-columns: 1fr 340px; gap: var(--space-6);">
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Plantões de Hoje</div>
+              <div class="chart-subtitle" id="today-date-label"></div>
+            </div>
+            <a class="btn btn-secondary btn-sm" href="#" onclick="showSection('agenda',document.getElementById('nav-agenda'))">
+              Ver Agenda →
+            </a>
+          </div>
+          <div id="escalas-hoje-list" class="flex flex-col gap-3">
+            <!-- Escalas renderizadas via JS -->
+          </div>
+        </div>
+
+        <div>
+          <!-- Alertas -->
+          <div class="chart-card" style="height:100%">
+            <div class="chart-header">
+              <div class="chart-title">⚠️ Alertas</div>
+            </div>
+            <div id="alerts-list" class="flex flex-col gap-3">
+              <div class="alert-card warning">
+                <div class="alert-icon">📅</div>
+                <div>
+                  <div class="alert-title">Plantão descoberto</div>
+                  <div class="alert-desc">Amanhã 14h — Sem cuidador(a) escalado(a) para Dona Maria</div>
+                </div>
+              </div>
+              <div class="alert-card danger">
+                <div class="alert-icon">💊</div>
+                <div>
+                  <div class="alert-title">Medicamento não registrado</div>
+                  <div class="alert-desc">Sr. João — remédio das 18h sem confirmação</div>
+                </div>
+              </div>
+              <div class="alert-card info">
+                <div class="alert-icon">⭐</div>
+                <div>
+                  <div class="alert-title">Nova avaliação</div>
+                  <div class="alert-desc">Família Silva avaliou cuidadora Ana com 5 estrelas</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- =============================================
+         SEÇÃO: AGENDA DE PLANTÕES
+         ============================================= -->
+    <section class="page-content section-content" id="section-agenda" style="display:none">
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Agenda de Plantões</div>
+            <div class="chart-subtitle">Arraste para reagendar · Clique para criar nova escala</div>
+          </div>
+          <div class="flex gap-2">
+            <div class="calendar-legend">
+              <span class="legend-item"><span class="legend-dot" style="background:#4f46e5"></span>Agendado</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#06b6d4"></span>Em andamento</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>Concluído</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>Cancelado</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openModalEscala()">
+              <i data-lucide="plus" aria-hidden="true"></i> Nova Escala
+            </button>
+          </div>
+        </div>
+        <div id="fullCalendar" style="min-height:600px;"></div>
+      </div>
+
+    </section>
+
+    <!-- =============================================
+         SEÇÃO: ESCALAS
+         ============================================= -->
+    <section class="page-content section-content" id="section-escalas" style="display:none">
+
+      <div class="table-toolbar">
+        <div class="input-group table-search">
+          <i data-lucide="search" class="input-icon" aria-hidden="true"></i>
+          <input type="search" class="form-input" id="searchEscalas" placeholder="Buscar escala..." oninput="filterEscalas()" />
+        </div>
+        <div class="table-actions">
+          <select class="form-select" id="filterEscalaStatus" style="width:160px" onchange="filterEscalas()">
+            <option value="">Todos status</option>
+            <option value="agendado">Agendado</option>
+            <option value="em_andamento">Em Andamento</option>
+            <option value="concluido">Concluído</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+          <button class="btn btn-primary" onclick="openModalEscala()">
+            <i data-lucide="plus" aria-hidden="true"></i> Nova Escala
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table id="tabelaEscalas" aria-label="Tabela de escalas">
+          <thead>
+            <tr>
+              <th>Assistido</th>
+              <th>Cuidador(a)</th>
+              <th>Início</th>
+              <th>Término</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaEscalasBody">
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Carregando escalas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- =============================================
+         SEÇÃO: ASSISTIDOS
+         ============================================= -->
+    <section class="page-content section-content" id="section-idosos" style="display:none">
+
+      <div class="table-toolbar">
+        <div class="input-group table-search">
+          <i data-lucide="search" class="input-icon" aria-hidden="true"></i>
+          <input type="search" class="form-input" id="searchIdosos" placeholder="Buscar assistido..." oninput="filterIdosos()" />
+        </div>
+        <div class="table-actions">
+          <button class="btn btn-secondary" id="viewToggleIdosos" onclick="toggleIdososView()">
+            <i data-lucide="grid" aria-hidden="true"></i> Cards
+          </button>
+          <button class="btn btn-primary" onclick="openModalIdoso()">
+            <i data-lucide="plus" aria-hidden="true"></i> Novo Assistido
+          </button>
+        </div>
+      </div>
+
+      <!-- Visualização em Cards -->
+      <div id="idososCards" class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-5);">
+        <!-- Renderizado via JS -->
+      </div>
+
+      <!-- Visualização em Tabela -->
+      <div id="idososTable" class="table-container" style="display:none">
+        <table aria-label="Tabela de assistidos">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Idade</th>
+              <th>Perfil</th>
+              <th>Tipo Sanguíneo</th>
+              <th>Família</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="idososTableBody"></tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- =============================================
+         SEÇÃO: CUIDADORES
+         ============================================= -->
+    <section class="page-content section-content" id="section-cuidadores" style="display:none">
+
+      <div class="table-toolbar">
+        <div class="input-group table-search">
+          <i data-lucide="search" class="input-icon" aria-hidden="true"></i>
+          <input type="search" class="form-input" id="searchCuidadores" placeholder="Buscar cuidador(a)..." oninput="filterCuidadores()" />
+        </div>
+        <div class="table-actions">
+          <div class="filter-chip active" onclick="filterCuidadorStatus('', this)">Todos</div>
+          <div class="filter-chip" onclick="filterCuidadorStatus('ativo', this)">Ativos(as)</div>
+          <div class="filter-chip" onclick="filterCuidadorStatus('inativo', this)">Inativos(as)</div>
+          <button class="btn btn-primary" onclick="openModalCuidador()">
+            <i data-lucide="plus" aria-hidden="true"></i> Novo(a) Cuidador(a)
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table id="tabelaCuidadores" aria-label="Tabela de cuidadores">
+          <thead>
+            <tr>
+              <th>Cuidador(a)</th>
+              <th>Especialidade</th>
+              <th>Público Atendido</th>
+              <th>Disponibilidade</th>
+              <th>Valor/Hora</th>
+              <th>Avaliação</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaCuidadoresBody">
+            <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">Carregando cuidadores...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- =============================================
+         SEÇÃO: FAMÍLIAS
+         ============================================= -->
+    <section class="page-content section-content" id="section-familias" style="display:none">
+
+      <div class="table-toolbar">
+        <div class="input-group table-search">
+          <i data-lucide="search" class="input-icon" aria-hidden="true"></i>
+          <input type="search" class="form-input" id="searchFamilias" placeholder="Buscar família..." />
+        </div>
+        <div class="table-actions">
+          <button class="btn btn-primary" onclick="openModalFamilia()">
+            <i data-lucide="plus" aria-hidden="true"></i> Nova Família
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table aria-label="Tabela de famílias">
+          <thead>
+            <tr>
+              <th>Nome / Responsável</th>
+              <th>Contato</th>
+              <th>Cidade</th>
+              <th>Assistidos Vinculados</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaFamiliasBody">
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted)">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- =============================================
+         SEÇÃO: RELATÓRIOS
+         ============================================= -->
+    <section class="page-content section-content" id="section-relatorios" style="display:none">
+
+      <!-- Filtros de período -->
+      <div class="card mb-6">
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="form-group flex-1" style="min-width:140px;">
+            <label class="form-label">Data Início</label>
+            <input type="date" class="form-input" id="relDe" />
+          </div>
+          <div class="form-group flex-1" style="min-width:140px;">
+            <label class="form-label">Data Fim</label>
+            <input type="date" class="form-input" id="relAte" />
+          </div>
+          <div class="form-group" style="min-width:200px;">
+            <label class="form-label">Cuidador(a)</label>
+            <select class="form-select" id="relCuidador">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div style="margin-top:auto;">
+            <button class="btn btn-primary" onclick="gerarRelatorio()">
+              <i data-lucide="bar-chart-2" aria-hidden="true"></i> Gerar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="kpi-grid mb-6">
+        <div class="chart-card">
+          <div class="report-stat">
+            <div class="stat-number" id="rel-total-escalas">—</div>
+            <div class="stat-label">Total de Escalas</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="report-stat">
+            <div class="stat-number" id="rel-horas">—</div>
+            <div class="stat-label">Horas Trabalhadas</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="report-stat">
+            <div class="stat-number" id="rel-faturamento">—</div>
+            <div class="stat-label">Faturamento Total</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="report-stat">
+            <div class="stat-number" id="rel-ticket">—</div>
+            <div class="stat-label">Ticket Médio</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico Detalhado -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Faturamento por Período</div>
+        </div>
+        <canvas id="chartRelatorio" height="200"></canvas>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- ============================================================
+     MODAIS
+     ============================================================ -->
+
+<!-- Modal: Nova Escala -->
+<div class="modal-overlay" id="modalEscala" role="dialog" aria-modal="true" aria-labelledby="modalEscalaTitle">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalEscalaTitle">Nova Escala de Serviço</h2>
+      <button class="modal-close" onclick="closeModal('modalEscala')" aria-label="Fechar">✕</button>
+    </div>
+    <form id="formEscala" onsubmit="submitEscala(event)">
+      <div class="form-grid-2 mb-4">
+        <div class="form-group">
+          <label class="form-label" for="escIdoso">Assistido *</label>
+          <select class="form-select" id="escIdoso" required>
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="escCuidador">Cuidador(a) *</label>
+          <select class="form-select" id="escCuidador" required>
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid-2 mb-4">
+        <div class="form-group">
+          <label class="form-label" for="escInicio">Data e Hora Início *</label>
+          <input type="datetime-local" class="form-input" id="escInicio" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="escTermino">Data e Hora Término *</label>
+          <input type="datetime-local" class="form-input" id="escTermino" required />
+        </div>
+      </div>
+      <div class="form-grid-2 mb-4">
+        <div class="form-group">
+          <label class="form-label" for="escValorHora">Valor/Hora (R$)</label>
+          <input type="number" class="form-input" id="escValorHora" step="0.01" placeholder="0,00" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="escValorTotal">Valor Total (R$)</label>
+          <input type="number" class="form-input" id="escValorTotal" step="0.01" placeholder="Calculado auto" readonly />
+        </div>
+      </div>
+      <div class="form-group mb-6">
+        <label class="form-label" for="escObs">Observações</label>
+        <textarea class="form-textarea" id="escObs" rows="3" placeholder="Instruções especiais, cuidados importantes..."></textarea>
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEscala')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="check" aria-hidden="true"></i> Salvar Escala
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Idoso -->
+<div class="modal-overlay" id="modalIdoso" role="dialog" aria-modal="true" aria-labelledby="modalIdosoTitle">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalIdosoTitle">Cadastrar Assistido</h2>
+      <button class="modal-close" onclick="closeModal('modalIdoso')" aria-label="Fechar">✕</button>
+    </div>
+    <form id="formIdoso" onsubmit="submitIdoso(event)">
+      <!-- Tabs do formulário -->
+      <div class="tab-bar">
+        <div class="tab-item active" onclick="showFormTab('tab-idoso-dados', this)">Dados Pessoais</div>
+        <div class="tab-item" onclick="showFormTab('tab-idoso-saude', this)">Saúde</div>
+        <div class="tab-item" onclick="showFormTab('tab-idoso-familia', this)">Família</div>
+      </div>
+
+      <!-- Aba: Dados Pessoais -->
+      <div id="tab-idoso-dados" class="tab-content active">
+        <div class="form-grid-2 mb-4">
+          <div class="form-group">
+            <label class="form-label" for="idNome">Nome Completo *</label>
+            <input type="text" class="form-input" id="idNome" required placeholder="Nome do assistido" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="idNasc">Data de Nascimento</label>
+            <input type="date" class="form-input" id="idNasc" />
+          </div>
+        </div>
+        <div class="form-grid-2 mb-4">
+          <div class="form-group">
+            <label class="form-label" for="idPerfil">Perfil do Assistido *</label>
+            <select class="form-select" id="idPerfil" required>
+              <option value="idoso" selected>👵 Idoso(a)</option>
+              <option value="crianca_autista">🧩 Criança Autista</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="idFamilia">Família *</label>
+            <select class="form-select" id="idFamilia" required>
+              <option value="">Selecione</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid-2 mb-4">
+          <div class="form-group">
+            <label class="form-label" for="idGenero">Gênero</label>
+            <select class="form-select" id="idGenero">
+              <option value="">Selecione</option>
+              <option value="masculino">Masculino</option>
+              <option value="feminino">Feminino</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="idSangue">Tipo Sanguíneo</label>
+            <select class="form-select" id="idSangue">
+              <option value="">Desconhecido</option>
+              <option>A+</option><option>A-</option>
+              <option>B+</option><option>B-</option>
+              <option>AB+</option><option>AB-</option>
+              <option>O+</option><option>O-</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group mb-4">
+          <label class="form-label" for="idObs">Observações Gerais</label>
+          <textarea class="form-textarea" id="idObs" rows="3" placeholder="Informações adicionais sobre o assistido..."></textarea>
+        </div>
+      </div>
+
+      <!-- Aba: Saúde -->
+      <div id="tab-idoso-saude" class="tab-content">
+        <div class="form-group mb-4">
+          <label class="form-label" for="idRestricoes">Restrições Médicas</label>
+          <textarea class="form-textarea" id="idRestricoes" rows="3" placeholder="Doenças, restrições físicas, mobilidade..."></textarea>
+        </div>
+        <div class="form-group mb-4">
+          <label class="form-label" for="idAlergias">Alergias</label>
+          <textarea class="form-textarea" id="idAlergias" rows="2" placeholder="Alergias a medicamentos, alimentos..."></textarea>
+        </div>
+        <div class="form-group mb-4">
+          <label class="form-label" for="idMedicamentos">Medicamentos Contínuos</label>
+          <textarea class="form-textarea" id="idMedicamentos" rows="3" placeholder="Ex: Losartana 50mg - 1 comprimido às 08h..."></textarea>
+        </div>
+        <div class="form-grid-2 mb-4">
+          <div class="form-group">
+            <label class="form-label" for="idMedico">Médico Responsável</label>
+            <input type="text" class="form-input" id="idMedico" placeholder="Dr. Nome CRM..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="idPlano">Plano de Saúde</label>
+            <input type="text" class="form-input" id="idPlano" placeholder="Nome do plano" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba: Família / Emergência -->
+      <div id="tab-idoso-familia" class="tab-content">
+        <div class="form-grid-2 mb-4">
+          <div class="form-group">
+            <label class="form-label" for="idContEmer">Contato de Emergência</label>
+            <input type="text" class="form-input" id="idContEmer" placeholder="Nome do contato" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="idFoneEmer">Telefone Emergência</label>
+            <input type="tel" class="form-input" id="idFoneEmer" placeholder="(11) 99999-9999" />
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="flex gap-3 justify-end">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalIdoso')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="check" aria-hidden="true"></i> Salvar Assistido
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Cuidador -->
+<div class="modal-overlay" id="modalCuidador" role="dialog" aria-modal="true" aria-labelledby="modalCuidadorTitle">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalCuidadorTitle">Cadastrar Cuidador(a)</h2>
+      <button class="modal-close" onclick="closeModal('modalCuidador')" aria-label="Fechar">✕</button>
+    </div>
+    <form id="formCuidador" onsubmit="submitCuidador(event)">
+      <div class="form-grid-2 mb-4">
+        <div class="form-group">
+          <label class="form-label" for="cuidNome">Nome Completo *</label>
+          <input type="text" class="form-input" id="cuidNome" required placeholder="Nome completo" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cuidEmail">E-mail *</label>
+          <input type="email" class="form-input" id="cuidEmail" required placeholder="email@exemplo.com" />
+        </div>
+      </div>
+      <div class="form-grid-3 mb-4">
+        <div class="form-group">
+          <label class="form-label" for="cuidCPF">CPF</label>
+          <input type="text" class="form-input" id="cuidCPF" placeholder="000.000.000-00" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cuidTel">Telefone</label>
+          <input type="tel" class="form-input" id="cuidTel" placeholder="(11) 99999-9999" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cuidValor">Valor/Hora (R$)</label>
+          <input type="number" class="form-input" id="cuidValor" step="0.01" placeholder="0,00" />
+        </div>
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label" for="cuidFormacao">Formação / Certificados</label>
+        <input type="text" class="form-input" id="cuidFormacao" placeholder="Ex: Técnico em Enfermagem, Cuidador(a) de Idosos SENAC..." />
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label" for="cuidBio">Bio / Apresentação</label>
+        <textarea class="form-textarea" id="cuidBio" rows="3" placeholder="Descreva a experiência e pontos fortes do(a) cuidador(a)..."></textarea>
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label">Público Atendido *</label>
+        <div class="flex gap-4 mt-2">
+          <label class="flex items-center gap-2" style="cursor:pointer; font-weight: normal;">
+            <input type="checkbox" id="cuidPublicoIdoso" checked /> Idosos
+          </label>
+          <label class="flex items-center gap-2" style="cursor:pointer; font-weight: normal;">
+            <input type="checkbox" id="cuidPublicoAutista" /> Crianças Autistas
+          </label>
+        </div>
+      </div>
+      <div class="form-group mb-6">
+        <label class="form-label" for="cuidStatus">Status</label>
+        <select class="form-select" id="cuidStatus">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+          <option value="ferias">Férias</option>
+        </select>
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalCuidador')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="check" aria-hidden="true"></i> Salvar Cuidador(a)
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Familia -->
+<div class="modal-overlay" id="modalFamilia" role="dialog" aria-modal="true" aria-labelledby="modalFamiliaTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalFamiliaTitle">Cadastrar Família</h2>
+      <button class="modal-close" onclick="closeModal('modalFamilia')" aria-label="Fechar">✕</button>
+    </div>
+    <form id="formFamilia" onsubmit="submitFamilia(event)">
+      <div class="form-group mb-4">
+        <label class="form-label" for="famNome">Nome do Responsável *</label>
+        <input type="text" class="form-input" id="famNome" required placeholder="Nome completo do familiar" />
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label" for="famEmail">E-mail *</label>
+        <input type="email" class="form-input" id="famEmail" required placeholder="email@exemplo.com" />
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label" for="famCelular">Celular / Telefone</label>
+        <input type="tel" class="form-input" id="famCelular" placeholder="(11) 99999-9999" />
+      </div>
+      <div class="form-grid-2 mb-6">
+        <div class="form-group">
+          <label class="form-label" for="famCidade">Cidade</label>
+          <input type="text" class="form-input" id="famCidade" placeholder="Ex: São Paulo" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="famEstado">Estado</label>
+          <input type="text" class="form-input" id="famEstado" placeholder="SP" maxlength="2" />
+        </div>
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalFamilia')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="check" aria-hidden="true"></i> Salvar Família
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+
+<script>
+// ============================================================
+// SUPABASE DEMO STUB — inline, sem dependências de módulo
+// ============================================================
+const _stub = {
+  from: () => ({
+    select: function() { return this; },
+    eq:     function() { return this; },
+    neq:    function() { return this; },
+    gte:    function() { return this; },
+    lte:    function() { return this; },
+    order:  function() { return this; },
+    limit:  function() { return this; },
+    insert: async function() { return { data: [], error: null }; },
+    update: async function() { return { data: [], error: null }; },
+    single: async function() { return { data: null, error: null }; },
+    then:   function(resolve) { resolve({ data: [], error: null }); return this; },
+  }),
+  channel: () => ({ on: function(){ return this; }, subscribe: function(){ return this; } }),
+  auth: {
+    getSession: async () => ({ data: { session: null } }),
+    signOut: async () => {},
+  },
+};
+const supabase = _stub;
+</script>
+
+<script>
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let allEscalas  = [];
+let allCuidadores = [];
+let allIdosos   = [];
+let allFamilias = [];
+let calendarInstance = null;
+let chartFat  = null;
+let chartEsc  = null;
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = await protectRoute(['administrador']);
+  if (!currentUser) return;
+
+  // Atualiza UI do usuário
+  document.getElementById('userName').textContent = currentUser.nome || 'Admin';
+  document.getElementById('userAvatar').textContent = (currentUser.nome || 'A')[0].toUpperCase();
+  document.getElementById('today-date-label').textContent = new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'});
+
+  // Inicializa ícones
+  lucide.createIcons();
+
+  // Carrega dados iniciais
+  await Promise.all([loadDashboard(), loadAllData()]);
+
+  // Sidebar toggle
+  document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+});
+
+// ============================================================
+// CARREGAMENTO DE DADOS
+// ============================================================
+async function loadAllData() {
+  if (typeof supabase !== 'undefined' && supabase === _stub) {
+    loadDemoData();
+    return;
+  }
+  try {
+    // Cuidadores
+    const { data: cuidadores } = await supabase.from('cuidadores')
+      .select('*, usuarios(id, nome, email, avatar_url)')
+      .order('criado_em', { ascending: false });
+    allCuidadores = cuidadores || [];
+    renderCuidadores(allCuidadores);
+
+    // Idosos
+    const { data: idosos } = await supabase.from('idosos')
+      .select('*, clientes_familia(*, usuarios(nome))')
+      .eq('ativo', true)
+      .order('nome');
+    allIdosos = idosos || [];
+    renderIdosos(allIdosos);
+
+    // Famílias
+    const { data: familias } = await supabase.from('clientes_familia')
+      .select('*, usuarios(id, nome, email)');
+    allFamilias = familias || [];
+    renderFamilias(allFamilias);
+
+    // Escalas
+    const { data: escalas } = await supabase.from('escalas_servicos')
+      .select('*, idosos(nome), cuidadores(*, usuarios(nome))')
+      .order('data_inicio', { ascending: false })
+      .limit(200);
+    allEscalas = escalas || [];
+    renderEscalas(allEscalas);
+    renderEscalasHoje(allEscalas);
+
+    // Popula selects dos modais
+    populateSelects();
+
+    // Inicia calendário
+    initCalendar(allEscalas);
+
+  } catch (e) {
+    console.error('Erro ao carregar dados:', e);
+    // Usa dados demo para demonstração visual
+    loadDemoData();
+  }
+}
+
+async function loadDashboard() {
+  if (typeof supabase !== 'undefined' && supabase === _stub) {
+    // Demo mode — KPIs dinâmicos calculados a partir dos dados mock
+    const hoje = new Date().toDateString();
+    const ativos  = (allCuidadores.length || 5);
+    const idosos  = (allIdosos.length || 8);
+    const escsHoje = (allEscalas || []).filter(e => new Date(e.data_inicio).toDateString() === hoje);
+    const faturamento = (allEscalas || []).reduce((acc, e) => acc + (e.valor_total || 0), 0);
+
+    document.getElementById('kpi-idosos').textContent       = idosos;
+    document.getElementById('kpi-cuidadores').textContent   = ativos;
+    document.getElementById('kpi-faturamento').textContent  = 'R$ ' + faturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    document.getElementById('kpi-alertas').textContent      = '1';
+    document.getElementById('kpi-alertas-badge').textContent = '1';
+    renderCharts();
+    return;
+  }
+  try {
+    const { count: idosCount } = await supabase.from('idosos').select('*', {count:'exact', head:true}).eq('ativo', true);
+    const { count: cuidCount } = await supabase.from('cuidadores').select('*', {count:'exact', head:true}).eq('status','ativo');
+
+    document.getElementById('kpi-idosos').textContent = idosCount ?? '—';
+    document.getElementById('kpi-cuidadores').textContent = cuidCount ?? '—';
+    document.getElementById('kpi-faturamento').textContent = 'R$ 0';
+    document.getElementById('kpi-alertas').textContent = '0';
+  } catch(e) {
+    // Demo mode
+    document.getElementById('kpi-idosos').textContent = '24';
+    document.getElementById('kpi-cuidadores').textContent = '18';
+    document.getElementById('kpi-faturamento').textContent = 'R$ 38.4k';
+    document.getElementById('kpi-alertas').textContent = '2';
+  }
+
+  renderCharts();
+}
+
+function loadDemoData() {
+  const agora   = new Date();
+  const hoje    = new Date(); hoje.setHours(8,0,0,0);
+  const hojeM   = new Date(); hojeM.setHours(14,0,0,0);
+  const hojeA   = new Date(); hojeA.setHours(15,0,0,0);
+  const hojeAM  = new Date(); hojeAM.setHours(21,0,0,0);
+  const amanha  = new Date(); amanha.setDate(amanha.getDate()+1); amanha.setHours(8,0,0,0);
+  const amanhaM = new Date(); amanhaM.setDate(amanhaM.getDate()+1); amanhaM.setHours(14,0,0,0);
+  const ontem   = new Date(); ontem.setDate(ontem.getDate()-1); ontem.setHours(8,0,0,0);
+  const ontemM  = new Date(); ontemM.setDate(ontemM.getDate()-1); ontemM.setHours(14,0,0,0);
+  const semana  = new Date(); semana.setDate(semana.getDate()+3); semana.setHours(8,0,0,0);
+  const semanaM = new Date(); semanaM.setDate(semanaM.getDate()+3); semanaM.setHours(14,0,0,0);
+
+  allCuidadores = [
+    { id:'c1', status:'ativo',   valor_hora: 45, avaliacao_media: 4.9, total_avaliacoes: 47, formacao:'Técnica em Enfermagem', usuarios:{nome:'Ana Paula Ferreira', email:'ana@cuidar.com'}, publico_atendido: ['idoso', 'crianca_autista'] },
+    { id:'c2', status:'ativo',   valor_hora: 38, avaliacao_media: 4.7, total_avaliacoes: 32, formacao:'Cuidador(a) de Idosos', usuarios:{nome:'Carlos Mendes', email:'carlos@cuidar.com'}, publico_atendido: ['idoso'] },
+    { id:'c3', status:'ferias',  valor_hora: 52, avaliacao_media: 5.0, total_avaliacoes: 19, formacao:'Psicomotricista', usuarios:{nome:'Beatriz Lima', email:'bia@cuidar.com'}, publico_atendido: ['crianca_autista'] },
+    { id:'c4', status:'ativo',   valor_hora: 40, avaliacao_media: 4.8, total_avaliacoes: 28, formacao:'Aux. de Enfermagem', usuarios:{nome:'Roberto Santos', email:'roberto@cuidar.com'}, publico_atendido: ['idoso'] },
+    { id:'c5', status:'inativo', valor_hora: 35, avaliacao_media: 4.5, total_avaliacoes: 11, formacao:'Cuidador(a) Residencial', usuarios:{nome:'Fernanda Costa', email:'fernanda@cuidar.com'}, publico_atendido: ['idoso'] },
+  ];
+  allIdosos = [
+    { id:'i1', nome:'Maria das Graças Oliveira', data_nascimento:'1942-05-10', tipo_sanguineo:'A+', genero:'feminino', restricoes_medicas:'Hipertensão, Diabetes', clientes_familia:{usuarios:{nome:'João Silva'}}, perfil:'idoso', ativo:true },
+    { id:'i2', nome:'Enzo Gabriel Neto',         data_nascimento:'2018-03-15', tipo_sanguineo:'O+', genero:'masculino', restricoes_medicas:'Autismo nível 2', clientes_familia:{usuarios:{nome:'Família Neto'}}, perfil:'crianca_autista', ativo:true },
+    { id:'i3', nome:'José Almeida',              data_nascimento:'1938-11-22', tipo_sanguineo:'B+', genero:'masculino', restricoes_medicas:'Parkinson leve', clientes_familia:{usuarios:{nome:'Almeida Família'}}, perfil:'idoso', ativo:true },
+    { id:'i4', nome:'Helena Fernandes',          data_nascimento:'1950-07-04', tipo_sanguineo:'AB+', genero:'feminino', restricoes_medicas:'Alzheimer inicial', clientes_familia:{usuarios:{nome:'Fernandes Família'}}, perfil:'idoso', ativo:true },
+    { id:'i5', nome:'Lucas Pereira',             data_nascimento:'2016-09-10', tipo_sanguineo:'O-', genero:'masculino', restricoes_medicas:'Autismo + TDAH', clientes_familia:{usuarios:{nome:'Pereira Família'}}, perfil:'crianca_autista', ativo:true },
+  ];
+  allFamilias = [
+    { id:'f1', cidade:'São Paulo', estado:'SP', usuarios:{nome:'João Silva', email:'joao@email.com'}, celular:'(11) 99999-0000' },
+    { id:'f2', cidade:'São Paulo', estado:'SP', usuarios:{nome:'Família Neto', email:'neto@email.com'}, celular:'(11) 98888-0000' },
+    { id:'f3', cidade:'Guarulhos', estado:'SP', usuarios:{nome:'Almeida Família', email:'almeida@email.com'}, celular:'(11) 97777-0000' },
+    { id:'f4', cidade:'São Paulo', estado:'SP', usuarios:{nome:'Fernandes Família', email:'fernandes@email.com'}, celular:'(11) 96666-0000' },
+  ];
+  allEscalas = [
+    { id:'e1', idosos:{nome:'Maria das Graças Oliveira'}, cuidadores:{usuarios:{nome:'Ana Paula Ferreira'}}, data_inicio: hoje.toISOString(),  data_termino: hojeM.toISOString(),  valor_total: 270, status:'em_andamento' },
+    { id:'e2', idosos:{nome:'Enzo Gabriel Neto'},         cuidadores:{usuarios:{nome:'Carlos Mendes'}},      data_inicio: hojeA.toISOString(), data_termino: hojeAM.toISOString(), valor_total: 228, status:'agendado' },
+    { id:'e3', idosos:{nome:'José Almeida'},              cuidadores:{usuarios:{nome:'Roberto Santos'}},    data_inicio: amanha.toISOString(), data_termino: amanhaM.toISOString(), valor_total: 240, status:'agendado' },
+    { id:'e4', idosos:{nome:'Helena Fernandes'},          cuidadores:{usuarios:{nome:'Ana Paula Ferreira'}}, data_inicio: semana.toISOString(), data_termino: semanaM.toISOString(),  valor_total: 270, status:'agendado' },
+    { id:'e5', idosos:{nome:'Maria das Graças Oliveira'}, cuidadores:{usuarios:{nome:'Carlos Mendes'}},      data_inicio: ontem.toISOString(),  data_termino: ontemM.toISOString(),  valor_total: 228, status:'concluido' },
+    { id:'e6', idosos:{nome:'Lucas Pereira'},             cuidadores:{usuarios:{nome:'Beatriz Lima'}},      data_inicio: new Date(Date.now()-3*24*3600000).toISOString(), data_termino: new Date(Date.now()-3*24*3600000+6*3600000).toISOString(), valor_total: 312, status:'concluido' },
+  ];
+
+  renderCuidadores(allCuidadores);
+  renderIdosos(allIdosos);
+  renderFamilias(allFamilias);
+  renderEscalas(allEscalas);
+  renderEscalasHoje(allEscalas);
+  populateSelects();
+  initCalendar(allEscalas);
+
+  // Atualiza KPIs com dados reais do demo
+  loadDashboard();
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function renderCharts() {
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul'];
+  const values = [22400, 27100, 31500, 28900, 33200, 36100, 38400];
+
+  // Chart Faturamento
+  const ctxFat = document.getElementById('chartFaturamento');
+  if (chartFat) chartFat.destroy();
+  chartFat = new Chart(ctxFat, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Faturamento (R$)',
+        data: values,
+        borderColor: '#5C3C67',
+        backgroundColor: 'rgba(92,60,103,0.07)',
+        borderWidth: 2.5,
+        pointRadius: 4,
+        pointBackgroundColor: '#E07A8A',
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `R$ ${ctx.raw.toLocaleString('pt-BR')}`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(92,60,103,0.06)' }, ticks: { color: '#7B5589', font:{size:12} } },
+        y: {
+          grid: { color: 'rgba(92,60,103,0.06)' },
+          ticks: {
+            color: '#7B5589',
+            font:{size:12},
+            callback: v => 'R$ ' + (v/1000).toFixed(0) + 'k'
+          }
+        }
+      }
+    }
+  });
+
+  // Chart Escalas por status
+  const ctxEsc = document.getElementById('chartEscalas');
+  if (chartEsc) chartEsc.destroy();
+  chartEsc = new Chart(ctxEsc, {
+    type: 'doughnut',
+    data: {
+      labels: ['Concluídas','Em Andamento','Agendadas','Canceladas'],
+      datasets: [{
+        data: [78, 12, 24, 6],
+        backgroundColor: ['#5C3C67','#E07A8A','#BA95CB','#C8A8B8'],
+        borderWidth: 0,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '68%',
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+
+  // Legenda manual
+  document.getElementById('chartEscalasLegend').innerHTML = `
+    <span class="legend-item"><span class="legend-dot" style="background:#5C3C67"></span>Concluídas (78)</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#E07A8A"></span>Andamento (12)</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#BA95CB"></span>Agendadas (24)</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#C8A8B8"></span>Canceladas (6)</span>
+  `;
+}
+
+// ============================================================
+// FULLCALENDAR
+// ============================================================
+function initCalendar(escalas) {
+  const calEl = document.getElementById('fullCalendar');
+  if (!calEl) return;
+
+  const statusColors = {
+    agendado:     '#BA95CB',
+    em_andamento: '#E07A8A',
+    concluido:    '#5C3C67',
+    cancelado:    '#C8A8B8',
+  };
+
+  const events = escalas.map(e => ({
+    id: e.id,
+    title: `${e.idosos?.nome || 'Idoso'} ← ${e.cuidadores?.usuarios?.nome || 'Cuidador(a)'}`,
+    start: e.data_inicio,
+    end: e.data_termino,
+    backgroundColor: statusColors[e.status] || '#4f46e5',
+    extendedProps: e,
+  }));
+
+  if (calendarInstance) calendarInstance.destroy();
+
+  calendarInstance = new FullCalendar.Calendar(calEl, {
+    initialView: 'timeGridWeek',
+    locale: 'pt-br',
+    buttonText: {
+      today: 'hoje',
+      month: 'mês',
+      week: 'semana',
+      day: 'dia'
+    },
+    headerToolbar: {
+      left:   'prev,next today',
+      center: 'title',
+      right:  'dayGridMonth,timeGridWeek,timeGridDay',
+    },
+    events,
+    editable: true,
+    selectable: true,
+    eventClick: (info) => {
+      showToast(`Escala: ${info.event.title}`, 'info');
+    },
+    select: (info) => {
+      document.getElementById('escInicio').value = info.startStr.substring(0,16);
+      document.getElementById('escTermino').value = info.endStr.substring(0,16);
+      openModal('modalEscala');
+    },
+    eventDrop: async (info) => {
+      try {
+        await supabase.from('escalas_servicos').update({
+          data_inicio:  info.event.startStr,
+          data_termino: info.event.endStr,
+        }).eq('id', info.event.id);
+        showToast('Escala reagendada com sucesso!', 'success');
+      } catch {
+        info.revert();
+        showToast('Erro ao reagendar. Tente novamente.', 'error');
+      }
+    },
+    height: 650,
+  });
+
+  calendarInstance.render();
+}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderCuidadores(list) {
+  const tbody = document.getElementById('tabelaCuidadoresBody');
+  if (!tbody) return;
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhum(a) cuidador(a) cadastrado(a)</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(c => {
+    const nome = c.usuarios?.nome || '—';
+    const status = { ativo:'badge-success', inativo:'badge-neutral', ferias:'badge-warning' }[c.status] || 'badge-neutral';
+    const stars = '★'.repeat(Math.round(c.avaliacao_media || 0)) + '☆'.repeat(5 - Math.round(c.avaliacao_media || 0));
+    const publicoBadge = (c.publico_atendido || ['idoso']).map(p => {
+      if (p === 'idoso') return '<span class="badge badge-primary" style="margin-right:2px">Idosos</span>';
+      if (p === 'crianca_autista') return '<span class="badge badge-info" style="background:#06b6d4;color:white;margin-right:2px">Autismo</span>';
+      return '';
+    }).join('');
+    return `<tr>
+      <td>
+        <div class="cuidador-cell">
+          <div class="avatar">${nome[0]}</div>
+          <div class="cuidador-info">
+            <div class="cuidador-name">${nome}</div>
+            <div class="cuidador-spec">${c.formacao || 'Sem formação informada'}</div>
+          </div>
+        </div>
+      </td>
+      <td>${c.formacao || '—'}</td>
+      <td><div class="flex flex-wrap gap-1">${publicoBadge}</div></td>
+      <td><span class="badge badge-info">Ver agenda</span></td>
+      <td>R$ ${(c.valor_hora || 0).toFixed(2).replace('.',',')}/h</td>
+      <td><span class="rating-stars">${stars} ${(c.avaliacao_media || 0).toFixed(1)}</span></td>
+      <td><span class="badge ${status}">${c.status}</span></td>
+      <td>
+        <div class="flex gap-1">
+          <button class="btn btn-ghost btn-icon btn-sm" data-tooltip="Editar" onclick="editCuidador('${c.id}')"><i data-lucide="edit-2"></i></button>
+          <button class="btn btn-ghost btn-icon btn-sm" data-tooltip="Excluir" onclick="deleteCuidador('${c.id}')"><i data-lucide="trash-2" style="color:var(--danger)"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  lucide.createIcons();
+}
+
+function renderIdosos(list) {
+  const container = document.getElementById('idososCards');
+  const tbody = document.getElementById('idososTableBody');
+  if (!container) return;
+  if (!list.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);padding:2rem;">Nenhum assistido cadastrado.</p>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhum assistido cadastrado</td></tr>';
+    return;
+  }
+  container.innerHTML = list.map(id => {
+    const idade = id.data_nascimento ? Math.floor((Date.now() - new Date(id.data_nascimento)) / (365.25*24*3600000)) : '—';
+    const perfilLabel = id.perfil === 'crianca_autista' ? '🧩 Criança Autista' : '👵 Idoso';
+    const tags = [perfilLabel, id.tipo_sanguineo, ...(id.restricoes_medicas || '').split(',').slice(0,2)].filter(Boolean);
+    const defaultEmoji = id.perfil === 'crianca_autista' ? '🧩' : (id.genero === 'feminino' ? '👵' : '👴');
+    return `
+    <div class="idoso-card animate-fade-in" onclick="viewIdoso('${id.id}')">
+      <div class="idoso-header">
+        <div class="idoso-photo">${id.foto_url ? `<img src="${id.foto_url}" alt="${id.nome}">` : defaultEmoji}</div>
+        <div class="idoso-meta">
+          <h3>${id.nome}</h3>
+          <div class="idoso-age">${typeof idade === 'number' ? idade + ' anos' : '—'} · ${id.clientes_familia?.usuarios?.nome || 'Sem família'}</div>
+        </div>
+        <div class="flex gap-1">
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();editIdoso('${id.id}')" data-tooltip="Editar"><i data-lucide="edit-2"></i></button>
+        </div>
+      </div>
+      <div class="idoso-tags">${tags.map(t=>`<span class="idoso-tag">${t.trim()}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+
+  if (tbody) {
+    tbody.innerHTML = list.map(id => {
+      const idade = id.data_nascimento ? Math.floor((Date.now() - new Date(id.data_nascimento)) / (365.25*24*3600000)) : '—';
+      const perfilLabel = id.perfil === 'crianca_autista' ? '🧩 Criança Autista' : '👵 Idoso';
+      const statusClass = id.ativo !== false ? 'badge-success' : 'badge-neutral';
+      const statusText = id.ativo !== false ? 'Ativo' : 'Inativo';
+      return `<tr>
+        <td>
+          <div class="flex items-center gap-2">
+            <span style="font-size:1.25rem">${id.perfil === 'crianca_autista' ? '🧩' : '👴'}</span>
+            <span class="font-semibold">${id.nome}</span>
+          </div>
+        </td>
+        <td>${idade} ${typeof idade === 'number' ? 'anos' : ''}</td>
+        <td><span class="badge ${id.perfil === 'crianca_autista' ? 'badge-info' : 'badge-primary'}" style="${id.perfil === 'crianca_autista' ? 'background:#06b6d4;color:white' : ''}">${perfilLabel}</span></td>
+        <td>${id.tipo_sanguineo || '—'}</td>
+        <td>${id.clientes_familia?.usuarios?.nome || '—'}</td>
+        <td><span class="badge ${statusClass}">${statusText}</span></td>
+        <td>
+          <div class="flex gap-1">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="editIdoso('${id.id}')" data-tooltip="Editar"><i data-lucide="edit-2"></i></button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  lucide.createIcons();
+}
+
+function renderFamilias(list) {
+  const tbody = document.getElementById('tabelaFamiliasBody');
+  if (!tbody) return;
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhuma família cadastrada</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(f => `
+    <tr>
+      <td><div class="font-semibold">${f.usuarios?.nome || '—'}</div><div class="text-xs text-muted">${f.usuarios?.email || ''}</div></td>
+      <td>${f.celular || f.telefone || '—'}</td>
+      <td>${f.cidade ? `${f.cidade}/${f.estado}` : '—'}</td>
+      <td><span class="badge badge-primary">Ver assistidos</span></td>
+      <td>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="editFamilia('${f.id}')"><i data-lucide="edit-2"></i></button>
+      </td>
+    </tr>
+  `).join('');
+  lucide.createIcons();
+}
+
+function renderEscalas(list) {
+  const tbody = document.getElementById('tabelaEscalasBody');
+  if (!tbody) return;
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhuma escala encontrada</td></tr>';
+    return;
+  }
+  const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
+  tbody.innerHTML = list.map(e => `
+    <tr>
+      <td>${e.idosos?.nome || '—'}</td>
+      <td>${e.cuidadores?.usuarios?.nome || '—'}</td>
+      <td>${formatDate(e.data_inicio)}</td>
+      <td>${formatDate(e.data_termino)}</td>
+      <td>R$ ${(e.valor_total || 0).toFixed(2).replace('.',',')}</td>
+      <td><span class="badge ${statusMap[e.status] || 'badge-neutral'}">${e.status?.replace('_',' ') || '—'}</span></td>
+      <td>
+        <div class="flex gap-1">
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="editEscala('${e.id}')"><i data-lucide="edit-2"></i></button>
+          <button class="btn btn-danger btn-icon btn-sm" onclick="cancelarEscala('${e.id}')"><i data-lucide="x"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  lucide.createIcons();
+}
+
+function renderEscalasHoje(list) {
+  const container = document.getElementById('escalas-hoje-list');
+  if (!container) return;
+  const hoje = new Date().toDateString();
+  const hojeList = list.filter(e => new Date(e.data_inicio).toDateString() === hoje);
+
+  if (!hojeList.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1.5rem">Nenhum plantão hoje.</p>';
+    return;
+  }
+  container.innerHTML = hojeList.map(e => `
+    <div class="escala-item">
+      <div class="escala-time">
+        <div class="time-start">${new Date(e.data_inicio).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="time-end">até ${new Date(e.data_termino).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <div class="escala-divider"></div>
+      <div class="escala-info">
+        <div class="escala-idoso">${e.idosos?.nome || '—'}</div>
+        <div class="escala-cuidador">
+          <div class="status-dot ${e.status==='em_andamento'?'active':e.status==='concluido'?'':''}" aria-hidden="true"></div>
+          ${e.cuidadores?.usuarios?.nome || 'Sem cuidador(a)'}
+        </div>
+      </div>
+      <div class="escala-valor">R$ ${(e.valor_total||0).toFixed(0)}</div>
+    </div>
+  `).join('');
+}
+
+function populateSelects() {
+  // Select idosos no modal de escala
+  const selIdoso = document.getElementById('escIdoso');
+  if (selIdoso) {
+    allIdosos.forEach(i => selIdoso.add(new Option(i.nome, i.id)));
+  }
+  // Select cuidadores no modal de escala
+  const selCuidador = document.getElementById('escCuidador');
+  if (selCuidador) {
+    allCuidadores.forEach(c => selCuidador.add(new Option(c.usuarios?.nome || '—', c.id)));
+  }
+  // Select famílias no modal de idoso
+  const selFamilia = document.getElementById('idFamilia');
+  if (selFamilia) {
+    allFamilias.forEach(f => selFamilia.add(new Option(f.usuarios?.nome || '—', f.id)));
+  }
+}
+
+// ============================================================
+// FILTROS
+// ============================================================
+window.filterEscalas = () => {
+  const q = document.getElementById('searchEscalas')?.value.toLowerCase() || '';
+  const s = document.getElementById('filterEscalaStatus')?.value || '';
+  const filtered = allEscalas.filter(e =>
+    (!q || (e.idosos?.nome||'').toLowerCase().includes(q) || (e.cuidadores?.usuarios?.nome||'').toLowerCase().includes(q)) &&
+    (!s || e.status === s)
+  );
+  renderEscalas(filtered);
+};
+
+window.filterIdosos = () => {
+  const q = document.getElementById('searchIdosos')?.value.toLowerCase() || '';
+  renderIdosos(allIdosos.filter(i => i.nome.toLowerCase().includes(q)));
+};
+
+window.filterCuidadores = () => {
+  const q = document.getElementById('searchCuidadores')?.value.toLowerCase() || '';
+  renderCuidadores(allCuidadores.filter(c => (c.usuarios?.nome||'').toLowerCase().includes(q)));
+};
+
+window.filterCuidadorStatus = (status, el) => {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderCuidadores(status ? allCuidadores.filter(c => c.status === status) : allCuidadores);
+};
+
+// ============================================================
+// SUBMIT FORMS
+// ============================================================
+window.submitEscala = async (e) => {
+  e.preventDefault();
+  try {
+    const inicio  = document.getElementById('escInicio').value;
+    const termino = document.getElementById('escTermino').value;
+    const valorHora = parseFloat(document.getElementById('escValorHora').value || 0);
+    const horas = (new Date(termino) - new Date(inicio)) / 3600000;
+    const valorTotal = valorHora * horas;
+
+    const idosoId = document.getElementById('escIdoso').value;
+    const idosoObj = allIdosos.find(i => i.id === idosoId);
+
+    const cuidId = document.getElementById('escCuidador').value;
+    const cuidObj = allCuidadores.find(c => c.id === cuidId);
+
+    if (window._editingEscalaId) {
+      const idx = allEscalas.findIndex(x => x.id === window._editingEscalaId);
+      if (idx !== -1) {
+        allEscalas[idx] = {
+          ...allEscalas[idx],
+          idosos: { nome: idosoObj ? idosoObj.nome : '—' },
+          cuidadores: { usuarios: { nome: cuidObj ? cuidObj.usuarios.nome : '—' } },
+          data_inicio: new Date(inicio).toISOString(),
+          data_termino: new Date(termino).toISOString(),
+          valor_hora: valorHora,
+          valor_total: valorTotal,
+          observacoes: document.getElementById('escObs').value
+        };
+      }
+      window._editingEscalaId = null;
+      showToast('Escala atualizada com sucesso!', 'success');
+    } else {
+      const newEsc = {
+        id: 'e' + (allEscalas.length + 1),
+        idosos: { nome: idosoObj ? idosoObj.nome : '—' },
+        cuidadores: { usuarios: { nome: cuidObj ? cuidObj.usuarios.nome : '—' } },
+        data_inicio: new Date(inicio).toISOString(),
+        data_termino: new Date(termino).toISOString(),
+        valor_hora: valorHora,
+        valor_total: valorTotal,
+        status: 'agendado',
+        observacoes: document.getElementById('escObs').value
+      };
+      allEscalas.unshift(newEsc);
+      showToast('Escala criada com sucesso!', 'success');
+    }
+
+    closeModal('modalEscala');
+    renderEscalas(allEscalas);
+    renderEscalasHoje(allEscalas);
+    initCalendar(allEscalas);
+    loadDashboard();
+  } catch(err) {
+    showToast('Erro ao salvar escala: ' + err.message, 'error');
+  }
+};
+
+window.submitIdoso = async (e) => {
+  e.preventDefault();
+  try {
+    const famId = document.getElementById('idFamilia').value;
+    const famObj = allFamilias.find(f => f.id === famId);
+
+    const data = {
+      nome:             document.getElementById('idNome').value,
+      data_nascimento:  document.getElementById('idNasc').value || null,
+      genero:           document.getElementById('idGenero').value || null,
+      tipo_sanguineo:   document.getElementById('idSangue').value || null,
+      clientes_familia: { id: famId, usuarios: { nome: famObj ? famObj.usuarios.nome : 'Sem família' } },
+      restricoes_medicas: document.getElementById('idRestricoes').value,
+      alergias:         document.getElementById('idAlergias').value,
+      medicamentos:     document.getElementById('idMedicamentos').value,
+      medico_responsavel: document.getElementById('idMedico').value,
+      plano_saude:      document.getElementById('idPlano').value,
+      contato_emergencia: document.getElementById('idContEmer').value,
+      telefone_emergencia: document.getElementById('idFoneEmer').value,
+      observacoes:      document.getElementById('idObs').value,
+      perfil:           document.getElementById('idPerfil').value,
+      ativo:            true
+    };
+
+    if (window._editingIdosoId) {
+      const idx = allIdosos.findIndex(x => x.id === window._editingIdosoId);
+      if (idx !== -1) {
+        allIdosos[idx] = { ...allIdosos[idx], ...data };
+      }
+      window._editingIdosoId = null;
+      showToast('Assistido atualizado com sucesso!', 'success');
+    } else {
+      allIdosos.unshift({ id: String(allIdosos.length + 1), ...data });
+      showToast('Assistido cadastrado com sucesso!', 'success');
+    }
+
+    closeModal('modalIdoso');
+    renderIdosos(allIdosos);
+    populateSelects();
+    loadDashboard();
+  } catch(err) {
+    showToast('Erro ao salvar: ' + err.message, 'error');
+  }
+};
+
+window.submitCuidador = async (e) => {
+  e.preventDefault();
+  try {
+    const publico = [];
+    if (document.getElementById('cuidPublicoIdoso').checked) publico.push('idoso');
+    if (document.getElementById('cuidPublicoAutista').checked) publico.push('crianca_autista');
+
+    const data = {
+      status:           document.getElementById('cuidStatus').value,
+      valor_hora:       parseFloat(document.getElementById('cuidValor').value || 0),
+      formacao:         document.getElementById('cuidFormacao').value || 'Sem formação informada',
+      usuarios: {
+        nome:           document.getElementById('cuidNome').value,
+        email:          document.getElementById('cuidEmail').value
+      },
+      publico_atendido: publico
+    };
+
+    if (window._editingCuidadorId) {
+      const idx = allCuidadores.findIndex(x => x.id === window._editingCuidadorId);
+      if (idx !== -1) {
+        allCuidadores[idx] = { ...allCuidadores[idx], ...data };
+      }
+      window._editingCuidadorId = null;
+      showToast('Cuidador atualizado com sucesso!', 'success');
+    } else {
+      allCuidadores.unshift({
+        id: 'c' + (allCuidadores.length + 1),
+        avaliacao_media: 5.0,
+        ...data
+      });
+      showToast('Cuidador cadastrado com sucesso!', 'success');
+    }
+
+    closeModal('modalCuidador');
+    renderCuidadores(allCuidadores);
+    populateSelects();
+    loadDashboard();
+  } catch(err) {
+    showToast('Erro: ' + err.message, 'error');
+  }
+};
+
+window.submitFamilia = async (e) => {
+  e.preventDefault();
+  try {
+    const data = {
+      cidade: document.getElementById('famCidade').value,
+      estado: document.getElementById('famEstado').value,
+      celular: document.getElementById('famCelular').value,
+      usuarios: {
+        nome: document.getElementById('famNome').value,
+        email: document.getElementById('famEmail').value
+      }
+    };
+
+    if (window._editingFamiliaId) {
+      const idx = allFamilias.findIndex(x => x.id === window._editingFamiliaId);
+      if (idx !== -1) {
+        allFamilias[idx] = { ...allFamilias[idx], ...data };
+      }
+      window._editingFamiliaId = null;
+      showToast('Família atualizada com sucesso!', 'success');
+    } else {
+      allFamilias.unshift({ id: 'f' + (allFamilias.length + 1), ...data });
+      showToast('Família cadastrada com sucesso!', 'success');
+    }
+
+    closeModal('modalFamilia');
+    renderFamilias(allFamilias);
+    populateSelects();
+  } catch(err) {
+    showToast('Erro: ' + err.message, 'error');
+  }
+};
+
+// ============================================================
+// MODAIS
+// ============================================================
+window.openModal = (id) => {
+  document.getElementById(id)?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+window.closeModal = (id) => {
+  document.getElementById(id)?.classList.remove('open');
+  document.body.style.overflow = '';
+};
+window.openModalEscala  = () => openModal('modalEscala');
+window.openModalIdoso   = () => openModal('modalIdoso');
+window.openModalCuidador= () => openModal('modalCuidador');
+window.openModalFamilia = () => showToast('Modal de família em desenvolvimento', 'info');
+window.openQuickModal   = () => openModal('modalEscala');
+
+// Fecha modal ao clicar no overlay
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal(overlay.id);
+  });
+});
+
+// ============================================================
+// NAVEGAÇÃO POR SEÇÕES
+// ============================================================
+const SECTION_TITLES = {
+  dashboard: ['Dashboard', 'Visão geral do sistema'],
+  agenda:    ['Agenda de Plantões', 'Calendário de plantões'],
+  escalas:   ['Escalas de Serviço', 'Gestão de plantões'],
+  idosos:    ['Idosos', 'Cadastro e gestão de idosos'],
+  cuidadores:['Cuidadores', 'Equipe de cuidadores'],
+  familias:  ['Famílias', 'Clientes e familiares'],
+  relatorios:['Relatórios', 'Análises e faturamento'],
+};
+
+window.showSection = (name, el) => {
+  document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const section = document.getElementById(`section-${name}`);
+  if (section) section.style.display = '';
+  if (el) el.classList.add('active');
+  const [title, subtitle] = SECTION_TITLES[name] || [name, ''];
+  document.getElementById('pageTitle').textContent = title;
+  document.getElementById('pageSubtitle').textContent = subtitle;
+  if (name === 'agenda' && calendarInstance) {
+    setTimeout(() => calendarInstance.updateSize(), 200);
+  }
+  lucide.createIcons();
+  return false;
+};
+
+// ============================================================
+// SIDEBAR TOGGLE
+// ============================================================
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// ============================================================
+// TABS DE FORMULÁRIO
+// ============================================================
+window.showFormTab = (id, el) => {
+  const form = el.closest('form');
+  form.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  form.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+  el.classList.add('active');
+};
+
+// ============================================================
+// TOGGLE VIEW IDOSOS
+// ============================================================
+let idososViewCards = true;
+window.toggleIdososView = () => {
+  idososViewCards = !idososViewCards;
+  document.getElementById('idososCards').style.display = idososViewCards ? 'grid' : 'none';
+  document.getElementById('idososTable').style.display = idososViewCards ? 'none' : '';
+  const btn = document.getElementById('viewToggleIdosos');
+  btn.innerHTML = idososViewCards
+    ? '<i data-lucide="grid" aria-hidden="true"></i> Cards'
+    : '<i data-lucide="list" aria-hidden="true"></i> Lista';
+  lucide.createIcons();
+};
+
+// ============================================================
+// RELATÓRIOS
+// ============================================================
+window.gerarRelatorio = () => {
+  document.getElementById('rel-total-escalas').textContent = allEscalas.length;
+  const horas = allEscalas.reduce((acc, e) => acc + (new Date(e.data_termino) - new Date(e.data_inicio)) / 3600000, 0);
+  document.getElementById('rel-horas').textContent = horas.toFixed(0) + 'h';
+  const fat = allEscalas.reduce((acc, e) => acc + (e.valor_total || 0), 0);
+  document.getElementById('rel-faturamento').textContent = 'R$ ' + fat.toLocaleString('pt-BR', {minimumFractionDigits:2});
+  document.getElementById('rel-ticket').textContent = allEscalas.length ? 'R$ ' + (fat/allEscalas.length).toFixed(2) : '—';
+  showToast('Relatório gerado!', 'success');
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+window.showToast = (msg, type='info', dur=4000) => {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span style="font-size:.9rem">${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity='0'; toast.style.transform='translateX(100%)'; toast.style.transition='all .3s'; setTimeout(()=>toast.remove(), 300); }, dur);
+};
+
+window.openModalFamilia = () => {
+  window._editingFamiliaId = null;
+  document.getElementById('formFamilia').reset();
+  document.getElementById('modalFamiliaTitle').textContent = 'Cadastrar Família';
+  openModal('modalFamilia');
+};
+
+window.editCuidador = (id) => {
+  const c = allCuidadores.find(x => x.id === id);
+  if (!c) return;
+  window._editingCuidadorId = id;
+  document.getElementById('modalCuidadorTitle').textContent = 'Editar Cuidador(a)';
+  document.getElementById('cuidNome').value = c.usuarios?.nome || '';
+  document.getElementById('cuidEmail').value = c.usuarios?.email || '';
+  document.getElementById('cuidValor').value = c.valor_hora || '';
+  document.getElementById('cuidFormacao').value = c.formacao || '';
+  document.getElementById('cuidStatus').value = c.status || 'ativo';
+  document.getElementById('cuidPublicoIdoso').checked = c.publico_atendido?.includes('idoso');
+  document.getElementById('cuidPublicoAutista').checked = c.publico_atendido?.includes('crianca_autista');
+  openModal('modalCuidador');
+};
+
+window.deleteCuidador = (id) => {
+  if (confirm('Deseja realmente desativar/excluir este(a) cuidador(a)?')) {
+    allCuidadores = allCuidadores.filter(x => x.id !== id);
+    renderCuidadores(allCuidadores);
+    populateSelects();
+    loadDashboard();
+    showToast('Cuidador(a) desativado(a) com sucesso.', 'success');
+  }
+};
+
+window.editIdoso = (id) => {
+  const i = allIdosos.find(x => x.id === id);
+  if (!i) return;
+  window._editingIdosoId = id;
+  document.getElementById('modalIdosoTitle').textContent = 'Editar Assistido';
+  document.getElementById('idNome').value = i.nome || '';
+  document.getElementById('idNasc').value = i.data_nascimento || '';
+  document.getElementById('idPerfil').value = i.perfil || 'idoso';
+  document.getElementById('idFamilia').value = i.clientes_familia?.id || '';
+  document.getElementById('idGenero').value = i.genero || '';
+  document.getElementById('idSangue').value = i.tipo_sanguineo || '';
+  document.getElementById('idRestricoes').value = i.restricoes_medicas || '';
+  document.getElementById('idAlergias').value = i.alergias || '';
+  document.getElementById('idMedicamentos').value = i.medicamentos || '';
+  document.getElementById('idMedico').value = i.medico_responsavel || '';
+  document.getElementById('idPlano').value = i.plano_saude || '';
+  document.getElementById('idContEmer').value = i.contato_emergencia || '';
+  document.getElementById('idFoneEmer').value = i.telefone_emergencia || '';
+  document.getElementById('idObs').value = i.observacoes || '';
+  openModal('modalIdoso');
+};
+
+window.viewIdoso = (id) => {
+  const i = allIdosos.find(x => x.id === id);
+  if (!i) return;
+  const idade = i.data_nascimento ? Math.floor((Date.now() - new Date(i.data_nascimento)) / (365.25*24*3600000)) : '—';
+
+  // Exibe informações de forma limpa em um overlay/toast customizado
+  const div = document.createElement('div');
+  div.id = 'temp-view-idoso';
+  div.style.position = 'fixed';
+  div.style.top = '0'; div.style.left = '0';
+  div.style.width = '100vw'; div.style.height = '100vh';
+  div.style.background = 'rgba(0,0,0,0.5)';
+  div.style.display = 'flex'; div.style.justifyContent = 'center'; div.style.alignItems = 'center';
+  div.style.zIndex = '10000';
+  div.onclick = () => div.remove();
+
+  div.innerHTML = `
+    <div class="modal open" style="max-width: 500px; padding: 24px; position: relative;" onclick="event.stopPropagation()">
+      <button class="modal-close" style="position: absolute; right: 16px; top: 16px;" onclick="document.getElementById('temp-view-idoso').remove()">✕</button>
+      <h2 style="margin-bottom: 16px;">👵 Ficha do Assistido</h2>
+      <p style="margin: 6px 0;"><strong>Nome:</strong> ${i.nome}</p>
+      <p style="margin: 6px 0;"><strong>Idade:</strong> ${idade} anos (${i.data_nascimento || '—'})</p>
+      <p style="margin: 6px 0;"><strong>Gênero:</strong> ${i.genero || '—'} · <strong>Sangue:</strong> ${i.tipo_sanguineo || '—'}</p>
+      <p style="margin: 6px 0;"><strong>Responsável:</strong> ${i.clientes_familia?.usuarios?.nome || '—'}</p>
+      <hr style="margin: 12px 0; border: 0; border-top: 1px solid var(--border-color);" />
+      <p style="margin: 6px 0;"><strong>⚠️ Restrições:</strong> ${i.restricoes_medicas || 'Nenhuma'}</p>
+      <p style="margin: 6px 0;"><strong>🚫 Alergias:</strong> ${i.alergias || 'Nenhuma'}</p>
+      <p style="margin: 6px 0;"><strong>💊 Medicamentos:</strong> ${i.medicamentos || 'Nenhum'}</p>
+      <p style="margin: 6px 0;"><strong>📞 Emergência:</strong> ${i.contato_emergencia || '—'} (${i.telefone_emergencia || '—'})</p>
+    </div>
+  `;
+  document.body.appendChild(div);
+};
+
+window.editEscala = (id) => {
+  const e = allEscalas.find(x => x.id === id);
+  if (!e) return;
+  window._editingEscalaId = id;
+  document.getElementById('modalEscalaTitle').textContent = 'Editar Escala de Serviço';
+
+  // Encontra os ids nos selects correspondentes buscando por nome
+  const idoso = allIdosos.find(i => i.nome === e.idosos?.nome);
+  const cuid = allCuidadores.find(c => c.usuarios?.nome === e.cuidadores?.usuarios?.nome);
+
+  document.getElementById('escIdoso').value = idoso ? idoso.id : '';
+  document.getElementById('escCuidador').value = cuid ? cuid.id : '';
+
+  // Converte ISO para datetime-local input string (YYYY-MM-DDTHH:MM)
+  if (e.data_inicio) {
+    document.getElementById('escInicio').value = new Date(e.data_inicio).toISOString().substring(0, 16);
+  }
+  if (e.data_termino) {
+    document.getElementById('escTermino').value = new Date(e.data_termino).toISOString().substring(0, 16);
+  }
+
+  document.getElementById('escValorHora').value = e.valor_hora || 45;
+  document.getElementById('escValorTotal').value = e.valor_total || '';
+  document.getElementById('escObs').value = e.observacoes || '';
+  openModal('modalEscala');
+};
+
+window.cancelarEscala = (id) => {
+  if (confirm('Deseja realmente cancelar esta escala?')) {
+    const esc = allEscalas.find(x => x.id === id);
+    if (esc) {
+      esc.status = 'cancelado';
+      renderEscalas(allEscalas);
+      renderEscalasHoje(allEscalas);
+      initCalendar(allEscalas);
+      loadDashboard();
+      showToast('Escala cancelada com sucesso.', 'warning');
+    }
+  }
+};
+
+window.editFamilia = (id) => {
+  const f = allFamilias.find(x => x.id === id);
+  if (!f) return;
+  window._editingFamiliaId = id;
+  document.getElementById('modalFamiliaTitle').textContent = 'Editar Família';
+  document.getElementById('famNome').value = f.usuarios?.nome || '';
+  document.getElementById('famEmail').value = f.usuarios?.email || '';
+  document.getElementById('famCelular').value = f.celular || '';
+  document.getElementById('famCidade').value = f.cidade || '';
+  document.getElementById('famEstado').value = f.estado || '';
+  openModal('modalFamilia');
+};
+
+// Calcular valor total automaticamente
+document.getElementById('escValorHora')?.addEventListener('input', calcularTotal);
+document.getElementById('escInicio')?.addEventListener('change', calcularTotal);
+document.getElementById('escTermino')?.addEventListener('change', calcularTotal);
+
+function calcularTotal() {
+  const ini = document.getElementById('escInicio').value;
+  const fim = document.getElementById('escTermino').value;
+  const vh  = parseFloat(document.getElementById('escValorHora').value || 0);
+  if (ini && fim && vh) {
+    const horas = (new Date(fim) - new Date(ini)) / 3600000;
+    document.getElementById('escValorTotal').value = (vh * horas).toFixed(2);
+  }
+}
+</script>
+
+</body>
+</html>

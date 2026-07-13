@@ -1,0 +1,17 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/login", "destination": "/index.html" },
+    { "source": "/cuidador", "destination": "/dashboard-cuidador.html" },
+    { "source": "/familia", "destination": "/dashboard-familia.html" },
+    { "source": "/admin", "destination": "/dashboard-admin.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ]
+}

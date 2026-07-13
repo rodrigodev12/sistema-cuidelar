@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CuideLar — Painel Cuidador(a)</title>
+  <meta name="description" content="Painel do(a) cuidador(a) CuideLar: check-in, checklist de atividades e diário de cuidados." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/cuidador.css" />
+
+  <!-- Auth Guard Demo -->
+  <script>
+    (function() {
+      var raw = sessionStorage.getItem('cuideLar_user');
+      if (!raw) { window.location.href = 'index.html'; return; }
+      try {
+        var u = JSON.parse(raw);
+        if (!u || u.tipo !== 'cuidador') { window.location.href = 'index.html'; }
+        window.__cuideLarUser = u;
+      } catch(e) { window.location.href = 'index.html'; }
+    })();
+    window.cuideLarLogout = function() {
+      sessionStorage.removeItem('cuideLar_user');
+      window.location.href = 'index.html';
+    };
+    window.protectRoute = async function(roles) { return window.__cuideLarUser || null; };
+  </script>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+
+<div class="cuidador-layout" id="cuidadorLayout">
+
+  <!-- HEADER -->
+  <header class="cuidador-header">
+    <div class="header-logo">🏠 CuideLar</div>
+    <div class="header-actions">
+      <div class="avatar" id="userAvatar" style="width:34px;height:34px;font-size:.85rem;">C</div>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="cuideLarLogout()" aria-label="Sair">
+        <i data-lucide="log-out" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================
+       SEÇÃO: MEU DIA
+       ============================ -->
+  <div class="section-content" id="section-meudia">
+
+    <!-- Próximo Plantão Banner -->
+    <div class="next-shift-banner animate-fade-in-up">
+      <div class="shift-label">🌅 Próximo Plantão</div>
+      <div class="shift-time" id="shift-time">08:00 – 14:00</div>
+      <div class="shift-date" id="shift-date">Hoje, segunda-feira · 7 de julho</div>
+      <div class="shift-patient">
+        <div class="shift-patient-avatar" id="shift-patient-avatar">👴</div>
+        <div class="shift-patient-info">
+          <div class="patient-name" id="shift-patient-name">Maria das Graças Oliveira</div>
+          <div class="patient-addr" id="shift-patient-addr">📍 Rua das Flores, 123 — São Paulo/SP</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats do Dia -->
+    <div class="meu-dia-container">
+
+      <div class="greeting-card animate-fade-in-up delay-100">
+        <div class="greeting-emoji" id="greetingEmoji">👋</div>
+        <div class="greeting-text">
+          <h2 id="greetingText">Bom dia, Cuidador(a)!</h2>
+          <p id="greetingDate">Você tem 1 plantão hoje</p>
+          <button class="btn btn-secondary btn-sm" onclick="alternarDemoPaciente()" style="margin-top:0.625rem; font-size:0.75rem; padding: 0.25rem 0.5rem; width: fit-content; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; gap: 4px;">
+            <span>🔄</span> Alternar Paciente (Idoso / Autista)
+          </button>
+        </div>
+      </div>
+
+      <div class="day-summary-grid animate-fade-in-up delay-200">
+        <div class="day-stat">
+          <div class="day-stat-value" id="stat-plantoes">1</div>
+          <div class="day-stat-label">Plantões Hoje</div>
+        </div>
+        <div class="day-stat">
+          <div class="day-stat-value" id="stat-horas">6h</div>
+          <div class="day-stat-label">Horas Hoje</div>
+        </div>
+        <div class="day-stat">
+          <div class="day-stat-value" id="stat-ganhos">R$270</div>
+          <div class="day-stat-label">Ganhos Hoje</div>
+        </div>
+      </div>
+
+      <!-- Card do Assistido -->
+      <div class="escala-do-dia animate-fade-in-up delay-300">
+        <div class="escala-do-dia-header">
+          <span class="escala-do-dia-title" id="escala-do-dia-title">👴 Paciente do Dia</span>
+          <span class="badge badge-info" id="escala-status-badge">Agendado</span>
+        </div>
+        <div class="escala-do-dia-body">
+          <div class="idoso-detail">
+            <div class="idoso-detail-photo" id="idoso-photo">👴</div>
+            <div class="idoso-detail-info">
+              <h3 id="idoso-nome">Maria das Graças Oliveira</h3>
+              <div class="idoso-detail-meta">
+                <span>🎂 83 anos · Tipo A+</span>
+                <span>👨‍⚕️ Dr. Carlos Souza</span>
+                <span>🏥 Plano Amil Premium</span>
+              </div>
+            </div>
+          </div>
+          <div class="idoso-alert-pills" id="idoso-pills">
+            <span class="alert-pill alergias">⚠️ Alergia Penicilina</span>
+            <span class="alert-pill restricao">🦽 Mobilidade reduzida</span>
+            <span class="alert-pill medicamento">💊 Losartana 08h/20h</span>
+          </div>
+          <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+            <div style="font-size:.8rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Medicamentos Contínuos</div>
+            <div id="medicamentos-lista" style="font-size:.9rem;color:var(--text-secondary);">
+              • Losartana 50mg — 1 comp. às 08h e 20h<br>
+              • Metformina 850mg — 1 comp. após almoço<br>
+              • Omeprazol 20mg — 1 comp. em jejum
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================
+       SEÇÃO: CHECK-IN
+       ============================ -->
+  <div class="section-content" id="section-checkin" style="display:none">
+    <div class="section-title-bar">
+      <div class="section-title">Bater Ponto</div>
+      <div class="section-subtitle">Registre sua presença com geolocalização</div>
+    </div>
+    <div class="checkin-section">
+      <div class="checkin-card">
+        <!-- Mapa -->
+        <div class="checkin-map" id="checkinMap">
+          <div class="map-pin" id="mapPin">📍</div>
+          <div class="map-coords" id="mapCoords">Aguardando localização...</div>
+        </div>
+        <!-- Body -->
+        <div class="checkin-body">
+          <div class="checkin-status">
+            <div class="checkin-status-label">
+              <div class="status-dot" id="statusDot" aria-hidden="true"></div>
+              <span id="statusLabel">Fora do plantão</span>
+            </div>
+            <div class="checkin-timer" id="checkinTimer" aria-live="polite">--:--:--</div>
+          </div>
+
+          <button class="btn-checkin check-in" id="checkinBtn" onclick="handleCheckin()">
+            <i data-lucide="log-in" aria-hidden="true"></i>
+            <span id="checkinBtnText">Iniciar Plantão (Check-in)</span>
+          </button>
+
+          <div style="margin-top:.75rem;padding:.75rem;background:var(--bg-input);border-radius:var(--radius-md);font-size:.8125rem;color:var(--text-secondary);">
+            <div id="checkinInfo">
+              Sua localização será registrada ao bater o ponto.<br>A família e o administrador serão notificados.
+            </div>
+            <div id="checkinDetails" style="display:none">
+              <div>✅ <strong>Check-in:</strong> <span id="checkinHora">—</span></div>
+              <div id="checkoutRow" style="display:none">🔴 <strong>Check-out:</strong> <span id="checkoutHora">—</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================
+       SEÇÃO: CHECKLIST
+       ============================ -->
+  <div class="section-content" id="section-checklist" style="display:none">
+    <div class="section-title-bar">
+      <div class="section-title">Atividades do Plantão</div>
+      <div class="section-subtitle" id="checklistSubtitle">Marque as tarefas conforme forem concluídas</div>
+    </div>
+    <div class="checklist-container">
+      <!-- Progress -->
+      <div class="checklist-header">
+        <span style="font-weight:700;font-size:.9375rem;">Progresso</span>
+        <span class="checklist-progress" id="checklistProgress">0 / 0 concluídas</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+
+      <!-- Lista de atividades -->
+      <div id="checklistItems"></div>
+
+      <!-- Adicionar atividade -->
+      <div style="margin-top:1rem;">
+        <div class="input-group">
+          <i data-lucide="plus" class="input-icon" aria-hidden="true"></i>
+          <input type="text" class="form-input" id="newActivityInput" placeholder="Adicionar atividade..." />
+        </div>
+        <button class="btn btn-secondary w-full mt-2" onclick="addActivity()">
+          Adicionar Tarefa
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================
+       SEÇÃO: DIÁRIO DE CUIDADOS
+       ============================ -->
+  <div class="section-content" id="section-diario" style="display:none">
+    <div class="section-title-bar">
+      <div class="section-title">Diário de Cuidados</div>
+      <div class="section-subtitle">Registre os cuidados prestados</div>
+    </div>
+    <div class="diario-container">
+
+      <!-- Sinais Vitais -->
+      <div class="diario-card">
+        <div class="diario-section-title">💓 Sinais Vitais</div>
+        <div class="vitais-grid">
+          <div class="vital-input-group">
+            <label class="vital-label" for="vitBat">Batimentos (bpm)</label>
+            <input type="number" class="vital-input" id="vitBat" placeholder="75" min="30" max="250" aria-label="Batimentos cardíacos" />
+          </div>
+          <div class="vital-input-group">
+            <label class="vital-label" for="vitPA">Pressão Arterial</label>
+            <input type="text" class="vital-input" id="vitPA" placeholder="120/80" aria-label="Pressão arterial" />
+          </div>
+          <div class="vital-input-group">
+            <label class="vital-label" for="vitTemp">Temperatura (°C)</label>
+            <input type="number" class="vital-input" id="vitTemp" placeholder="36.5" step="0.1" min="34" max="42" aria-label="Temperatura" />
+          </div>
+          <div class="vital-input-group">
+            <label class="vital-label" for="vitSat">Saturação O₂ (%)</label>
+            <input type="number" class="vital-input" id="vitSat" placeholder="98" min="50" max="100" aria-label="Saturação de oxigênio" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Alimentação -->
+      <div class="diario-card">
+        <div class="diario-section-title">🍽️ Alimentação & Hidratação</div>
+        <div style="margin-bottom:.75rem;">
+          <div style="font-size:.8rem;color:var(--text-muted);font-weight:600;margin-bottom:.5rem;">ALIMENTAÇÃO</div>
+          <div class="option-chips" id="alimentacaoChips">
+            <button class="option-chip" onclick="selectChip(this,'alimentacao')" data-value="aceitou">✅ Aceitou</button>
+            <button class="option-chip" onclick="selectChip(this,'alimentacao')" data-value="parcial">⚠️ Parcial</button>
+            <button class="option-chip" onclick="selectChip(this,'alimentacao')" data-value="recusou">❌ Recusou</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:.8rem;color:var(--text-muted);font-weight:600;margin-bottom:.5rem;">HIDRATAÇÃO</div>
+          <div class="option-chips" id="hidratacaoChips">
+            <button class="option-chip" onclick="selectChip(this,'hidratacao')" data-value="boa">💧 Boa</button>
+            <button class="option-chip" onclick="selectChip(this,'hidratacao')" data-value="regular">⚠️ Regular</button>
+            <button class="option-chip" onclick="selectChip(this,'hidratacao')" data-value="insuficiente">🚨 Insuficiente</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medicamentos -->
+      <div class="diario-card">
+        <div class="diario-section-title">💊 Medicamentos</div>
+        <div class="toggle-row">
+          <span class="toggle-label">Medicamentos administrados</span>
+          <label class="toggle-switch" aria-label="Medicamentos administrados">
+            <input type="checkbox" id="medToggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <textarea class="form-textarea" id="medLista" rows="2" placeholder="Quais medicamentos foram administrados..."></textarea>
+      </div>
+
+      <!-- Humor -->
+      <div class="diario-card">
+        <div class="diario-section-title">😊 Humor do Paciente</div>
+        <div class="option-chips" id="humorChips">
+          <button class="option-chip" onclick="selectChip(this,'humor')" data-value="otimo">😄 Ótimo</button>
+          <button class="option-chip" onclick="selectChip(this,'humor')" data-value="bom">😊 Bom</button>
+          <button class="option-chip" onclick="selectChip(this,'humor')" data-value="regular">😐 Regular</button>
+          <button class="option-chip" onclick="selectChip(this,'humor')" data-value="agitado">😤 Agitado</button>
+          <button class="option-chip" onclick="selectChip(this,'humor')" data-value="sonolento">😴 Sonolento</button>
+          <button class="option-chip" onclick="selectChip(this,'humor')" data-value="triste">😢 Triste</button>
+        </div>
+      </div>
+
+      <!-- Banho -->
+      <div class="diario-card">
+        <div class="diario-section-title">🚿 Higiene</div>
+        <div class="toggle-row">
+          <span class="toggle-label">Banho realizado</span>
+          <label class="toggle-switch" aria-label="Banho realizado">
+            <input type="checkbox" id="banhoToggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Foto + Observações -->
+      <div class="diario-card">
+        <div class="diario-section-title">📷 Foto & Observações</div>
+        <div class="foto-upload" onclick="document.getElementById('fotoInput').click()" role="button" tabindex="0" aria-label="Adicionar foto">
+          <div class="foto-upload-icon">📸</div>
+          <div class="foto-upload-text">Toque para adicionar uma foto</div>
+        </div>
+        <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none;" onchange="previewFoto(this)" />
+        <img id="fotoPreview" class="foto-preview" alt="Preview da foto" />
+        <div style="margin-top:.875rem;">
+          <textarea class="form-textarea" id="obsGerais" rows="4" placeholder="Observações gerais: como foi o plantão, comportamento do paciente, intercorrências..."></textarea>
+        </div>
+      </div>
+
+      <!-- Botão Salvar -->
+      <button class="btn btn-primary btn-lg w-full" onclick="salvarDiario()" id="salvarDiarioBtn">
+        <i data-lucide="save" aria-hidden="true"></i>
+        Salvar Registro
+      </button>
+
+      <!-- Histórico -->
+      <div style="margin-top:1.5rem;">
+        <div style="font-weight:700;font-size:.9rem;margin-bottom:.75rem;color:var(--text-secondary);">📋 REGISTROS ANTERIORES HOJE</div>
+        <div id="historicoList"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="mobile-nav" aria-label="Navegação principal">
+  <button class="mobile-nav-item active" id="nav-meudia" onclick="showCuidadorSection('meudia', this)" aria-current="page">
+    <div class="nav-icon-wrap"><i data-lucide="home" aria-hidden="true"></i></div>
+    <span class="mobile-nav-label">Meu Dia</span>
+  </button>
+  <button class="mobile-nav-item" id="nav-checkin" onclick="showCuidadorSection('checkin', this)">
+    <div class="nav-icon-wrap"><i data-lucide="map-pin" aria-hidden="true"></i></div>
+    <span class="mobile-nav-label">Check-in</span>
+  </button>
+  <button class="mobile-nav-item" id="nav-checklist" onclick="showCuidadorSection('checklist', this)">
+    <div class="nav-icon-wrap"><i data-lucide="check-square" aria-hidden="true"></i></div>
+    <span class="mobile-nav-label">Checklist</span>
+  </button>
+  <button class="mobile-nav-item" id="nav-diario" onclick="showCuidadorSection('diario', this)">
+    <div class="nav-icon-wrap"><i data-lucide="clipboard" aria-hidden="true"></i></div>
+    <span class="mobile-nav-label">Diário</span>
+  </button>
+</nav>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script>
+// ============================================================
+// STUB SUPABASE (demo) + Persistência localStorage
+// ============================================================
+const supabase = {
+  from: () => ({
+    select: function(){return this;}, eq: function(){return this;},
+    neq: function(){return this;}, gte: function(){return this;},
+    lte: function(){return this;}, order: function(){return this;},
+    limit: function(){return this;},
+    insert: async function(){return {data:null,error:null};},
+    update: async function(){return {data:null,error:null};},
+    single: async function(){return {data:null,error:null};},
+    then: function(r){r({data:null,error:null});return this;}
+  }),
+  channel: () => ({on:function(){return this;},subscribe:function(){return this;}}),
+  auth: {getSession: async()=>({data:{session:null}})}
+};
+
+// BroadcastChannel para comunicação cross-tab
+let _bc = null;
+try { _bc = new BroadcastChannel('cuidelar_channel'); } catch(e) {}
+function _publishUpdate(type, payload) {
+  const msg = { type, payload, ts: Date.now() };
+  if (_bc) _bc.postMessage(msg);
+  localStorage.setItem('cl_last_update', JSON.stringify(msg));
+}
+
+const registrarCheckin = async (id, lat, lng) => {
+  const estado = { id, lat, lng, hora: new Date().toISOString(), ativo: true,
+    cuidadorNome: (window.__cuideLarUser||{}).nome || 'Cuidador(a)' };
+  localStorage.setItem('cl_checkin', JSON.stringify(estado));
+  _publishUpdate('checkin', estado);
+};
+const registrarCheckout = async (id, lat, lng) => {
+  const estado = JSON.parse(localStorage.getItem('cl_checkin') || '{}');
+  estado.ativo = false; estado.horaOut = new Date().toISOString();
+  localStorage.setItem('cl_checkin', JSON.stringify(estado));
+  _publishUpdate('checkout', estado);
+};
+const insertDiario = async (d) => {
+  const key = 'cl_diario_' + (d.id_escala || 'demo');
+  const entries = JSON.parse(localStorage.getItem(key) || '[]');
+  const entry = { ...d, id: 'local-' + Date.now(), horario: new Date().toISOString() };
+  entries.unshift(entry);
+  localStorage.setItem(key, JSON.stringify(entries.slice(0,50)));
+  _publishUpdate('diario', entry);
+  return entry;
+};
+const listenDiario = () => ({on:function(){return this;},subscribe:function(){return this;}});
+</script>
+
+<script>
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser     = null;
+let currentEscala   = null;
+let checkinActive   = false;
+let checkinStart    = null;
+let timerInterval   = null;
+let escalaPendingId = null;
+let selectedValues  = { alimentacao: null, hidratacao: null, humor: null };
+let checklistData   = [];
+let diarioHistorico = [];
+let userCoords      = { lat: null, lng: null };
+
+const LS_CHECKIN   = 'cl_checkin';
+const LS_CHECKLIST = 'cl_checklist';
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = await protectRoute(['cuidador']);
+  if (!currentUser) return;
+
+  lucide.createIcons();
+
+  // Greeting
+  const hour = new Date().getHours();
+  const emoji = hour < 12 ? '🌅' : hour < 18 ? '☀️' : '🌙';
+  const gday  = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  document.getElementById('greetingEmoji').textContent = emoji;
+  document.getElementById('greetingText').textContent  = `${gday}, ${currentUser.nome?.split(' ')[0] || 'Cuidador(a)'}!`;
+  document.getElementById('userAvatar').textContent    = (currentUser.nome || 'C')[0].toUpperCase();
+
+  // Data do turno
+  const hoje = new Date();
+  document.getElementById('shift-date').textContent    = hoje.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('greetingDate').textContent  = hoje.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
+
+  // Carrega escala do cuidador
+  await loadEscalaCuidador();
+
+  // Carrega checklist e restaura estado salvo
+  loadDefaultChecklist();
+  restoreChecklist();
+
+  // Restaura estado de check-in persistido
+  restoreCheckinState();
+
+  // Geolocalização
+  getLocation();
+});
+
+// ============================================================
+// PERSISTÊNCIA: RESTAURAR CHECKIN
+// ============================================================
+function restoreCheckinState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_CHECKIN) || 'null');
+    if (!saved) return;
+
+    // Verifica se é do mesmo dia
+    const savedDay = new Date(saved.hora).toDateString();
+    if (savedDay !== new Date().toDateString()) {
+      localStorage.removeItem(LS_CHECKIN);
+      return;
+    }
+
+    if (saved.ativo) {
+      checkinActive   = true;
+      checkinStart    = new Date(saved.hora);
+      escalaPendingId = saved.id || escalaPendingId;
+
+      document.getElementById('checkinHora').textContent      = fmtDateTime(checkinStart);
+      document.getElementById('checkinDetails').style.display = 'block';
+      document.getElementById('checkinInfo').style.display    = 'none';
+      if (saved.lat) document.getElementById('mapCoords').textContent =
+        `${Number(saved.lat).toFixed(5)}, ${Number(saved.lng).toFixed(5)}`;
+      updateCheckinUI(true);
+      startTimer(checkinStart);
+
+      // Badge da escala
+      const badge = document.getElementById('escala-status-badge');
+      badge.className   = 'badge badge-info';
+      badge.textContent = 'em andamento';
+    } else if (saved.horaOut) {
+      // Checkout já feito hoje
+      checkinActive = false;
+      updateCheckinUI(false, true);
+      document.getElementById('checkinDetails').style.display = 'block';
+      document.getElementById('checkinInfo').style.display    = 'none';
+      document.getElementById('checkinHora').textContent      = fmtDateTime(new Date(saved.hora));
+      document.getElementById('checkoutRow').style.display    = 'block';
+      document.getElementById('checkoutHora').textContent     = fmtDateTime(new Date(saved.horaOut));
+    }
+  } catch(e) { console.error('restoreCheckinState:', e); }
+}
+
+// ============================================================
+// PERSISTÊNCIA: CHECKLIST
+// ============================================================
+function restoreChecklist() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_CHECKLIST) || 'null');
+    if (!saved || saved.day !== new Date().toDateString()) return;
+    saved.items.forEach(si => {
+      const item = checklistData.find(i => i.id === si.id);
+      if (item) item.done = si.done;
+    });
+    renderChecklist();
+  } catch(e) { console.error('restoreChecklist:', e); }
+}
+
+function saveChecklistState() {
+  const data = { day: new Date().toDateString(),
+    items: checklistData.map(i => ({ id: i.id, done: i.done })) };
+  localStorage.setItem(LS_CHECKLIST, JSON.stringify(data));
+}
+
+// ============================================================
+// ESCALA DO CUIDADOR
+// ============================================================
+async function loadEscalaCuidador() {
+  try {
+    const { data: cuidador } = await supabase
+      .from('cuidadores')
+      .select('id')
+      .eq('id_usuario', currentUser.id)
+      .single();
+
+    if (!cuidador) { showDemoData(); return; }
+
+    const hoje = new Date().toISOString().split('T')[0];
+    const { data: escalas } = await supabase
+      .from('escalas_servicos')
+      .select('*, idosos(*)')
+      .eq('id_cuidador', cuidador.id)
+      .gte('data_inicio', hoje + 'T00:00:00')
+      .lte('data_inicio', hoje + 'T23:59:59')
+      .order('data_inicio')
+      .limit(1);
+
+    if (escalas?.length) {
+      currentEscala = escalas[0];
+      escalaPendingId = currentEscala.id;
+      updateEscalaUI(currentEscala);
+      await loadHistorico();
+    } else {
+      showDemoData();
+    }
+  } catch(e) {
+    showDemoData();
+  }
+}
+
+let currentDemoProfile = 'idoso';
+
+window.alternarDemoPaciente = () => {
+  currentDemoProfile = currentDemoProfile === 'idoso' ? 'autista' : 'idoso';
+  showDemoData();
+  showToast(`Paciente demo alterado para: ${currentDemoProfile === 'idoso' ? 'Maria das Graças (Idoso)' : 'Enzo Gabriel (Criança Autista)'}`, 'info');
+};
+
+function showDemoData() {
+  // Dados demo para visualização
+  const demoEscala = {
+    id: 'demo',
+    data_inicio: new Date().setHours(8,0,0,0),
+    data_termino: new Date().setHours(14,0,0,0),
+    valor_hora: 45,
+    valor_total: 270,
+    status: 'agendado',
+    idosos: currentDemoProfile === 'idoso' ? {
+      nome: 'Maria das Graças Oliveira',
+      data_nascimento: '1942-05-10',
+      tipo_sanguineo: 'A+',
+      restricoes_medicas: 'Hipertensão, Diabetes',
+      alergias: 'Penicilina',
+      medicamentos: 'Losartana 50mg — 08h/20h\nMetformina 850mg — após almoço\nOmeprazol 20mg — em jejum',
+      medico_responsavel: 'Dr. Carlos Souza',
+      plano_saude: 'Amil Premium',
+      perfil: 'idoso'
+    } : {
+      nome: 'Enzo Gabriel Neto',
+      data_nascimento: '2018-03-15',
+      tipo_sanguineo: 'O+',
+      restricoes_medicas: 'Hipersensibilidade auditiva, Necessidade de rotina previsível',
+      alergias: 'Glúten, Lactose',
+      medicamentos: 'Suplemento Vitamínino D — 10 gotas às 09h\nMelatonina — 3 gotas às 21h',
+      medico_responsavel: 'Dra. Paula Ramos (Pediatra)',
+      plano_saude: 'Unimed Kids',
+      perfil: 'crianca_autista'
+    }
+  };
+  currentEscala = demoEscala;
+  updateEscalaUI(demoEscala);
+  showDemoHistorico();
+}
+
+function updateEscalaUI(escala) {
+  const ini = new Date(escala.data_inicio);
+  const fim = new Date(escala.data_termino);
+  const horas = (fim - ini) / 3600000;
+  const idoso = escala.idosos;
+
+  document.getElementById('shift-time').textContent = `${fmtHora(ini)} – ${fmtHora(fim)}`;
+  document.getElementById('stat-plantoes').textContent = '1';
+  document.getElementById('stat-horas').textContent = horas.toFixed(0) + 'h';
+  document.getElementById('stat-ganhos').textContent = 'R$' + (escala.valor_total || 0).toFixed(0);
+
+  const badge = document.getElementById('escala-status-badge');
+  const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
+  badge.className = `badge ${statusMap[escala.status] || 'badge-neutral'}`;
+  badge.textContent = escala.status?.replace('_',' ') || '—';
+
+  if (idoso) {
+    document.getElementById('idoso-nome').textContent = idoso.nome;
+    document.getElementById('shift-patient-name').textContent = idoso.nome;
+
+    const idade = idoso.data_nascimento
+      ? Math.floor((Date.now() - new Date(idoso.data_nascimento)) / (365.25*24*3600000))
+      : '—';
+
+    const isAutista = idoso.perfil === 'crianca_autista';
+    const defaultEmoji = isAutista ? '🧩' : (idoso.genero === 'feminino' ? '👵' : '👴');
+    
+    document.getElementById('shift-patient-avatar').textContent = defaultEmoji;
+    document.getElementById('escala-do-dia-title').textContent = `${isAutista ? '🧩 Criança Assistida' : '👵 Paciente'} do Dia`;
+    document.getElementById('idoso-photo').textContent = defaultEmoji;
+
+    const metaEl = document.querySelector('.idoso-detail-meta');
+    metaEl.innerHTML = `
+      <span>🎂 ${idade} anos · ${idoso.tipo_sanguineo || '—'}</span>
+      <span>👨‍⚕️ ${idoso.medico_responsavel || 'Não informado'}</span>
+      <span>🏥 ${idoso.plano_saude || 'Sem plano'}</span>
+    `;
+
+    // Pills de alertas
+    const pills = [];
+    if (idoso.alergias) pills.push(`<span class="alert-pill alergias">⚠️ Alergia: ${idoso.alergias}</span>`);
+    if (idoso.restricoes_medicas) pills.push(`<span class="alert-pill restricao">🦽 ${idoso.restricoes_medicas}</span>`);
+    if (idoso.medicamentos) pills.push(`<span class="alert-pill medicamento">💊 Medicamento contínuo</span>`);
+    document.getElementById('idoso-pills').innerHTML = pills.join('');
+
+    if (idoso.medicamentos) {
+      document.getElementById('medicamentos-lista').innerHTML =
+        idoso.medicamentos.split('\n').map(m => `• ${m}`).join('<br>');
+    }
+  }
+
+  if (escala.status === 'em_andamento') {
+    checkinActive = true;
+    updateCheckinUI(true);
+    startTimer(new Date(escala.checkin_hora || Date.now()));
+  }
+}
+
+// ============================================================
+// CHECKIN
+// ============================================================
+async function handleCheckin() {
+  if (!checkinActive) {
+    // CHECK-IN
+    let lat = userCoords.lat;
+    let lng = userCoords.lng;
+    if (!lat) {
+      showToast('⚠️ GPS não obtido — usando localização estimada (demo).', 'warning');
+      lat = -23.5505; lng = -46.6333; // São Paulo fallback
+    }
+    try {
+      await registrarCheckin(currentEscala?.id || 'demo', lat, lng);
+      checkinActive = true;
+      checkinStart  = new Date();
+      document.getElementById('checkinHora').textContent      = fmtDateTime(checkinStart);
+      document.getElementById('checkinDetails').style.display = 'block';
+      document.getElementById('checkinInfo').style.display    = 'none';
+      updateCheckinUI(true);
+      startTimer(checkinStart);
+      showToast('✅ Check-in registrado com sucesso!', 'success');
+      const badge = document.getElementById('escala-status-badge');
+      badge.className   = 'badge badge-info';
+      badge.textContent = 'em andamento';
+    } catch(e) {
+      showToast('Erro ao registrar check-in: ' + e.message, 'error');
+    }
+  } else {
+    // CHECK-OUT
+    const btn = document.getElementById('checkinBtn');
+    const txt = document.getElementById('checkinBtnText');
+
+    if (!btn.classList.contains('confirm-pending')) {
+      btn.classList.add('confirm-pending');
+      txt.textContent      = '⚠️ Confirmar Encerramento?';
+      btn.style.background = 'linear-gradient(135deg, #d97706, #b45309)';
+      btn.confirmTimeout   = setTimeout(() => {
+        btn.classList.remove('confirm-pending');
+        txt.textContent      = 'Encerrar Plantão (Check-out)';
+        btn.style.background = '';
+      }, 3000);
+      return;
+    }
+
+    clearTimeout(btn.confirmTimeout);
+    btn.classList.remove('confirm-pending');
+    btn.style.background = '';
+
+    try {
+      const lat = userCoords.lat || -23.5505;
+      const lng = userCoords.lng || -46.6333;
+      await registrarCheckout(currentEscala?.id || 'demo', lat, lng);
+      stopTimer();
+      checkinActive = false;
+      const now = new Date();
+      document.getElementById('checkoutRow').style.display = 'block';
+      document.getElementById('checkoutHora').textContent  = fmtDateTime(now);
+      updateCheckinUI(false, true);
+      showToast('🔴 Check-out registrado. Bom descanso!', 'success');
+      const badge = document.getElementById('escala-status-badge');
+      badge.className   = 'badge badge-success';
+      badge.textContent = 'concluido';
+    } catch(e) {
+      showToast('Erro ao registrar check-out: ' + e.message, 'error');
+    }
+  }
+}
+
+function updateCheckinUI(isActive, isDone = false) {
+  const btn = document.getElementById('checkinBtn');
+  const dot = document.getElementById('statusDot');
+  const lbl = document.getElementById('statusLabel');
+  const txt = document.getElementById('checkinBtnText');
+
+  if (isDone) {
+    btn.className = 'btn-checkin check-out';
+    btn.style.background = 'var(--bg-hover)';
+    btn.style.color = 'var(--text-secondary)';
+    btn.disabled = true;
+    dot.className = 'status-dot inactive';
+    lbl.textContent = 'Plantão encerrado';
+    txt.textContent = 'Check-out Concluído ✓';
+  } else if (isActive) {
+    btn.className = 'btn-checkin check-out';
+    dot.className = 'status-dot active';
+    lbl.textContent = 'Plantão em andamento';
+    txt.textContent = 'Encerrar Plantão (Check-out)';
+  } else {
+    btn.className = 'btn-checkin check-in';
+    dot.className = 'status-dot inactive';
+    lbl.textContent = 'Fora do plantão';
+    txt.textContent = 'Iniciar Plantão (Check-in)';
+  }
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer(startTime) {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const diff = Date.now() - startTime;
+    const h = Math.floor(diff / 3600000).toString().padStart(2,'0');
+    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2,'0');
+    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2,'0');
+    document.getElementById('checkinTimer').textContent = `${h}:${m}:${s}`;
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+// ============================================================
+// GEOLOCATION
+// ============================================================
+function getLocation() {
+  if (!navigator.geolocation) {
+    document.getElementById('mapCoords').textContent = 'GPS não disponível (demo: São Paulo)';
+    userCoords.lat = -23.5505; userCoords.lng = -46.6333;
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userCoords.lat = pos.coords.latitude;
+      userCoords.lng = pos.coords.longitude;
+      document.getElementById('mapCoords').textContent =
+        `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+      document.getElementById('mapPin').style.color = 'var(--primary-400)';
+    },
+    () => {
+      // Fallback de demo: São Paulo
+      userCoords.lat = -23.5505; userCoords.lng = -46.6333;
+      document.getElementById('mapCoords').textContent = '📍 São Paulo, SP (demo)';
+      document.getElementById('mapPin').style.color = 'var(--warning)';
+    },
+    { enableHighAccuracy: true, timeout: 8000 }
+  );
+}
+
+// ============================================================
+// CHECKLIST
+// ============================================================
+function loadDefaultChecklist() {
+  checklistData = [
+    { id:1, descricao:'Administrar medicamentos da manhã', horario:'08:00', done:false, icon:'💊' },
+    { id:2, descricao:'Auxiliar no banho e higiene pessoal', horario:'09:00', done:false, icon:'🚿' },
+    { id:3, descricao:'Preparar e servir o almoço', horario:'12:00', done:false, icon:'🍽️' },
+    { id:4, descricao:'Registrar sinais vitais', horario:'10:00', done:false, icon:'💓' },
+    { id:5, descricao:'Hidratação — oferecer água a cada 2h', horario:'—', done:false, icon:'💧' },
+    { id:6, descricao:'Acompanhar caminhada leve (15 min)', horario:'11:00', done:false, icon:'🦯' },
+  ];
+  renderChecklist();
+}
+
+function renderChecklist() {
+  const container = document.getElementById('checklistItems');
+  const done = checklistData.filter(t => t.done).length;
+  const total = checklistData.length;
+
+  document.getElementById('checklistProgress').textContent = `${done} / ${total} concluídas`;
+  document.getElementById('progressFill').style.width = total ? (done/total*100)+'%' : '0%';
+  document.getElementById('checklistSubtitle').textContent = done === total && total > 0
+    ? '🎉 Todas as atividades concluídas!'
+    : 'Marque as tarefas conforme forem concluídas';
+
+  container.innerHTML = checklistData.map((item, i) => `
+    <div class="checklist-item ${item.done ? 'done' : ''}" onclick="toggleTask(${i})" role="checkbox" aria-checked="${item.done}" tabindex="0">
+      <div class="checklist-checkbox">${item.done ? '✓' : ''}</div>
+      <div class="checklist-text">
+        <div class="checklist-desc">${item.icon} ${item.descricao}</div>
+        ${item.horario !== '—' ? `<div class="checklist-time">⏰ ${item.horario}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+window.toggleTask = (index) => {
+  checklistData[index].done = !checklistData[index].done;
+  renderChecklist();
+  saveChecklistState(); // Persiste no localStorage
+  const completed = checklistData.filter(t=>t.done).length;
+  if (completed === checklistData.length && checklistData.length > 0) {
+    showToast('🎉 Todas as atividades concluídas!', 'success');
+  }
+};
+
+window.addActivity = () => {
+  const input = document.getElementById('newActivityInput');
+  const desc  = input.value.trim();
+  if (!desc) return;
+  checklistData.push({ id: Date.now(), descricao: desc, horario:'—', done: false, icon:'📌' });
+  input.value = '';
+  renderChecklist();
+  saveChecklistState();
+};
+
+// ============================================================
+// DIÁRIO
+// ============================================================
+window.selectChip = (el, type) => {
+  const parent = el.closest('.option-chips') || el.parentElement;
+  parent?.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedValues[type] = el.dataset.value;
+};
+
+window.previewFoto = (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const prev = document.getElementById('fotoPreview');
+    prev.src   = e.target.result;
+    prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.salvarDiario = async () => {
+  const btn = document.getElementById('salvarDiarioBtn');
+  btn.disabled  = true;
+  btn.innerHTML = '<div class="loader"></div> Salvando...';
+
+  try {
+    const registro = {
+      id_escala:              escalaPendingId || currentEscala?.id || 'demo',
+      batimento_cardiaco:     parseInt(document.getElementById('vitBat').value)   || null,
+      pressao_arterial:       document.getElementById('vitPA').value              || null,
+      temperatura:            parseFloat(document.getElementById('vitTemp').value) || null,
+      saturacao_oxigenio:     parseInt(document.getElementById('vitSat').value)   || null,
+      alimentacao:            selectedValues.alimentacao,
+      hidratacao:             selectedValues.hidratacao,
+      humor:                  selectedValues.humor,
+      medicamento_ministrado: document.getElementById('medToggle').checked,
+      medicamentos_lista:     document.getElementById('medLista').value,
+      banho_realizado:        document.getElementById('banhoToggle').checked,
+      observacoes:            document.getElementById('obsGerais').value,
+      visivel_familia:        true,
+    };
+
+    // Sempre usa insertDiario (persiste no localStorage em modo demo)
+    const saved = await insertDiario(registro);
+    diarioHistorico.unshift(saved);
+    renderHistorico();
+
+    showToast('✅ Registro salvo com sucesso!', 'success');
+
+    // Limpa formulário
+    ['vitBat','vitPA','vitTemp','vitSat','medLista','obsGerais'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('medToggle').checked   = false;
+    document.getElementById('banhoToggle').checked = false;
+    document.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
+    selectedValues = { alimentacao: null, hidratacao: null, humor: null };
+    const prev = document.getElementById('fotoPreview');
+    if (prev) { prev.src = ''; prev.style.display = 'none'; }
+
+  } catch(e) {
+    showToast('Erro ao salvar: ' + e.message, 'error');
+  } finally {
+    btn.disabled  = false;
+    btn.innerHTML = '<i data-lucide="save"></i> Salvar Registro';
+    lucide.createIcons();
+  }
+};
+
+async function loadHistorico() {
+  // Lê do localStorage primeiro
+  const key   = 'cl_diario_' + (escalaPendingId || 'demo');
+  const saved = JSON.parse(localStorage.getItem(key) || '[]');
+  const today = new Date().toDateString();
+  const todayEntries = saved.filter(e => new Date(e.horario).toDateString() === today);
+
+  if (todayEntries.length > 0) {
+    diarioHistorico = todayEntries;
+  } else {
+    // Sem registros hoje: mostra demo
+    diarioHistorico = [
+      { horario: new Date(Date.now()-7200000).toISOString(), batimento_cardiaco:72, pressao_arterial:'118/78', temperatura:36.4, alimentacao:'aceitou', medicamento_ministrado:true, observacoes:'Paciente bem disposta, tomou café da manhã com apetite.' }
+    ];
+  }
+  renderHistorico();
+}
+
+function renderHistorico() {
+  const container = document.getElementById('historicoList');
+  if (!diarioHistorico.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);font-size:.875rem;">Nenhum registro hoje.</p>';
+    return;
+  }
+  container.innerHTML = diarioHistorico.map(r => `
+    <div class="historico-item">
+      <div class="historico-header">
+        <span style="font-weight:700;font-size:.9rem;">📋 Registro de cuidados</span>
+        <span class="historico-time">${new Date(r.horario).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>
+      </div>
+      <div class="historico-vitais">
+        ${r.batimento_cardiaco ? `<span class="vital-pill">💓 ${r.batimento_cardiaco}bpm</span>` : ''}
+        ${r.pressao_arterial   ? `<span class="vital-pill">🩺 ${r.pressao_arterial}</span>` : ''}
+        ${r.temperatura        ? `<span class="vital-pill">🌡️ ${r.temperatura}°C</span>` : ''}
+        ${r.alimentacao        ? `<span class="vital-pill">🍽️ ${r.alimentacao}</span>` : ''}
+        ${r.medicamento_ministrado ? `<span class="vital-pill" style="background:rgba(16,185,129,.15);color:var(--success)">💊 Med. OK</span>` : ''}
+      </div>
+      ${r.observacoes ? `<div style="font-size:.8125rem;color:var(--text-secondary);margin-top:.375rem">${r.observacoes}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
+window.showCuidadorSection = (name, el) => {
+  document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.mobile-nav-item').forEach(n => {
+    n.classList.remove('active');
+    n.removeAttribute('aria-current');
+  });
+  document.getElementById(`section-${name}`).style.display = '';
+  if (el) { el.classList.add('active'); el.setAttribute('aria-current','page'); }
+
+  // Ao voltar para check-in, garantir que timer está rodando
+  if (name === 'checkin' && checkinActive && !timerInterval) {
+    startTimer(checkinStart);
+  }
+
+  lucide.createIcons();
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function fmtHora(d)     { return new Date(d).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDateTime(d) { return new Date(d).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+
+window.showToast = (msg, type='info', dur=4000) => {
+  const c = document.getElementById('toastContainer');
+  const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span style="font-size:.9rem">${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; t.style.transition='all .3s'; setTimeout(()=>t.remove(),300); }, dur);
+};
+
+window.handleCheckin = handleCheckin;
+</script>
+
+</body>
+</html>
