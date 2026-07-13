@@ -7,8 +7,8 @@
   <meta name="description" content="Painel administrativo do CuideLar para gestão completa de cuidadores, assistidos, escalas e faturamento." />
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link rel="stylesheet" href="css/global.css?v=3" />
-  <link rel="stylesheet" href="css/admin.css?v=3" />
+  <link rel="stylesheet" href="css/global.css?v=4" />
+  <link rel="stylesheet" href="css/admin.css?v=4" />
 
   <!-- Auth Guard Demo -->
   <script>
@@ -1674,14 +1674,12 @@ window.showSection = (name, el) => {
     setTimeout(() => calendarInstance.updateSize(), 200);
   }
 
-  // Fecha a sidebar no clique do item se estiver no mobile
-  if (window.innerWidth <= 768) {
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    const appLayout = document.getElementById('appLayout');
-    if (appLayout) appLayout.classList.remove('menu-open');
-    const backdrop = document.getElementById('sidebarBackdrop');
-    if (backdrop) backdrop.classList.remove('active');
-  }
+  // Fecha a sidebar no clique do item (mobile-safe)
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  const appLayout = document.getElementById('appLayout');
+  if (appLayout) appLayout.classList.remove('menu-open');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (backdrop) backdrop.classList.remove('active');
 
   lucide.createIcons();
   return false;
@@ -1694,14 +1692,14 @@ function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('sidebarBackdrop');
   const appLayout = document.getElementById('appLayout');
-  if (window.innerWidth <= 768) {
-    const isOpen = sidebar.classList.toggle('mobile-open');
-    if (appLayout) appLayout.classList.toggle('menu-open', isOpen);
-    if (backdrop) {
-      backdrop.classList.toggle('active', isOpen);
-    }
-  } else {
-    sidebar.classList.toggle('collapsed');
+  
+  // Alterna as duas classes. No desktop, mobile-open é inofensivo; no mobile, collapsed é anulado pelo width !important.
+  sidebar.classList.toggle('collapsed');
+  const isOpen = sidebar.classList.toggle('mobile-open');
+  
+  if (appLayout) appLayout.classList.toggle('menu-open', isOpen);
+  if (backdrop) {
+    backdrop.classList.toggle('active', isOpen);
   }
 }
 
