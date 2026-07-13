@@ -126,7 +126,7 @@
         <div class="page-subtitle" id="pageSubtitle">Visão geral do sistema</div>
       </div>
       <div class="flex gap-2">
-        <button class="btn btn-secondary btn-icon" id="sidebarToggle" aria-label="Alternar sidebar">
+        <button class="btn btn-secondary btn-icon" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Alternar sidebar">
           <i data-lucide="panel-left" aria-hidden="true"></i>
         </button>
         <button class="btn btn-primary btn-sm" id="headerActionBtn" onclick="openQuickModal()">
@@ -916,8 +916,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Carrega dados iniciais
   await Promise.all([loadDashboard(), loadAllData()]);
 
-  // Sidebar toggle
-  document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+  // Sidebar toggle is handled inline via onclick
 });
 
 // ============================================================
