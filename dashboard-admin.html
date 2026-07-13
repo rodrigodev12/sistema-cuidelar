@@ -43,6 +43,8 @@
 <body>
 
 <div class="app-layout" id="appLayout">
+  <!-- Backdrop para fechar menu no mobile ao clicar fora -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
   <!-- ======================================================
        SIDEBAR
@@ -51,6 +53,7 @@
     <div class="sidebar-logo">
       <div class="logo-mark">🏠</div>
       <span class="logo-text">CuideLar</span>
+      <button class="sidebar-mobile-close" onclick="toggleSidebar()" aria-label="Fechar menu">✕</button>
     </div>
 
     <nav class="sidebar-nav" aria-label="Navegação principal">
@@ -1674,6 +1677,8 @@ window.showSection = (name, el) => {
   // Fecha a sidebar no clique do item se estiver no mobile
   if (window.innerWidth <= 768) {
     document.getElementById('sidebar').classList.remove('mobile-open');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (backdrop) backdrop.classList.remove('active');
   }
 
   lucide.createIcons();
@@ -1685,8 +1690,12 @@ window.showSection = (name, el) => {
 // ============================================================
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
   if (window.innerWidth <= 768) {
-    sidebar.classList.toggle('mobile-open');
+    const isOpen = sidebar.classList.toggle('mobile-open');
+    if (backdrop) {
+      backdrop.classList.toggle('active', isOpen);
+    }
   } else {
     sidebar.classList.toggle('collapsed');
   }
