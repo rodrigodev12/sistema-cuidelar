@@ -7,8 +7,8 @@
   <meta name="description" content="Acompanhe em tempo real o bem-estar do seu familiar assistido com transparência total." />
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link rel="stylesheet" href="css/global.css" />
-  <link rel="stylesheet" href="css/familia.css" />
+  <link rel="stylesheet" href="css/global.css?v=2" />
+  <link rel="stylesheet" href="css/familia.css?v=2" />
 
   <!-- Auth Guard Demo -->
   <script>
@@ -725,7 +725,7 @@ function renderFeed(entries) {
         </div>
 
         ${entry.observacoes ? `<div class="feed-obs">${entry.observacoes}</div>` : ''}
-        ${entry.foto_url ? `<img src="${entry.foto_url}" class="feed-photo" alt="Foto do registro" onclick="openPhoto('${entry.foto_url}')" />` : ''}
+        ${entry.foto_url ? renderFeedPhotosHtml(entry.foto_url) : ''}
       </div>
     </div>`;
   }).join('');
@@ -923,6 +923,21 @@ window.openPhoto = (url) => {
 
   overlay.appendChild(img);
   document.body.appendChild(overlay);
+};
+
+window.renderFeedPhotosHtml = function(fotoUrl) {
+  if (!fotoUrl) return '';
+  if (fotoUrl.startsWith('[')) {
+    try {
+      const urls = JSON.parse(fotoUrl);
+      return `<div class="feed-photos-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:8px; margin-top:8px;">` +
+        urls.map(url => `<img src="${url}" class="feed-photo" alt="Foto do registro" style="width:100%; height:100px; object-fit:cover; border-radius:6px; cursor:pointer;" onclick="openPhoto('${url}')" />`).join('') +
+        `</div>`;
+    } catch(e) {
+      return `<img src="${fotoUrl}" class="feed-photo" alt="Foto do registro" onclick="openPhoto('${fotoUrl}')" />`;
+    }
+  }
+  return `<img src="${fotoUrl}" class="feed-photo" alt="Foto do registro" onclick="openPhoto('${fotoUrl}')" />`;
 };
 
 // ============================================================
