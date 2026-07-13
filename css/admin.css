@@ -532,3 +532,47 @@
   color: var(--text-secondary);
   margin-top: var(--space-1);
 }
+
+/* ============================================================
+   RESPONSIVIDADE EXTRA (Painel Admin)
+   ============================================================ */
+.admin-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-6);
+}
+
+@media (max-width: 1024px) {
+  .admin-split-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Evita que colunas de tabelas esmaguem */
+  .table-container table {
+    min-width: 750px;
+  }
+  
+  /* Ajusta o cabeçalho mobile do painel */
+  .page-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+  }
+  
+  /* Melhora o espaçamento de modais */
+  .modal {
+    width: 92%;
+    margin: 4% auto;
+    padding: var(--space-4) !important;
+  }
+  
+  /* FullCalendar responsivo */
+  .fc .fc-toolbar {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}
+

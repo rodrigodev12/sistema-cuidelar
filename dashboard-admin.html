@@ -240,7 +240,7 @@
       </div>
 
       <!-- Escalas do Dia + Alertas -->
-      <div style="display:grid; grid-template-columns: 1fr 340px; gap: var(--space-6);">
+      <div class="admin-split-layout">
 
         <div class="chart-card">
           <div class="chart-header">
@@ -1671,6 +1671,12 @@ window.showSection = (name, el) => {
   if (name === 'agenda' && calendarInstance) {
     setTimeout(() => calendarInstance.updateSize(), 200);
   }
+
+  // Fecha a sidebar no clique do item se estiver no mobile
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+  }
+
   lucide.createIcons();
   return false;
 };
@@ -1679,7 +1685,12 @@ window.showSection = (name, el) => {
 // SIDEBAR TOGGLE
 // ============================================================
 function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('collapsed');
+  const sidebar = document.getElementById('sidebar');
+  if (window.innerWidth <= 768) {
+    sidebar.classList.toggle('mobile-open');
+  } else {
+    sidebar.classList.toggle('collapsed');
+  }
 }
 
 // ============================================================
