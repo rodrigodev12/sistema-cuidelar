@@ -1,5 +1,5 @@
 /* ============================================================
-   CuideLar — Global CSS Design System
+   Cuidelar — Global CSS Design System
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
@@ -8,7 +8,7 @@
    1. CSS CUSTOM PROPERTIES (Design Tokens)
    ============================================================ */
 :root {
-  /* ── Nova Identidade Visual CuideLar ─────────────────────── */
+  /* ── Nova Identidade Visual Cuidelar ─────────────────────── */
   --brand-dark:   #5C3C67;   /* Roxo Escuro — títulos, textos, ícones  */
   --brand-rose:   #E07A8A;   /* Rosa Quente — botões, badges, destaques */
   --brand-pastel: #F9E6E8;   /* Rosa Claro  — inputs, cards secundários  */

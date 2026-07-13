@@ -1,5 +1,5 @@
 /**
- * CuideLar — Supabase Client
+ * Cuidelar — Supabase Client
  * MODO DEMO: Quando SUPABASE_URL começa com 'https://SEU_PROJETO',
  * o módulo exporta stubs seguros que não fazem chamadas de rede.
  */

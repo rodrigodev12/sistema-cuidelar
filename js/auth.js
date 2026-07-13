@@ -1,5 +1,5 @@
 /**
- * CuideLar — auth.js
+ * Cuidelar — auth.js
  * Gerencia autenticação, sessão e redirecionamento por tipo de usuário.
  * Inclui MODO DEMO para testar sem Supabase configurado.
  */
@@ -10,24 +10,24 @@ import { supabase, getUserProfile } from './supabase-client.js';
 // MODO DEMO
 // Ativo quando o Supabase não está configurado.
 // Credenciais de demonstração:
-//   admin@cuideLar.com    / admin123
-//   cuidador@cuideLar.com / cuida123
-//   familia@cuideLar.com  / familia123
+//   admin@cuidelar.com    / admin123
+//   cuidador@cuidelar.com / cuida123
+//   familia@cuidelar.com  / familia123
 // ============================================================
 const DEMO_MODE = true; // Mude para false após configurar o Supabase
 
 const DEMO_USERS = {
-  'admin@cuideLar.com': {
+  'admin@cuidelar.com': {
     senha: 'admin123',
-    profile: { id: 'demo-admin', nome: 'Admin CuideLar', email: 'admin@cuideLar.com', tipo: 'administrador' }
+    profile: { id: 'demo-admin', nome: 'Admin Cuidelar', email: 'admin@cuidelar.com', tipo: 'administrador' }
   },
-  'cuidador@cuideLar.com': {
+  'cuidador@cuidelar.com': {
     senha: 'cuida123',
-    profile: { id: 'demo-cuidador', nome: 'Ana Paula Ferreira', email: 'cuidador@cuideLar.com', tipo: 'cuidador' }
+    profile: { id: 'demo-cuidador', nome: 'Ana Paula Ferreira', email: 'cuidador@cuidelar.com', tipo: 'cuidador' }
   },
-  'familia@cuideLar.com': {
+  'familia@cuidelar.com': {
     senha: 'familia123',
-    profile: { id: 'demo-familia', nome: 'João Silva (Família)', email: 'familia@cuideLar.com', tipo: 'cliente' }
+    profile: { id: 'demo-familia', nome: 'João Silva (Família)', email: 'familia@cuidelar.com', tipo: 'cliente' }
   },
 };
 
@@ -55,17 +55,17 @@ function redirectToDashboard(tipo) {
 // ============================================================
 function getDemoSession() {
   try {
-    const raw = sessionStorage.getItem('cuideLar_demo_user');
+    const raw = sessionStorage.getItem('cuidelar_demo_user');
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 
 function setDemoSession(profile) {
-  sessionStorage.setItem('cuideLar_demo_user', JSON.stringify(profile));
+  sessionStorage.setItem('cuidelar_demo_user', JSON.stringify(profile));
 }
 
 function clearDemoSession() {
-  sessionStorage.removeItem('cuideLar_demo_user');
+  sessionStorage.removeItem('cuidelar_demo_user');
 }
 
 // ============================================================
@@ -106,7 +106,7 @@ export async function logout() {
   window.location.href = 'index.html';
 }
 
-window.cuideLarLogout = logout;
+window.cuidelarLogout = logout;
 
 // ============================================================
 // TOAST NOTIFICATIONS

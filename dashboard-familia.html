@@ -3,29 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CuideLar — Painel da Família</title>
+  <title>Cuidelar — Painel da Família</title>
   <meta name="description" content="Acompanhe em tempo real o bem-estar do seu familiar assistido com transparência total." />
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link rel="stylesheet" href="css/global.css?v=2" />
-  <link rel="stylesheet" href="css/familia.css?v=2" />
+  <link rel="stylesheet" href="css/global.css?v=3" />
+  <link rel="stylesheet" href="css/familia.css?v=3" />
 
   <!-- Auth Guard Demo -->
   <script>
     (function() {
-      var raw = sessionStorage.getItem('cuideLar_user');
+      var raw = sessionStorage.getItem('cuidelar_user');
       if (!raw) { window.location.href = 'index.html'; return; }
       try {
         var u = JSON.parse(raw);
         if (!u || u.tipo !== 'cliente') { window.location.href = 'index.html'; }
-        window.__cuideLarUser = u;
+        window.__cuidelarUser = u;
       } catch(e) { window.location.href = 'index.html'; }
     })();
-    window.cuideLarLogout = function() {
-      sessionStorage.removeItem('cuideLar_user');
+    window.cuidelarLogout = function() {
+      sessionStorage.removeItem('cuidelar_user');
       window.location.href = 'index.html';
     };
-    window.protectRoute = async function(roles) { return window.__cuideLarUser || null; };
+    window.protectRoute = async function(roles) { return window.__cuidelarUser || null; };
   </script>
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -36,7 +36,7 @@
 <header class="familia-header">
   <div class="header-brand">
     <span style="font-size:1.25rem">🏠</span>
-    <span>CuideLar</span>
+    <span>Cuidelar</span>
   </div>
   <div class="flex items-center gap-3">
     <button class="btn btn-secondary btn-sm" onclick="alternarDemoFamilia()" style="font-size:0.75rem; padding:0.25rem 0.5rem; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; gap:4px; cursor:pointer;">
@@ -47,7 +47,7 @@
       Ao Vivo
     </div>
     <div class="avatar" id="userAvatar" style="width:34px;height:34px;font-size:.85rem;">F</div>
-    <button class="btn btn-ghost btn-icon btn-sm" onclick="cuideLarLogout()" aria-label="Sair">
+    <button class="btn btn-ghost btn-icon btn-sm" onclick="cuidelarLogout()" aria-label="Sair">
       <i data-lucide="log-out" aria-hidden="true"></i>
     </button>
   </div>

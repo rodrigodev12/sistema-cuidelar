@@ -3,31 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CuideLar — Painel Cuidador(a)</title>
-  <meta name="description" content="Painel do(a) cuidador(a) CuideLar: check-in, checklist de atividades e diário de cuidados." />
+  <title>Cuidelar — Painel Cuidador(a)</title>
+  <meta name="description" content="Painel do(a) cuidador(a) Cuidelar: check-in, checklist de atividades e diário de cuidados." />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link rel="stylesheet" href="css/global.css?v=4" />
-  <link rel="stylesheet" href="css/cuidador.css?v=4" />
+  <link rel="stylesheet" href="css/global.css?v=5" />
+  <link rel="stylesheet" href="css/cuidador.css?v=5" />
 
   <!-- Auth Guard Demo -->
   <script>
     (function() {
-      var raw = sessionStorage.getItem('cuideLar_user');
+      var raw = sessionStorage.getItem('cuidelar_user');
       if (!raw) { window.location.href = 'index.html'; return; }
       try {
         var u = JSON.parse(raw);
         if (!u || u.tipo !== 'cuidador') { window.location.href = 'index.html'; }
-        window.__cuideLarUser = u;
+        window.__cuidelarUser = u;
       } catch(e) { window.location.href = 'index.html'; }
     })();
-    window.cuideLarLogout = function() {
-      sessionStorage.removeItem('cuideLar_user');
+    window.cuidelarLogout = function() {
+      sessionStorage.removeItem('cuidelar_user');
       window.location.href = 'index.html';
     };
-    window.protectRoute = async function(roles) { return window.__cuideLarUser || null; };
+    window.protectRoute = async function(roles) { return window.__cuidelarUser || null; };
   </script>
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -38,10 +38,10 @@
 
   <!-- HEADER -->
   <header class="cuidador-header">
-    <div class="header-logo">🏠 CuideLar</div>
+    <div class="header-logo">🏠 Cuidelar</div>
     <div class="header-actions">
       <div class="avatar" id="userAvatar" style="width:34px;height:34px;font-size:.85rem;">C</div>
-      <button class="btn btn-ghost btn-icon btn-sm" onclick="cuideLarLogout()" aria-label="Sair">
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="cuidelarLogout()" aria-label="Sair">
         <i data-lucide="log-out" aria-hidden="true"></i>
       </button>
     </div>
@@ -391,7 +391,7 @@ function _publishUpdate(type, payload) {
 
 const registrarCheckin = async (id, lat, lng) => {
   const estado = { id, lat, lng, hora: new Date().toISOString(), ativo: true,
-    cuidadorNome: (window.__cuideLarUser||{}).nome || 'Cuidador(a)' };
+    cuidadorNome: (window.__cuidelarUser||{}).nome || 'Cuidador(a)' };
   localStorage.setItem('cl_checkin', JSON.stringify(estado));
   _publishUpdate('checkin', estado);
 };

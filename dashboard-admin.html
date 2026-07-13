@@ -20,31 +20,31 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CuideLar — Painel Administrador</title>
-  <meta name="description" content="Painel administrativo do CuideLar para gestão completa de cuidadores, assistidos, escalas e faturamento." />
+  <title>Cuidelar — Painel Administrador</title>
+  <meta name="description" content="Painel administrativo do Cuidelar para gestão completa de cuidadores, assistidos, escalas e faturamento." />
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link rel="stylesheet" href="css/global.css?v=8" />
-  <link rel="stylesheet" href="css/admin.css?v=8" />
+  <link rel="stylesheet" href="css/global.css?v=9" />
+  <link rel="stylesheet" href="css/admin.css?v=9" />
 
   <!-- Auth Guard Demo -->
   <script>
     (function() {
-      var raw = sessionStorage.getItem('cuideLar_user');
+      var raw = sessionStorage.getItem('cuidelar_user');
       if (!raw) { window.location.href = 'index.html'; return; }
       try {
         var u = JSON.parse(raw);
         if (!u || u.tipo !== 'administrador') { window.location.href = 'index.html'; }
         // Expõe globalmente para os scripts da página
-        window.__cuideLarUser = u;
+        window.__cuidelarUser = u;
       } catch(e) { window.location.href = 'index.html'; }
     })();
-    window.cuideLarLogout = function() {
-      sessionStorage.removeItem('cuideLar_user');
+    window.cuidelarLogout = function() {
+      sessionStorage.removeItem('cuidelar_user');
       window.location.href = 'index.html';
     };
     // Proteção de rota compatível com módulos que importam auth.js
-    window.protectRoute = async function(roles) { return window.__cuideLarUser || null; };
+    window.protectRoute = async function(roles) { return window.__cuidelarUser || null; };
 
     // Sidebar toggle exposto imediatamente
     window.toggleSidebar = function() {
@@ -85,7 +85,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">🏠</div>
-      <span class="logo-text">CuideLar</span>
+      <span class="logo-text">Cuidelar</span>
       <button class="sidebar-mobile-close" onclick="toggleSidebar()" aria-label="Fechar menu">✕</button>
     </div>
 
@@ -143,7 +143,7 @@
           <div class="text-xs text-muted">Administrador</div>
         </div>
       </div>
-      <button class="nav-item w-full mt-2" onclick="cuideLarLogout()" style="justify-content:flex-start;">
+      <button class="nav-item w-full mt-2" onclick="cuidelarLogout()" style="justify-content:flex-start;">
         <i data-lucide="log-out" class="nav-icon" aria-hidden="true"></i>
         <span class="nav-label" style="color:var(--danger)">Sair</span>
       </button>
