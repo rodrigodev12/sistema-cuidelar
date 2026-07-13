@@ -1,14 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      const errDiv = document.createElement('div');
+      errDiv.style.position = 'fixed';
+      errDiv.style.bottom = '10px';
+      errDiv.style.left = '10px';
+      errDiv.style.background = 'red';
+      errDiv.style.color = 'white';
+      errDiv.style.padding = '10px';
+      errDiv.style.zIndex = '99999';
+      errDiv.style.fontSize = '12px';
+      errDiv.style.borderRadius = '4px';
+      errDiv.innerHTML = '⚠️ Erro JS: ' + msg + ' (L: ' + line + ')';
+      document.body.appendChild(errDiv);
+      return false;
+    };
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CuideLar — Painel Administrador</title>
   <meta name="description" content="Painel administrativo do CuideLar para gestão completa de cuidadores, assistidos, escalas e faturamento." />
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link rel="stylesheet" href="css/global.css?v=5" />
-  <link rel="stylesheet" href="css/admin.css?v=5" />
+  <link rel="stylesheet" href="css/global.css?v=6" />
+  <link rel="stylesheet" href="css/admin.css?v=6" />
 
   <!-- Auth Guard Demo -->
   <script>
@@ -28,6 +45,22 @@
     };
     // Proteção de rota compatível com módulos que importam auth.js
     window.protectRoute = async function(roles) { return window.__cuideLarUser || null; };
+
+    // Sidebar toggle exposto imediatamente
+    window.toggleSidebar = function() {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      const appLayout = document.getElementById('appLayout');
+      if (!sidebar) return;
+      
+      sidebar.classList.toggle('collapsed');
+      const isOpen = sidebar.classList.toggle('mobile-open');
+      
+      if (appLayout) appLayout.classList.toggle('menu-open', isOpen);
+      if (backdrop) {
+        backdrop.classList.toggle('active', isOpen);
+      }
+    };
   </script>
 
   <!-- FullCalendar -->
@@ -1685,23 +1718,7 @@ window.showSection = (name, el) => {
   return false;
 };
 
-// ============================================================
-// SIDEBAR TOGGLE
-// ============================================================
-function toggleSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const backdrop = document.getElementById('sidebarBackdrop');
-  const appLayout = document.getElementById('appLayout');
-  
-  // Alterna as duas classes. No desktop, mobile-open é inofensivo; no mobile, collapsed é anulado pelo width !important.
-  sidebar.classList.toggle('collapsed');
-  const isOpen = sidebar.classList.toggle('mobile-open');
-  
-  if (appLayout) appLayout.classList.toggle('menu-open', isOpen);
-  if (backdrop) {
-    backdrop.classList.toggle('active', isOpen);
-  }
-}
+
 
 // ============================================================
 // TABS DE FORMULÁRIO
