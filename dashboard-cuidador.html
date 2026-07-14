@@ -482,6 +482,35 @@ const LS_CHECKLIST = 'cl_checklist';
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  // Limpeza preventiva de localStorage para liberar espaço de imagens gigantes legadas
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('cl_diario_')) {
+        const saved = JSON.parse(localStorage.getItem(key) || '[]');
+        let modified = false;
+        const cleaned = saved.map((e, idx) => {
+          // Remove fotos de registros mais antigos (índice >= 3)
+          if (idx >= 3 && e.foto_url) {
+            delete e.foto_url;
+            modified = true;
+          }
+          // Se houver uma foto gigante legado (base64 maior que 1MB), remove para não estourar a quota
+          if (e.foto_url && e.foto_url.length > 800000) {
+            delete e.foto_url;
+            modified = true;
+          }
+          return e;
+        });
+        if (modified) {
+          localStorage.setItem(key, JSON.stringify(cleaned));
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Erro ao limpar localStorage legado:', err);
+  }
+
   currentUser = await protectRoute(['cuidador']);
   if (!currentUser) return;
 
