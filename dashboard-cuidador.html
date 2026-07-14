@@ -835,6 +835,7 @@ function updateEscalaUI(escala) {
   const idoso = escala.idosos;
 
   document.getElementById('shift-time').textContent = `${fmtHora(ini)} – ${fmtHora(fim)}`;
+  document.getElementById('shift-date').textContent = ini.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
   document.getElementById('stat-plantoes').textContent = '1';
   document.getElementById('stat-horas').textContent = horas.toFixed(0) + 'h';
   document.getElementById('stat-ganhos').textContent = 'R$' + (escala.valor_total || 0).toFixed(0);
@@ -891,9 +892,12 @@ function updateEscalaUI(escala) {
     if (idoso.medicamentos) pills.push(`<span class="alert-pill medicamento">💊 Medicamento contínuo</span>`);
     document.getElementById('idoso-pills').innerHTML = pills.join('');
 
-    if (idoso.medicamentos) {
+    if (idoso.medicamentos && idoso.medicamentos.trim()) {
       document.getElementById('medicamentos-lista').innerHTML =
         idoso.medicamentos.split('\n').map(m => `• ${m}`).join('<br>');
+    } else {
+      document.getElementById('medicamentos-lista').innerHTML =
+        '<p style="color:var(--text-muted);font-size:.875rem;">Nenhum medicamento contínuo cadastrado.</p>';
     }
   }
 
