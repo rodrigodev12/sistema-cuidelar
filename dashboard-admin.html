@@ -1626,6 +1626,38 @@ window.submitEscala = async (e) => {
       status = 'concluido';
     }
 
+    if (!DEMO_MODE) {
+      const dbData = {
+        id_idoso: idosoId,
+        id_cuidador: cuidId,
+        data_inicio: startIso,
+        data_termino: endIso,
+        valor_total: valorTotal,
+        status: status,
+        observacoes: document.getElementById('escObs').value
+      };
+
+      if (window._editingEscalaId) {
+        const { error } = await supabase
+          .from('escalas_servicos')
+          .update(dbData)
+          .eq('id', window._editingEscalaId);
+        if (error) throw error;
+        showToast('Escala atualizada com sucesso!', 'success');
+      } else {
+        const { error } = await supabase
+          .from('escalas_servicos')
+          .insert(dbData);
+        if (error) throw error;
+        showToast('Escala criada com sucesso!', 'success');
+      }
+      window._editingEscalaId = null;
+      closeModal('modalEscala');
+      await loadAllData();
+      loadDashboard();
+      return;
+    }
+
     if (window._editingEscalaId) {
       const idx = allEscalas.findIndex(x => x.id === window._editingEscalaId);
       if (idx !== -1) {
@@ -1680,7 +1712,6 @@ window.submitIdoso = async (e) => {
       data_nascimento:  document.getElementById('idNasc').value || null,
       genero:           document.getElementById('idGenero').value || null,
       tipo_sanguineo:   document.getElementById('idSangue').value || null,
-      clientes_familia: { id: famId, usuarios: { nome: famObj ? famObj.usuarios.nome : 'Sem família' } },
       restricoes_medicas: document.getElementById('idRestricoes').value,
       alergias:         document.getElementById('idAlergias').value,
       medicamentos:     document.getElementById('idMedicamentos').value,
@@ -1693,15 +1724,47 @@ window.submitIdoso = async (e) => {
       ativo:            true
     };
 
+    if (!DEMO_MODE) {
+      const dbData = {
+        id_cliente: famId,
+        ...data
+      };
+
+      if (window._editingIdosoId) {
+        const { error } = await supabase
+          .from('idosos')
+          .update(dbData)
+          .eq('id', window._editingIdosoId);
+        if (error) throw error;
+        showToast('Assistido atualizado com sucesso!', 'success');
+      } else {
+        const { error } = await supabase
+          .from('idosos')
+          .insert(dbData);
+        if (error) throw error;
+        showToast('Assistido cadastrado com sucesso!', 'success');
+      }
+      window._editingIdosoId = null;
+      closeModal('modalIdoso');
+      await loadAllData();
+      loadDashboard();
+      return;
+    }
+
+    const demoData = {
+      ...data,
+      clientes_familia: { id: famId, usuarios: { nome: famObj ? famObj.usuarios.nome : 'Sem família' } }
+    };
+
     if (window._editingIdosoId) {
       const idx = allIdosos.findIndex(x => x.id === window._editingIdosoId);
       if (idx !== -1) {
-        allIdosos[idx] = { ...allIdosos[idx], ...data };
+        allIdosos[idx] = { ...allIdosos[idx], ...demoData };
       }
       window._editingIdosoId = null;
       showToast('Assistido atualizado com sucesso!', 'success');
     } else {
-      allIdosos.unshift({ id: String(allIdosos.length + 1), ...data });
+      allIdosos.unshift({ id: String(allIdosos.length + 1), ...demoData });
       showToast('Assistido cadastrado com sucesso!', 'success');
     }
 
@@ -1725,17 +1788,67 @@ window.submitCuidador = async (e) => {
       status:           document.getElementById('cuidStatus').value,
       valor_hora:       parseFloat(document.getElementById('cuidValor').value || 0),
       formacao:         document.getElementById('cuidFormacao').value || 'Sem formação informada',
-      usuarios: {
-        nome:           document.getElementById('cuidNome').value,
-        email:          document.getElementById('cuidEmail').value
-      },
       publico_atendido: publico
+    };
+
+    const nome = document.getElementById('cuidNome').value;
+    const email = document.getElementById('cuidEmail').value;
+
+    if (!DEMO_MODE) {
+      if (window._editingCuidadorId) {
+        const cuidObj = allCuidadores.find(x => x.id === window._editingCuidadorId);
+
+        // Atualiza usuarios
+        const { error: userErr } = await supabase
+          .from('usuarios')
+          .update({ nome, email })
+          .eq('id', cuidObj.id_usuario);
+        if (userErr) throw userErr;
+
+        // Atualiza cuidadores
+        const { error: cuidErr } = await supabase
+          .from('cuidadores')
+          .update(data)
+          .eq('id', window._editingCuidadorId);
+        if (cuidErr) throw cuidErr;
+
+        showToast('Cuidador atualizado com sucesso!', 'success');
+      } else {
+        // Insere usuarios
+        const { data: newUser, error: userErr } = await supabase
+          .from('usuarios')
+          .insert({ nome, email, tipo: 'cuidador' })
+          .select()
+          .single();
+        if (userErr) throw userErr;
+
+        // Insere cuidadores
+        const { error: cuidErr } = await supabase
+          .from('cuidadores')
+          .insert({
+            id_usuario: newUser.id,
+            ...data
+          });
+        if (cuidErr) throw cuidErr;
+
+        showToast('Cuidador cadastrado com sucesso!', 'success');
+      }
+      window._editingCuidadorId = null;
+      closeModal('modalCuidador');
+      await loadAllData();
+      loadDashboard();
+      return;
+    }
+
+    const demoData = {
+      ...data,
+      usuarios: { nome, email }
     };
 
     if (window._editingCuidadorId) {
       const idx = allCuidadores.findIndex(x => x.id === window._editingCuidadorId);
       if (idx !== -1) {
-        allCuidadores[idx] = { ...allCuidadores[idx], ...data };
+        allCuidadores[idx] = { ...allCuidadores[idx], ...demoData };
       }
       window._editingCuidadorId = null;
       showToast('Cuidador atualizado com sucesso!', 'success');
@@ -1743,7 +1856,7 @@ window.submitCuidador = async (e) => {
       allCuidadores.unshift({
         id: 'c' + (allCuidadores.length + 1),
         avaliacao_media: 5.0,
-        ...data
+        ...demoData
       });
       showToast('Cuidador cadastrado com sucesso!', 'success');
     }
@@ -1763,22 +1876,71 @@ window.submitFamilia = async (e) => {
     const data = {
       cidade: document.getElementById('famCidade').value,
       estado: document.getElementById('famEstado').value,
-      celular: document.getElementById('famCelular').value,
-      usuarios: {
-        nome: document.getElementById('famNome').value,
-        email: document.getElementById('famEmail').value
+      celular: document.getElementById('famCelular').value
+    };
+
+    const nome = document.getElementById('famNome').value;
+    const email = document.getElementById('famEmail').value;
+
+    if (!DEMO_MODE) {
+      if (window._editingFamiliaId) {
+        const famObj = allFamilias.find(x => x.id === window._editingFamiliaId);
+
+        // Atualiza usuarios
+        const { error: userErr } = await supabase
+          .from('usuarios')
+          .update({ nome, email })
+          .eq('id', famObj.id_usuario);
+        if (userErr) throw userErr;
+
+        // Atualiza clientes_familia
+        const { error: famErr } = await supabase
+          .from('clientes_familia')
+          .update(data)
+          .eq('id', window._editingFamiliaId);
+        if (famErr) throw famErr;
+
+        showToast('Família atualizada com sucesso!', 'success');
+      } else {
+        // Insere usuarios
+        const { data: newUser, error: userErr } = await supabase
+          .from('usuarios')
+          .insert({ nome, email, tipo: 'cliente' })
+          .select()
+          .single();
+        if (userErr) throw userErr;
+
+        // Insere clientes_familia
+        const { error: famErr } = await supabase
+          .from('clientes_familia')
+          .insert({
+            id_usuario: newUser.id,
+            ...data
+          });
+        if (famErr) throw famErr;
+
+        showToast('Família cadastrada com sucesso!', 'success');
       }
+      window._editingFamiliaId = null;
+      closeModal('modalFamilia');
+      await loadAllData();
+      return;
+    }
+
+    const demoData = {
+      ...data,
+      usuarios: { nome, email }
     };
 
     if (window._editingFamiliaId) {
       const idx = allFamilias.findIndex(x => x.id === window._editingFamiliaId);
       if (idx !== -1) {
-        allFamilias[idx] = { ...allFamilias[idx], ...data };
+        allFamilias[idx] = { ...allFamilias[idx], ...demoData };
       }
       window._editingFamiliaId = null;
       showToast('Família atualizada com sucesso!', 'success');
     } else {
-      allFamilias.unshift({ id: 'f' + (allFamilias.length + 1), ...data });
+      allFamilias.unshift({ id: 'f' + (allFamilias.length + 1), ...demoData });
       showToast('Família cadastrada com sucesso!', 'success');
     }
 
