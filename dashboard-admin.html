@@ -1581,16 +1581,19 @@ function populateSelects() {
   // Select idosos no modal de escala
   const selIdoso = document.getElementById('escIdoso');
   if (selIdoso) {
+    selIdoso.innerHTML = '<option value="">Selecione...</option>';
     allIdosos.forEach(i => selIdoso.add(new Option(i.nome, i.id)));
   }
   // Select cuidadores no modal de escala
   const selCuidador = document.getElementById('escCuidador');
   if (selCuidador) {
+    selCuidador.innerHTML = '<option value="">Selecione...</option>';
     allCuidadores.forEach(c => selCuidador.add(new Option(c.usuarios?.nome || '—', c.id)));
   }
   // Select famílias no modal de idoso
   const selFamilia = document.getElementById('idFamilia');
   if (selFamilia) {
+    selFamilia.innerHTML = '<option value="">Selecione...</option>';
     allFamilias.forEach(f => selFamilia.add(new Option(f.usuarios?.nome || '—', f.id)));
   }
 }
