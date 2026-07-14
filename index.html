@@ -290,11 +290,14 @@
 
   <script>
     // ============================================================
-    // CUIDELAR LOGIN — Script autossuficiente (Modo Demo)
+    // CUIDELAR LOGIN — Script integrado (Modo Demo + Supabase Real)
     // ============================================================
 
     // Inicializa ícones Lucide
     lucide.createIcons();
+
+    let supabase = null;
+    let DEMO_MODE = true;
 
     // Credenciais demo
     const DEMO_USERS = {
@@ -309,8 +312,20 @@
       cliente: 'dashboard-familia.html',
     };
 
-    // Verifica sessão existente
-    (function () {
+    async function initDatabase() {
+      try {
+        const clientModule = await import('./js/supabase-client.js');
+        DEMO_MODE = clientModule.DEMO_MODE;
+        supabase = clientModule.supabase;
+      } catch (e) {
+        console.warn('Erro ao carregar cliente Supabase, usando stubs locais.', e);
+      }
+    }
+
+    // Inicialização da página e verificação de sessão
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initDatabase();
+
       const raw = localStorage.getItem('cuidelar_user');
       if (raw) {
         try {
@@ -318,12 +333,28 @@
           if (u && u.tipo) { window.location.href = REDIRECT_MAP[u.tipo]; }
         } catch (e) { localStorage.removeItem('cuidelar_user'); }
       }
-    })();
+    });
 
-    // Atalho demo — preenche e submete automaticamente
+    // Atalho demo — preenche e submete automaticamente (reconhece credenciais de produção)
     window.fillDemo = (email, senha) => {
-      document.getElementById('emailInput').value = email;
-      document.getElementById('passwordInput').value = senha;
+      let targetEmail = email;
+      let targetSenha = senha;
+
+      if (!DEMO_MODE) {
+        if (email.startsWith('admin')) {
+          targetEmail = 'cuidelarslzadmin@gmail.com';
+          targetSenha = 'slz12345';
+        } else if (email.startsWith('cuidador')) {
+          targetEmail = 'cuidelarslzcuidador@gmail.com';
+          targetSenha = 'slz12345';
+        } else if (email.startsWith('familia')) {
+          targetEmail = 'cuidelarslzfamilia@gmail.com';
+          targetSenha = 'slz12345';
+        }
+      }
+
+      document.getElementById('emailInput').value = targetEmail;
+      document.getElementById('passwordInput').value = targetSenha;
       setTimeout(() => document.getElementById('loginForm').requestSubmit(), 250);
     };
 
@@ -348,7 +379,7 @@
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const email = document.getElementById('emailInput').value.trim();
+      const email = document.getElementById('emailInput').value.trim().toLowerCase();
       const senha = document.getElementById('passwordInput').value;
       const btn = document.getElementById('loginBtn');
       const errEl = document.getElementById('loginError');
@@ -367,20 +398,47 @@
       // Simula latência de autenticação
       await new Promise(r => setTimeout(r, 700));
 
-      const user = DEMO_USERS[email];
-      if (!user || user.senha !== senha) {
-        errMsg.textContent = 'E-mail ou senha incorretos. Use as credenciais demo acima.';
-        errEl.classList.add('visible');
-        btn.classList.remove('loading');
-        btn.disabled = false;
-        return;
-      }
+      if (DEMO_MODE) {
+        const user = DEMO_USERS[email];
+        if (!user || user.senha !== senha) {
+          errMsg.textContent = 'E-mail ou senha incorretos. Use as credenciais demo acima.';
+          errEl.classList.add('visible');
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          return;
+        }
 
-      // Login bem-sucedido
-      const profile = { id: user.id, nome: user.nome, tipo: user.tipo, email };
-      localStorage.setItem('cuidelar_user', JSON.stringify(profile));
-      showToast(`Bem-vindo, ${user.nome.split(' ')[0]}! 🎉`, 'success', 2000);
-      setTimeout(() => { window.location.href = REDIRECT_MAP[user.tipo]; }, 900);
+        // Login bem-sucedido demo
+        const profile = { id: user.id, nome: user.nome, tipo: user.tipo, email };
+        localStorage.setItem('cuidelar_user', JSON.stringify(profile));
+        showToast(`Bem-vindo, ${user.nome.split(' ')[0]}! 🎉`, 'success', 2000);
+        setTimeout(() => { window.location.href = REDIRECT_MAP[user.tipo]; }, 900);
+      } else {
+        // Login Real Supabase
+        try {
+          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password: senha });
+          if (authError) throw new Error(authError.message);
+
+          const { data: profile, error: profError } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('auth_id', authData.user.id)
+            .single();
+
+          if (profError || !profile) {
+            throw new Error('Perfil do usuário não encontrado no banco de dados.');
+          }
+
+          localStorage.setItem('cuidelar_user', JSON.stringify(profile));
+          showToast(`Bem-vindo, ${profile.nome.split(' ')[0]}! 🎉`, 'success', 2000);
+          setTimeout(() => { window.location.href = REDIRECT_MAP[profile.tipo]; }, 900);
+        } catch(err) {
+          errMsg.textContent = err.message || 'Erro ao realizar login.';
+          errEl.classList.add('visible');
+          btn.classList.remove('loading');
+          btn.disabled = false;
+        }
+      }
     });
 
     // Toggle senha
