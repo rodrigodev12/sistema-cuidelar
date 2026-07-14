@@ -314,7 +314,7 @@
 
     async function initDatabase() {
       try {
-        const clientModule = await import('./js/supabase-client.js');
+        const clientModule = await import('./js/supabase-client.js?v=6');
         DEMO_MODE = clientModule.DEMO_MODE;
         supabase = clientModule.supabase;
       } catch (e) {

@@ -395,7 +395,7 @@ const _stubSupabase = {
 
 async function initDatabase() {
   try {
-    const clientModule = await import('./js/supabase-client.js');
+    const clientModule = await import('./js/supabase-client.js?v=6');
     DEMO_MODE = clientModule.DEMO_MODE;
     supabase = DEMO_MODE ? _stubSupabase : clientModule.supabase;
   } catch (e) {
@@ -666,6 +666,12 @@ function restoreCheckinState() {
   try {
     const saved = JSON.parse(localStorage.getItem(LS_CHECKIN) || 'null');
     if (!saved) return;
+
+    // Limpa o cache se o ID da escala do banco de dados for diferente do ID do cache local
+    if (currentEscala && saved.id !== currentEscala.id) {
+      localStorage.removeItem(LS_CHECKIN);
+      return;
+    }
 
     // Verifica se é do mesmo dia
     const savedDay = new Date(saved.hora).toDateString();

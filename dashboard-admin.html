@@ -944,7 +944,7 @@ const _stub = {
 
 async function initDatabase() {
   try {
-    const clientModule = await import('./js/supabase-client.js');
+    const clientModule = await import('./js/supabase-client.js?v=6');
     DEMO_MODE = clientModule.DEMO_MODE;
     supabase = DEMO_MODE ? _stub : clientModule.supabase;
   } catch (e) {
