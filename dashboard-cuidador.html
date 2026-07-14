@@ -718,13 +718,12 @@ async function loadEscalaCuidador() {
 
     if (!cuidador) { showDemoData(); return; }
 
-    const hoje = new Date().toISOString().split('T')[0];
+    const agora = new Date().toISOString();
     const { data: escalas } = await supabase
       .from('escalas_servicos')
       .select('*, idosos(*)')
       .eq('id_cuidador', cuidador.id)
-      .gte('data_inicio', hoje + 'T00:00:00')
-      .lte('data_inicio', hoje + 'T23:59:59')
+      .gte('data_termino', agora)
       .order('data_inicio')
       .limit(1);
 
