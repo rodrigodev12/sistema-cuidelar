@@ -836,9 +836,10 @@ function updateEscalaUI(escala) {
 
   document.getElementById('shift-time').textContent = `${fmtHora(ini)} – ${fmtHora(fim)}`;
   document.getElementById('shift-date').textContent = ini.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
-  document.getElementById('stat-plantoes').textContent = '1';
-  document.getElementById('stat-horas').textContent = horas.toFixed(0) + 'h';
-  document.getElementById('stat-ganhos').textContent = 'R$' + (escala.valor_total || 0).toFixed(0);
+  const isHoje = ini.toDateString() === new Date().toDateString();
+  document.getElementById('stat-plantoes').textContent = isHoje ? '1' : '0';
+  document.getElementById('stat-horas').textContent = isHoje ? horas.toFixed(0) + 'h' : '0h';
+  document.getElementById('stat-ganhos').textContent = isHoje ? 'R$' + (escala.valor_total || 0).toFixed(0) : 'R$0';
 
   const badge = document.getElementById('escala-status-badge');
   const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
