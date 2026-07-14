@@ -665,3 +665,56 @@
   }
 }
 
+/* Agenda e Graficos Responsivos */
+.chart-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .chart-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: var(--space-3) !important;
+  }
+  
+  .chart-header-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: var(--space-3) !important;
+  }
+  
+  .chart-header-actions button,
+  .chart-header select,
+  .chart-header a {
+    width: 100% !important;
+    text-align: center;
+    justify-content: center;
+  }
+  
+  .calendar-legend {
+    justify-content: flex-start !important;
+    gap: var(--space-3) !important;
+  }
+
+  /* Faz o grid do FullCalendar rolar horizontalmente em telas pequenas */
+  .fc-view-harness {
+    overflow-x: auto !important;
+  }
+  
+  .fc-view-harness .fc-scrollgrid {
+    min-width: 720px !important;
+  }
+  
+  /* Ajusta os botões e títulos do próprio cabeçalho do FullCalendar no mobile */
+  .fc .fc-toolbar {
+    flex-direction: column !important;
+    gap: var(--space-3) !important;
+  }
+  .fc .fc-toolbar-title {
+    font-size: 1rem !important;
+    text-align: center;
+  }
+}
+
