@@ -1142,6 +1142,9 @@ async function loadAllData() {
     // Inicia calendário
     initCalendar(allEscalas);
 
+    // Renderiza alertas reais do banco
+    renderDynamicAlerts();
+
   } catch (e) {
     console.error('Erro ao carregar dados:', e);
     // Usa dados demo para demonstração visual
@@ -1237,6 +1240,86 @@ function loadDemoData() {
 
   // Atualiza KPIs com dados reais do demo
   loadDashboard();
+  renderDynamicAlerts();
+}
+
+function renderDynamicAlerts() {
+  const container = document.getElementById('alerts-list');
+  if (!container) return;
+
+  const alerts = [];
+  const agora = new Date();
+
+  // 1. Verifica escalas atrasadas ou sem cuidador
+  allEscalas.forEach(esc => {
+    const ini = new Date(esc.data_inicio);
+    const fim = new Date(esc.data_termino);
+    const idosoNome = esc.idosos?.nome || 'Paciente';
+    const cuidNome = esc.cuidadores?.usuarios?.nome || 'Cuidador(a)';
+
+    // Sem cuidador escalado
+    if (!esc.id_cuidador && ini > agora) {
+      alerts.push({
+        type: 'warning',
+        icon: '📅',
+        title: 'Plantão sem Cuidador',
+        desc: `${ini.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às ${ini.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} — Sem profissional escalado para ${idosoNome}`
+      });
+    }
+
+    // Atraso de Check-in (início no passado há mais de 30 min, status agendado)
+    if (esc.id_cuidador && esc.status === 'agendado' && (agora - ini) > 30 * 60000) {
+      alerts.push({
+        type: 'danger',
+        icon: '⏰',
+        title: 'Atraso de Check-in',
+        desc: `${idosoNome} — Plantão deveria iniciar às ${ini.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} com ${cuidNome}`
+      });
+    }
+
+    // Atraso de Check-out (término no passado há mais de 30 min, status em_andamento)
+    if (esc.status === 'em_andamento' && (agora - fim) > 30 * 60000) {
+      alerts.push({
+        type: 'warning',
+        icon: '⏱️',
+        title: 'Ponto em aberto',
+        desc: `${idosoNome} — Horário de término era às ${fim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Sem registro de check-out.`
+      });
+    }
+  });
+
+  // 2. Verifica cuidadores pendentes
+  allCuidadores.forEach(c => {
+    if (c.status === 'pendente' || c.status === 'inativo') {
+      const nome = c.usuarios?.nome || 'Profissional';
+      alerts.push({
+        type: 'info',
+        icon: '👤',
+        title: 'Aprovação Pendente',
+        desc: `Cuidador(a) ${nome} aguarda ativação de cadastro no sistema.`
+      });
+    }
+  });
+
+  // Renderiza
+  if (alerts.length === 0) {
+    container.innerHTML = `
+      <div style="color:var(--text-muted);text-align:center;padding:1.5rem;font-size:0.875rem;">
+        ✨ Tudo sob controle! Nenhum alerta pendente.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = alerts.map(a => `
+    <div class="alert-card ${a.type}">
+      <div class="alert-icon">${a.icon}</div>
+      <div>
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-desc">${a.desc}</div>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ============================================================
