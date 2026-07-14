@@ -601,6 +601,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUser = await protectRoute(['cuidador']);
   if (!currentUser) return;
 
+  // Auto-correção: Atualiza o perfil caso o localStorage tenha ID obsoleto
+  if (!DEMO_MODE) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: freshProfile } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('auth_id', session.user.id)
+          .single();
+        if (freshProfile) {
+          currentUser = freshProfile;
+          localStorage.setItem('cuidelar_user', JSON.stringify(freshProfile));
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao atualizar perfil em tempo real:', e);
+    }
+  }
+
   // Restaura seção ativa anterior (ou carrega default)
   const savedSection = localStorage.getItem('cuidador_active_section');
   if (savedSection) {
@@ -710,22 +730,32 @@ function saveChecklistState() {
 // ============================================================
 async function loadEscalaCuidador() {
   try {
-    const { data: cuidador } = await supabase
+    const { data: cuidador, error: cuidErr } = await supabase
       .from('cuidadores')
       .select('id')
       .eq('id_usuario', currentUser.id)
       .single();
 
-    if (!cuidador) { showDemoData(); return; }
+    if (cuidErr || !cuidador) {
+      console.warn('Cuidador não encontrado no banco:', cuidErr);
+      showDemoData();
+      return;
+    }
 
     const agora = new Date().toISOString();
-    const { data: escalas } = await supabase
+    const { data: escalas, error: escErr } = await supabase
       .from('escalas_servicos')
       .select('*, idosos(*)')
       .eq('id_cuidador', cuidador.id)
       .gte('data_termino', agora)
       .order('data_inicio')
       .limit(1);
+
+    if (escErr) {
+      console.error('Erro ao consultar escalas no Supabase:', escErr);
+      showDemoData();
+      return;
+    }
 
     if (escalas?.length) {
       currentEscala = escalas[0];
@@ -736,6 +766,7 @@ async function loadEscalaCuidador() {
       showDemoData();
     }
   } catch(e) {
+    console.error('Erro na rotina loadEscalaCuidador:', e);
     showDemoData();
   }
 }
@@ -1207,21 +1238,33 @@ window.salvarDiario = async () => {
 };
 
 async function loadHistorico() {
-  // Lê do localStorage primeiro
-  const key   = 'cl_diario_' + (escalaPendingId || 'demo');
-  const saved = JSON.parse(localStorage.getItem(key) || '[]');
-  const today = new Date().toDateString();
-  const todayEntries = saved.filter(e => new Date(e.horario).toDateString() === today);
+  try {
+    const key   = 'cl_diario_' + (escalaPendingId || 'demo');
+    let saved = [];
+    try {
+      saved = JSON.parse(localStorage.getItem(key) || '[]');
+      if (!Array.isArray(saved)) saved = [];
+    } catch {
+      saved = [];
+    }
+    const today = new Date().toDateString();
+    const todayEntries = saved.filter(e => e && e.horario && new Date(e.horario).toDateString() === today);
 
-  if (todayEntries.length > 0) {
-    diarioHistorico = todayEntries;
-  } else {
-    // Sem registros hoje: mostra demo
+    if (todayEntries.length > 0) {
+      diarioHistorico = todayEntries;
+    } else {
+      diarioHistorico = [
+        { horario: new Date(Date.now()-7200000).toISOString(), batimento_cardiaco:72, pressao_arterial:'118/78', temperatura:36.4, alimentacao:'aceitou', medicamento_ministrado:true, observacoes:'Paciente bem disposta, tomou café da manhã com apetite.' }
+      ];
+    }
+    renderHistorico();
+  } catch (err) {
+    console.error('Erro no loadHistorico:', err);
     diarioHistorico = [
       { horario: new Date(Date.now()-7200000).toISOString(), batimento_cardiaco:72, pressao_arterial:'118/78', temperatura:36.4, alimentacao:'aceitou', medicamento_ministrado:true, observacoes:'Paciente bem disposta, tomou café da manhã com apetite.' }
     ];
+    renderHistorico();
   }
-  renderHistorico();
 }
 
 function renderHistorico() {
