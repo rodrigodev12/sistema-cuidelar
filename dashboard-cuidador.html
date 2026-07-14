@@ -75,7 +75,7 @@
         <div class="greeting-text">
           <h2 id="greetingText">Bom dia, Cuidador(a)!</h2>
           <p id="greetingDate">Você tem 1 plantão hoje</p>
-          <button class="btn btn-secondary btn-sm" onclick="alternarDemoPaciente()" style="margin-top:0.625rem; font-size:0.75rem; padding: 0.25rem 0.5rem; width: fit-content; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; gap: 4px;">
+          <button class="btn btn-secondary btn-sm" id="btnAlternarDemo" onclick="alternarDemoPaciente()" style="margin-top:0.625rem; font-size:0.75rem; padding: 0.25rem 0.5rem; width: fit-content; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; gap: 4px;">
             <span>🔄</span> Alternar Paciente (Idoso / Autista)
           </button>
         </div>
@@ -569,6 +569,12 @@ const LS_CHECKLIST = 'cl_checklist';
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
   await initDatabase();
+
+  if (!DEMO_MODE) {
+    const btn = document.getElementById('btnAlternarDemo');
+    if (btn) btn.style.display = 'none';
+  }
+
   // Limpeza preventiva de localStorage para liberar espaço de imagens gigantes legadas
   try {
     for (let i = 0; i < localStorage.length; i++) {
