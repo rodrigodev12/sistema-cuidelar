@@ -936,9 +936,78 @@ let chartFat  = null;
 let chartEsc  = null;
 
 // ============================================================
+// CROSS-PANEL SYNC via BroadcastChannel + localStorage
+// ============================================================
+let _bc = null;
+try { _bc = new BroadcastChannel('cuidelar_channel'); } catch(e) {}
+
+function setupCrossSync() {
+  if (_bc) {
+    _bc.onmessage = (event) => {
+      const { type, payload } = event.data;
+      handleRemoteUpdate(type, payload);
+    };
+  }
+
+  // Fallback: polling localStorage
+  setInterval(() => {
+    const raw = localStorage.getItem('cl_last_update');
+    if (!raw) return;
+    try {
+      const msg = JSON.parse(raw);
+      if (Date.now() - msg.ts < 10000) {
+        handleRemoteUpdate(msg.type, msg.payload);
+        localStorage.removeItem('cl_last_update');
+      }
+    } catch(e) {}
+  }, 5000);
+}
+
+function handleRemoteUpdate(type, payload) {
+  if (type === 'checkin' || type === 'checkout') {
+    const scaleId = (payload.id === 'demo') ? 'e1' : payload.id;
+    const escala = allEscalas.find(e => e.id === scaleId);
+    if (escala) {
+      escala.status = (type === 'checkin') ? 'em_andamento' : 'concluido';
+      if (type === 'checkin') {
+        escala.checkin_hora = payload.hora;
+      } else {
+        escala.checkout_hora = payload.horaOut;
+      }
+      
+      // Atualiza as tabelas, a lista de escalas do dia e o calendário
+      renderEscalas(allEscalas);
+      renderEscalasHoje(allEscalas);
+      initCalendar(allEscalas);
+      loadDashboard(); // Recalcula KPIs do dashboard
+
+      showToast(`📍 Cuidador(a) atualizou status do plantão: ${type === 'checkin' ? 'Check-in (Em andamento)' : 'Check-out (Concluído)'}`, 'info');
+    }
+  } else if (type === 'diario') {
+    // Adiciona o alerta no início da lista de alertas
+    const alertsList = document.getElementById('alerts-list');
+    if (alertsList) {
+      const newAlert = document.createElement('div');
+      newAlert.className = 'alert-card info';
+      newAlert.style.borderLeft = '4px solid var(--primary-500)';
+      newAlert.innerHTML = `
+        <div class="alert-icon">📋</div>
+        <div>
+          <div class="alert-title">Novo registro diário</div>
+          <div class="alert-desc">${payload.observacoes || 'Sinais vitais e cuidados registrados.'} (${payload.humor || 'sem alteração'})</div>
+        </div>
+      `;
+      alertsList.insertBefore(newAlert, alertsList.firstChild);
+    }
+    showToast('📋 Novo registro diário recebido do cuidador!', 'info');
+  }
+}
+
+// ============================================================
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  setupCrossSync();
   currentUser = await protectRoute(['administrador']);
   if (!currentUser) return;
 
