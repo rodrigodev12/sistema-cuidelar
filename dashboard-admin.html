@@ -898,6 +898,9 @@
 // ============================================================
 // SUPABASE DEMO STUB — inline, sem dependências de módulo
 // ============================================================
+let supabase = null;
+let DEMO_MODE = true;
+
 const _stub = {
   from: () => ({
     select: function() { return this; },
@@ -918,7 +921,17 @@ const _stub = {
     signOut: async () => {},
   },
 };
-const supabase = _stub;
+
+async function initDatabase() {
+  try {
+    const clientModule = await import('./js/supabase-client.js');
+    DEMO_MODE = clientModule.DEMO_MODE;
+    supabase = DEMO_MODE ? _stub : clientModule.supabase;
+  } catch (e) {
+    console.warn('Erro ao carregar cliente Supabase, usando stubs locais.', e);
+    supabase = _stub;
+  }
+}
 </script>
 
 <script>
@@ -941,6 +954,8 @@ let chartEsc  = null;
 let _bc = null;
 try { _bc = new BroadcastChannel('cuidelar_channel'); } catch(e) {}
 
+let realtimeChannel = null;
+
 function setupCrossSync() {
   if (_bc) {
     _bc.onmessage = (event) => {
@@ -961,6 +976,29 @@ function setupCrossSync() {
       }
     } catch(e) {}
   }, 5000);
+
+  // Sincronização via rede (Supabase Realtime) quando não for modo demo
+  if (!DEMO_MODE && supabase) {
+    if (realtimeChannel) realtimeChannel.unsubscribe();
+    realtimeChannel = supabase
+      .channel('feed-admin')
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'diario_cuidados'
+      }, (payload) => {
+        handleRemoteUpdate('diario', payload.new);
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'escalas_servicos'
+      }, (payload) => {
+        const scale = payload.new;
+        if (scale.status === 'em_andamento') {
+          handleRemoteUpdate('checkin', { id: scale.id, lat: scale.checkin_lat, lng: scale.checkin_lng, hora: scale.checkin_hora });
+        } else if (scale.status === 'concluido') {
+          handleRemoteUpdate('checkout', { id: scale.id, lat: scale.checkout_lat, lng: scale.checkout_lng, horaOut: scale.checkout_hora });
+        }
+      })
+      .subscribe();
+  }
 }
 
 function handleRemoteUpdate(type, payload) {
@@ -1007,6 +1045,7 @@ function handleRemoteUpdate(type, payload) {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  await initDatabase();
   setupCrossSync();
   currentUser = await protectRoute(['administrador']);
   if (!currentUser) return;

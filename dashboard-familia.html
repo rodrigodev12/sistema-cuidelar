@@ -323,8 +323,10 @@
      SCRIPTS
      ============================================================ -->
 <script>
-// Stub Supabase (demo mode)
-const supabase = {
+let supabase = null;
+let DEMO_MODE = true;
+
+const _stubSupabase = {
   from: () => ({
     select: function(){return this;}, eq: function(){return this;},
     neq: function(){return this;}, gte: function(){return this;},
@@ -338,7 +340,17 @@ const supabase = {
   channel: () => ({on:function(){return this;},subscribe:function(){return this;}}),
   auth: {getSession: async()=>({data:{session:null}})}
 };
-const listenDiario = () => ({on:function(){return this;},subscribe:function(){return this;}});
+
+async function initDatabase() {
+  try {
+    const clientModule = await import('./js/supabase-client.js');
+    DEMO_MODE = clientModule.DEMO_MODE;
+    supabase = DEMO_MODE ? _stubSupabase : clientModule.supabase;
+  } catch (e) {
+    console.warn('Erro ao carregar cliente Supabase, usando stubs locais.', e);
+    supabase = _stubSupabase;
+  }
+}
 
 // ============================================================
 // CROSS-PANEL SYNC via BroadcastChannel + localStorage
@@ -477,6 +489,7 @@ let realtimeChannel = null;
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  await initDatabase();
   currentUser = await protectRoute(['cliente']);
   if (!currentUser) return;
 
@@ -768,7 +781,21 @@ function setupRealtime() {
       if (payload.new.visivel_familia) {
         feedEntries.unshift(payload.new);
         renderFeed(feedEntries);
+        updateSidebarQuickInfo(payload.new);
         showToast('📋 Novo registro do(a) cuidador(a)!', 'info');
+      }
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'escalas_servicos'
+    }, (payload) => {
+      const scale = payload.new;
+      const hoje = new Date().toISOString().split('T')[0];
+      if (scale.data_inicio?.startsWith(hoje)) {
+        if (scale.status === 'em_andamento') {
+          handleRemoteUpdate('checkin', { id: scale.id, lat: scale.checkin_lat, lng: scale.checkin_lng, hora: scale.checkin_hora });
+        } else if (scale.status === 'concluido') {
+          handleRemoteUpdate('checkout', { id: scale.id, lat: scale.checkout_lat, lng: scale.checkout_lng, horaOut: scale.checkout_hora });
+        }
       }
     })
     .subscribe();

@@ -4,7 +4,7 @@
  * Inclui MODO DEMO para testar sem Supabase configurado.
  */
 
-import { supabase, getUserProfile } from './supabase-client.js';
+import { supabase, getUserProfile, DEMO_MODE } from './supabase-client.js';
 
 // ============================================================
 // MODO DEMO
@@ -14,7 +14,6 @@ import { supabase, getUserProfile } from './supabase-client.js';
 //   cuidador@cuidelar.com / cuida123
 //   familia@cuidelar.com  / familia123
 // ============================================================
-const DEMO_MODE = true; // Mude para false após configurar o Supabase
 
 const DEMO_USERS = {
   'admin@cuidelar.com': {

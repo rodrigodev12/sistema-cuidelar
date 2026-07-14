@@ -375,7 +375,10 @@
 // ============================================================
 // STUB SUPABASE (demo) + Persistência localStorage
 // ============================================================
-const supabase = {
+let supabase = null;
+let DEMO_MODE = true;
+
+const _stubSupabase = {
   from: () => ({
     select: function(){return this;}, eq: function(){return this;},
     neq: function(){return this;}, gte: function(){return this;},
@@ -390,6 +393,17 @@ const supabase = {
   auth: {getSession: async()=>({data:{session:null}})}
 };
 
+async function initDatabase() {
+  try {
+    const clientModule = await import('./js/supabase-client.js');
+    DEMO_MODE = clientModule.DEMO_MODE;
+    supabase = DEMO_MODE ? _stubSupabase : clientModule.supabase;
+  } catch (e) {
+    console.warn('Erro ao carregar cliente Supabase, usando stubs locais.', e);
+    supabase = _stubSupabase;
+  }
+}
+
 // BroadcastChannel para comunicação cross-tab
 let _bc = null;
 try { _bc = new BroadcastChannel('cuidelar_channel'); } catch(e) {}
@@ -402,16 +416,89 @@ function _publishUpdate(type, payload) {
 const registrarCheckin = async (id, lat, lng) => {
   const estado = { id, lat, lng, hora: new Date().toISOString(), ativo: true,
     cuidadorNome: (window.__cuidelarUser||{}).nome || 'Cuidador(a)' };
+
+  if (!DEMO_MODE) {
+    try {
+      const { error } = await supabase
+        .from('escalas_servicos')
+        .update({
+          checkin_hora: estado.hora,
+          checkin_lat: lat,
+          checkin_lng: lng,
+          status: 'em_andamento'
+        })
+        .eq('id', id);
+      if (error) throw error;
+    } catch(err) {
+      console.error('Erro ao salvar checkin no Supabase:', err);
+      showToast('Erro de sincronização. Salvando localmente.', 'warning');
+    }
+  }
+
   localStorage.setItem('cl_checkin', JSON.stringify(estado));
   _publishUpdate('checkin', estado);
 };
+
 const registrarCheckout = async (id, lat, lng) => {
   const estado = JSON.parse(localStorage.getItem('cl_checkin') || '{}');
   estado.ativo = false; estado.horaOut = new Date().toISOString();
+
+  if (!DEMO_MODE) {
+    try {
+      const { error } = await supabase
+        .from('escalas_servicos')
+        .update({
+          checkout_hora: estado.horaOut,
+          checkout_lat: lat,
+          checkout_lng: lng,
+          status: 'concluido'
+        })
+        .eq('id', id);
+      if (error) throw error;
+    } catch(err) {
+      console.error('Erro ao salvar checkout no Supabase:', err);
+      showToast('Erro de sincronização. Salvando localmente.', 'warning');
+    }
+  }
+
   localStorage.setItem('cl_checkin', JSON.stringify(estado));
   _publishUpdate('checkout', estado);
 };
+
 const insertDiario = async (d) => {
+  if (!DEMO_MODE) {
+    try {
+      // Cria registro no banco de dados real
+      const { data, error } = await supabase
+        .from('diario_cuidados')
+        .insert({
+          id_escala: d.id_escala,
+          batimento_cardiaco: d.batimento_cardiaco,
+          pressao_arterial: d.pressao_arterial,
+          temperatura: d.temperatura,
+          saturacao_oxigenio: d.saturacao_oxigenio,
+          alimentacao: d.alimentacao,
+          hidratacao: d.hidratacao,
+          humor: d.humor,
+          medicamento_ministrado: d.medicamento_ministrado,
+          medicamentos_lista: d.medicamentos_lista,
+          banho_realizado: d.banho_realizado,
+          observacoes: d.observacoes,
+          visivel_familia: d.visivel_familia,
+          foto_url: d.foto_url
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      _publishUpdate('diario', data);
+      return data;
+    } catch(err) {
+      console.error('Erro ao inserir diário no Supabase:', err);
+      showToast('Erro de conexão. Salvando no histórico local.', 'warning');
+    }
+  }
+
+  // Backup Local (localStorage)
   const key = 'cl_diario_' + (d.id_escala || 'demo');
   let entries = [];
   try {
@@ -437,7 +524,6 @@ const insertDiario = async (d) => {
     localStorage.setItem(key, JSON.stringify(trimmed));
   } catch (err) {
     console.warn('Cota de localStorage excedida, reduzindo histórico...', err);
-    // Em caso de erro, tenta reduzir ainda mais
     trimmed.forEach((e, idx) => {
       if (idx >= 1 && e.foto_url) {
         delete e.foto_url;
@@ -482,6 +568,7 @@ const LS_CHECKLIST = 'cl_checklist';
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  await initDatabase();
   // Limpeza preventiva de localStorage para liberar espaço de imagens gigantes legadas
   try {
     for (let i = 0; i < localStorage.length; i++) {

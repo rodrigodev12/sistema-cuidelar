@@ -7,7 +7,7 @@
 const SUPABASE_URL      = 'https://SEU_PROJETO.supabase.co';
 const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
 
-const DEMO_MODE = SUPABASE_URL.includes('SEU_PROJETO');
+export const DEMO_MODE = SUPABASE_URL.includes('SEU_PROJETO');
 
 // ============================================================
 // STUB SEGURO (sem Supabase configurado)
