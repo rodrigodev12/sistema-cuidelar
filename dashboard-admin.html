@@ -30,7 +30,7 @@
   <!-- Auth Guard Demo -->
   <script>
     (function() {
-      var raw = sessionStorage.getItem('cuidelar_user');
+      var raw = localStorage.getItem('cuidelar_user');
       if (!raw) { window.location.href = 'index.html'; return; }
       try {
         var u = JSON.parse(raw);
@@ -40,7 +40,8 @@
       } catch(e) { window.location.href = 'index.html'; }
     })();
     window.cuidelarLogout = function() {
-      sessionStorage.removeItem('cuidelar_user');
+      localStorage.removeItem('cuidelar_user');
+      localStorage.removeItem('admin_active_section');
       window.location.href = 'index.html';
     };
     // Proteção de rota compatível com módulos que importam auth.js
@@ -941,6 +942,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUser = await protectRoute(['administrador']);
   if (!currentUser) return;
 
+  // Restaura seção ativa anterior (ou carrega default)
+  const savedSection = localStorage.getItem('admin_active_section');
+  if (savedSection) {
+    const el = document.getElementById('nav-' + savedSection);
+    if (el) {
+      showSection(savedSection, el);
+    }
+  }
+
   // Atualiza UI do usuário
   document.getElementById('userName').textContent = currentUser.nome || 'Admin';
   document.getElementById('userAvatar').textContent = (currentUser.nome || 'A')[0].toUpperCase();
@@ -1710,6 +1720,7 @@ const SECTION_TITLES = {
 };
 
 window.showSection = (name, el) => {
+  localStorage.setItem('admin_active_section', name);
   document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const section = document.getElementById(`section-${name}`);

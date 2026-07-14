@@ -15,7 +15,7 @@
   <!-- Auth Guard Demo -->
   <script>
     (function() {
-      var raw = sessionStorage.getItem('cuidelar_user');
+      var raw = localStorage.getItem('cuidelar_user');
       if (!raw) { window.location.href = 'index.html'; return; }
       try {
         var u = JSON.parse(raw);
@@ -24,7 +24,8 @@
       } catch(e) { window.location.href = 'index.html'; }
     })();
     window.cuidelarLogout = function() {
-      sessionStorage.removeItem('cuidelar_user');
+      localStorage.removeItem('cuidelar_user');
+      localStorage.removeItem('cuidador_active_section');
       window.location.href = 'index.html';
     };
     window.protectRoute = async function(roles) { return window.__cuidelarUser || null; };
@@ -307,11 +308,20 @@
       <!-- Foto + Observações -->
       <div class="diario-card">
         <div class="diario-section-title">📷 Foto & Observações</div>
-        <div class="foto-upload" onclick="document.getElementById('fotoInput').click()" role="button" tabindex="0" aria-label="Adicionar fotos">
-          <div class="foto-upload-icon">📸</div>
-          <div class="foto-upload-text">Toque para adicionar fotos (máx. 5)</div>
+        <div class="foto-upload-options" style="display: flex; gap: 12px; margin-bottom: 12px;">
+          <div class="foto-upload" onclick="document.getElementById('fotoCameraInput').click()" role="button" tabindex="0" aria-label="Tirar foto com a câmera" style="flex: 1; padding: 1.25rem 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div class="foto-upload-icon" style="font-size: 1.75rem; margin-bottom: 0.25rem;">📸</div>
+            <div class="foto-upload-text" style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">Tirar Foto</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">Usar Câmera</div>
+          </div>
+          <div class="foto-upload" onclick="document.getElementById('fotoGaleriaInput').click()" role="button" tabindex="0" aria-label="Escolher foto da galeria" style="flex: 1; padding: 1.25rem 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div class="foto-upload-icon" style="font-size: 1.75rem; margin-bottom: 0.25rem;">🖼️</div>
+            <div class="foto-upload-text" style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">Escolher Galeria</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">Importar Foto</div>
+          </div>
         </div>
-        <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none;" onchange="addPhotos(this)" />
+        <input type="file" id="fotoCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="addPhotos(this)" />
+        <input type="file" id="fotoGaleriaInput" accept="image/*" style="display:none;" onchange="addPhotos(this)" />
         <div id="fotoPreviewsContainer" class="foto-previews-container" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;"></div>
         <div style="margin-top:.875rem;">
           <textarea class="form-textarea" id="obsGerais" rows="4" placeholder="Observações gerais: como foi o plantão, comportamento do paciente, intercorrências..."></textarea>
@@ -403,10 +413,46 @@ const registrarCheckout = async (id, lat, lng) => {
 };
 const insertDiario = async (d) => {
   const key = 'cl_diario_' + (d.id_escala || 'demo');
-  const entries = JSON.parse(localStorage.getItem(key) || '[]');
+  let entries = [];
+  try {
+    entries = JSON.parse(localStorage.getItem(key) || '[]');
+  } catch (e) {
+    console.error('Erro ao ler localStorage', e);
+  }
+
   const entry = { ...d, id: 'local-' + Date.now(), horario: new Date().toISOString() };
   entries.unshift(entry);
-  localStorage.setItem(key, JSON.stringify(entries.slice(0,50)));
+
+  // Mantém apenas os 20 registros mais recentes para economizar espaço
+  const trimmed = entries.slice(0, 20);
+
+  // Remove fotos (dados pesados em base64) de registros a partir da 5ª posição
+  trimmed.forEach((e, idx) => {
+    if (idx >= 5 && e.foto_url) {
+      delete e.foto_url;
+    }
+  });
+
+  try {
+    localStorage.setItem(key, JSON.stringify(trimmed));
+  } catch (err) {
+    console.warn('Cota de localStorage excedida, reduzindo histórico...', err);
+    // Em caso de erro, tenta reduzir ainda mais
+    trimmed.forEach((e, idx) => {
+      if (idx >= 1 && e.foto_url) {
+        delete e.foto_url;
+      }
+    });
+    try {
+      localStorage.setItem(key, JSON.stringify(trimmed.slice(0, 10)));
+    } catch (secondErr) {
+      console.error('Falha de escrita no localStorage. Salvando sem fotos.', secondErr);
+      const cleanEntry = { ...entry };
+      delete cleanEntry.foto_url;
+      localStorage.setItem(key, JSON.stringify([cleanEntry]));
+    }
+  }
+
   _publishUpdate('diario', entry);
   return entry;
 };
@@ -438,6 +484,15 @@ const LS_CHECKLIST = 'cl_checklist';
 document.addEventListener('DOMContentLoaded', async () => {
   currentUser = await protectRoute(['cuidador']);
   if (!currentUser) return;
+
+  // Restaura seção ativa anterior (ou carrega default)
+  const savedSection = localStorage.getItem('cuidador_active_section');
+  if (savedSection) {
+    const el = document.getElementById('nav-' + savedSection);
+    if (el) {
+      showCuidadorSection(savedSection, el);
+    }
+  }
 
   lucide.createIcons();
 
@@ -882,23 +937,75 @@ window.selectChip = (el, type) => {
 
 let attachedPhotos = [];
 
-window.addPhotos = (input) => {
-  const files = Array.from(input.files);
-  if (!files.length) return;
-  
-  files.forEach(file => {
-    if (attachedPhotos.length >= 5) {
-      showToast('Limite máximo de 5 fotos atingido', 'warning');
+function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) {
+      reject(new Error('O arquivo selecionado não é uma imagem válida.'));
       return;
     }
     const reader = new FileReader();
     reader.onload = (e) => {
-      attachedPhotos.push(e.target.result);
-      renderPhotoPreviews();
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Mantém a proporção da imagem ao redimensionar
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Comprime como JPEG com qualidade ajustável
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedBase64);
+      };
+      img.onerror = (err) => reject(new Error('Erro ao carregar a imagem para processamento.'));
+      img.src = e.target.result;
     };
+    reader.onerror = (err) => reject(new Error('Erro ao ler o arquivo.'));
     reader.readAsDataURL(file);
   });
+}
+
+window.addPhotos = async (input) => {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+
+  // Feedback visual simples alterando o cursor do input
+  const originalLabel = document.body.style.cursor;
+  document.body.style.cursor = 'wait';
   
+  for (const file of files) {
+    if (attachedPhotos.length >= 5) {
+      showToast('Limite máximo de 5 fotos atingido', 'warning');
+      break;
+    }
+    
+    try {
+      const compressedBase64 = await compressImage(file, 800, 800, 0.7);
+      attachedPhotos.push(compressedBase64);
+      renderPhotoPreviews();
+    } catch (err) {
+      showToast('Erro ao processar imagem: ' + err.message, 'error');
+    }
+  }
+  
+  document.body.style.cursor = originalLabel;
   input.value = '';
 };
 
@@ -1031,6 +1138,7 @@ function renderHistorico() {
 // NAVEGAÇÃO
 // ============================================================
 window.showCuidadorSection = (name, el) => {
+  localStorage.setItem('cuidador_active_section', name);
   document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
   document.querySelectorAll('.mobile-nav-item').forEach(n => {
     n.classList.remove('active');

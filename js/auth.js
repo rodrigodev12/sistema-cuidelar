@@ -55,17 +55,17 @@ function redirectToDashboard(tipo) {
 // ============================================================
 function getDemoSession() {
   try {
-    const raw = sessionStorage.getItem('cuidelar_demo_user');
+    const raw = localStorage.getItem('cuidelar_demo_user');
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 
 function setDemoSession(profile) {
-  sessionStorage.setItem('cuidelar_demo_user', JSON.stringify(profile));
+  localStorage.setItem('cuidelar_demo_user', JSON.stringify(profile));
 }
 
 function clearDemoSession() {
-  sessionStorage.removeItem('cuidelar_demo_user');
+  localStorage.removeItem('cuidelar_demo_user');
 }
 
 // ============================================================

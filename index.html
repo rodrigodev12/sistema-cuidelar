@@ -311,12 +311,12 @@
 
     // Verifica sessão existente
     (function () {
-      const raw = sessionStorage.getItem('cuidelar_user');
+      const raw = localStorage.getItem('cuidelar_user');
       if (raw) {
         try {
           const u = JSON.parse(raw);
           if (u && u.tipo) { window.location.href = REDIRECT_MAP[u.tipo]; }
-        } catch (e) { sessionStorage.removeItem('cuidelar_user'); }
+        } catch (e) { localStorage.removeItem('cuidelar_user'); }
       }
     })();
 
@@ -378,7 +378,7 @@
 
       // Login bem-sucedido
       const profile = { id: user.id, nome: user.nome, tipo: user.tipo, email };
-      sessionStorage.setItem('cuidelar_user', JSON.stringify(profile));
+      localStorage.setItem('cuidelar_user', JSON.stringify(profile));
       showToast(`Bem-vindo, ${user.nome.split(' ')[0]}! 🎉`, 'success', 2000);
       setTimeout(() => { window.location.href = REDIRECT_MAP[user.tipo]; }, 900);
     });
