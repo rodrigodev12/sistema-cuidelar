@@ -721,6 +721,10 @@
           </div>
         </div>
         <div class="form-group mb-4">
+          <label class="form-label" for="idEndereco">Endereço Completo</label>
+          <input type="text" class="form-input" id="idEndereco" placeholder="Rua, Número, Bairro, Cidade - Estado" />
+        </div>
+        <div class="form-group mb-4">
           <label class="form-label" for="idObs">Observações Gerais</label>
           <textarea class="form-textarea" id="idObs" rows="3" placeholder="Informações adicionais sobre o assistido..."></textarea>
         </div>
@@ -1745,6 +1749,7 @@ window.submitIdoso = async (e) => {
       data_nascimento:  document.getElementById('idNasc').value || null,
       genero:           document.getElementById('idGenero').value || null,
       tipo_sanguineo:   document.getElementById('idSangue').value || null,
+      endereco:         document.getElementById('idEndereco').value || null,
       restricoes_medicas: document.getElementById('idRestricoes').value,
       alergias:         document.getElementById('idAlergias').value,
       medicamentos:     document.getElementById('idMedicamentos').value,
@@ -2043,7 +2048,12 @@ window.closeModal = (id) => {
   document.body.style.overflow = '';
 };
 window.openModalEscala  = () => openModal('modalEscala');
-window.openModalIdoso   = () => openModal('modalIdoso');
+window.openModalIdoso   = () => {
+  window._editingIdosoId = null;
+  document.getElementById('formIdoso').reset();
+  document.getElementById('modalIdosoTitle').textContent = 'Cadastrar Assistido';
+  openModal('modalIdoso');
+};
 window.openModalCuidador= () => openModal('modalCuidador');
 window.openModalFamilia = () => showToast('Modal de família em desenvolvimento', 'info');
 window.openQuickModal   = () => openModal('modalEscala');
@@ -2215,6 +2225,7 @@ window.editIdoso = (id) => {
   document.getElementById('idFamilia').value = i.clientes_familia?.id || '';
   document.getElementById('idGenero').value = i.genero || '';
   document.getElementById('idSangue').value = i.tipo_sanguineo || '';
+  document.getElementById('idEndereco').value = i.endereco || '';
   document.getElementById('idRestricoes').value = i.restricoes_medicas || '';
   document.getElementById('idAlergias').value = i.alergias || '';
   document.getElementById('idMedicamentos').value = i.medicamentos || '';

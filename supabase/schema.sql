@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS idosos (
   alergias          TEXT,
   medicamentos      TEXT,  -- lista de medicamentos contínuos
   foto_url          TEXT,
+  endereco          TEXT,
   observacoes       TEXT,
   plano_saude       TEXT,
   numero_plano      TEXT,

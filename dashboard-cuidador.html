@@ -751,7 +751,7 @@ async function loadEscalaCuidador() {
     const agora = new Date().toISOString();
     const { data: escalas, error: escErr } = await supabase
       .from('escalas_servicos')
-      .select('*, idosos(*)')
+      .select('*, idosos(*, clientes_familia(*))')
       .eq('id_cuidador', cuidador.id)
       .in('status', ['agendado', 'em_andamento'])
       .gte('data_termino', agora)
@@ -841,6 +841,24 @@ function updateEscalaUI(escala) {
   if (idoso) {
     document.getElementById('idoso-nome').textContent = idoso.nome;
     document.getElementById('shift-patient-name').textContent = idoso.nome;
+
+    let addressStr = 'Endereço não cadastrado';
+    if (escala.id === 'demo' || !escala.id) {
+      addressStr = 'Rua das Flores, 123 — São Paulo/SP';
+    } else if (idoso.endereco) {
+      addressStr = idoso.endereco;
+    } else if (idoso.clientes_familia) {
+      const fam = idoso.clientes_familia;
+      if (fam.logradouro) {
+        addressStr = `${fam.logradouro}, ${fam.numero || 'S/N'}`;
+        if (fam.complemento) addressStr += ` - ${fam.complemento}`;
+        if (fam.bairro) addressStr += `, ${fam.bairro}`;
+        if (fam.cidade) addressStr += ` — ${fam.cidade}/${fam.estado || 'MA'}`;
+      } else if (fam.cidade) {
+        addressStr = `${fam.cidade}/${fam.estado || 'MA'}`;
+      }
+    }
+    document.getElementById('shift-patient-addr').textContent = `📍 ${addressStr}`;
 
     const idade = idoso.data_nascimento
       ? Math.floor((Date.now() - new Date(idoso.data_nascimento)) / (365.25*24*3600000))
