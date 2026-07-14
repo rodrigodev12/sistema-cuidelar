@@ -2175,13 +2175,32 @@ window.editCuidador = (id) => {
   openModal('modalCuidador');
 };
 
-window.deleteCuidador = (id) => {
+window.deleteCuidador = async (id) => {
   if (confirm('Deseja realmente desativar/excluir este(a) cuidador(a)?')) {
-    allCuidadores = allCuidadores.filter(x => x.id !== id);
-    renderCuidadores(allCuidadores);
-    populateSelects();
-    loadDashboard();
-    showToast('Cuidador(a) desativado(a) com sucesso.', 'success');
+    try {
+      if (!DEMO_MODE) {
+        const cuid = allCuidadores.find(x => x.id === id);
+        if (cuid) {
+          const { error: cuidErr } = await supabase.from('cuidadores').delete().eq('id', id);
+          if (cuidErr) throw cuidErr;
+          if (cuid.id_usuario) {
+            await supabase.from('usuarios').delete().eq('id', cuid.id_usuario);
+          }
+        }
+        showToast('Cuidador(a) desativado(a) com sucesso.', 'success');
+        await loadAllData();
+        loadDashboard();
+        return;
+      }
+
+      allCuidadores = allCuidadores.filter(x => x.id !== id);
+      renderCuidadores(allCuidadores);
+      populateSelects();
+      loadDashboard();
+      showToast('Cuidador(a) desativado(a) com sucesso.', 'success');
+    } catch(err) {
+      showToast('Erro ao excluir cuidador: ' + err.message, 'error');
+    }
   }
 };
 
@@ -2268,16 +2287,32 @@ window.editEscala = (id) => {
   openModal('modalEscala');
 };
 
-window.cancelarEscala = (id) => {
+window.cancelarEscala = async (id) => {
   if (confirm('Deseja realmente cancelar esta escala?')) {
-    const esc = allEscalas.find(x => x.id === id);
-    if (esc) {
-      esc.status = 'cancelado';
-      renderEscalas(allEscalas);
-      renderEscalasHoje(allEscalas);
-      initCalendar(allEscalas);
-      loadDashboard();
-      showToast('Escala cancelada com sucesso.', 'warning');
+    try {
+      if (!DEMO_MODE) {
+        const { error } = await supabase
+          .from('escalas_servicos')
+          .update({ status: 'cancelado' })
+          .eq('id', id);
+        if (error) throw error;
+        showToast('Escala cancelada com sucesso.', 'warning');
+        await loadAllData();
+        loadDashboard();
+        return;
+      }
+
+      const esc = allEscalas.find(x => x.id === id);
+      if (esc) {
+        esc.status = 'cancelado';
+        renderEscalas(allEscalas);
+        renderEscalasHoje(allEscalas);
+        initCalendar(allEscalas);
+        loadDashboard();
+        showToast('Escala cancelada com sucesso.', 'warning');
+      }
+    } catch(err) {
+      showToast('Erro ao cancelar escala: ' + err.message, 'error');
     }
   }
 };

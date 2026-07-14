@@ -747,6 +747,7 @@ async function loadEscalaCuidador() {
       .from('escalas_servicos')
       .select('*, idosos(*)')
       .eq('id_cuidador', cuidador.id)
+      .in('status', ['agendado', 'em_andamento'])
       .gte('data_termino', agora)
       .order('data_inicio')
       .limit(1);
