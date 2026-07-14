@@ -4,8 +4,8 @@
  * o módulo exporta stubs seguros que não fazem chamadas de rede.
  */
 
-const SUPABASE_URL      = 'https://SEU_PROJETO.supabase.co';
-const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
+const SUPABASE_URL      = 'https://ahhqlavggtcoklfwoino.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoaHFsYXZnZ3Rjb2tsZndvaW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTAzNjEsImV4cCI6MjA5OTU4NjM2MX0.MTs1DPktyrbiQL8NUt221nbHI0SCGIuTCwIhCiLj8SE';
 
 export const DEMO_MODE = SUPABASE_URL.includes('SEU_PROJETO');
 
