@@ -606,8 +606,8 @@ let checklistData   = [];
 let diarioHistorico = [];
 let userCoords      = { lat: null, lng: null };
 
-const getLSCheckinKey = () => 'cl_checkin' + (DEMO_MODE ? '_' + currentDemoProfile : '');
-const getLSChecklistKey = () => 'cl_checklist' + (DEMO_MODE ? '_' + currentDemoProfile : '');
+const getLSCheckinKey = () => 'cl_checkin_' + (DEMO_MODE ? currentDemoProfile : (currentUser?.id || 'anon'));
+const getLSChecklistKey = () => 'cl_checklist_' + (DEMO_MODE ? currentDemoProfile : (currentUser?.id || 'anon'));
 
 // ============================================================
 // INIT
