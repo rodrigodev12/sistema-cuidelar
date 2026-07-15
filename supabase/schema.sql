@@ -302,7 +302,13 @@ BEGIN
     raw_app_meta_data,
     raw_user_meta_data,
     created_at,
-    updated_at
+    updated_at,
+    confirmation_token,
+    recovery_token,
+    email_change_token_new,
+    email_change_token_current,
+    phone_change_token,
+    reauthentication_token
   ) VALUES (
     v_instance_id,
     gen_random_uuid(),
@@ -314,7 +320,13 @@ BEGIN
     '{"provider":"email","providers":["email"]}',
     '{}',
     now(),
-    now()
+    now(),
+    '',
+    '',
+    '',
+    '',
+    '',
+    ''
   ) RETURNING id INTO v_auth_id;
 
   -- 2. Insere na tabela auth.identities para associar o provedor de e-mail ao GoTrue
