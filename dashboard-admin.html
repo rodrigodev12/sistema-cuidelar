@@ -1984,7 +1984,7 @@ window.submitCuidador = async (e) => {
     };
 
     const nome = document.getElementById('cuidNome').value;
-    const email = document.getElementById('cuidEmail').value;
+    const email = document.getElementById('cuidEmail').value.trim();
 
     if (!DEMO_MODE) {
       if (window._editingCuidadorId) {
@@ -2092,7 +2092,7 @@ window.submitFamilia = async (e) => {
     };
 
     const nome = document.getElementById('famNome').value;
-    const email = document.getElementById('famEmail').value;
+    const email = document.getElementById('famEmail').value.trim();
 
     if (!DEMO_MODE) {
       if (window._editingFamiliaId) {
