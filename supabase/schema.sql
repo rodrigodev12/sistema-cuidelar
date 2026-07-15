@@ -327,7 +327,7 @@ BEGIN
     created_at,
     updated_at
   ) VALUES (
-    v_auth_id::text,
+    v_auth_id, -- Removido ::text
     v_auth_id,
     json_build_object('sub', v_auth_id, 'email', p_email)::jsonb,
     'email',
