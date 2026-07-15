@@ -102,7 +102,7 @@
       <a class="nav-item" id="nav-agenda" href="#" onclick="showSection('agenda',this)">
         <i data-lucide="calendar" class="nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Agenda de Plantões</span>
-        <span class="nav-badge" id="badge-agenda">3</span>
+        <span class="nav-badge" id="badge-agenda" style="display:none;">0</span>
       </a>
 
       <a class="nav-item" id="nav-escalas" href="#" onclick="showSection('escalas',this)">
@@ -140,7 +140,7 @@
       <div class="sidebar-user" id="sidebarUser">
         <div class="avatar" id="userAvatar">A</div>
         <div class="flex-1" style="overflow:hidden;">
-          <div class="truncate" style="font-weight:600;font-size:0.875rem;" id="userName">Administrador</div>
+          <div class="truncate" style="font-weight:600;font-size:0.875rem;" id="userName">Cuidelar</div>
           <div class="text-xs text-muted">Administrador</div>
         </div>
       </div>
@@ -1084,8 +1084,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Atualiza UI do usuário
-  document.getElementById('userName').textContent = currentUser.nome || 'Admin';
-  document.getElementById('userAvatar').textContent = (currentUser.nome || 'A')[0].toUpperCase();
+  document.getElementById('userName').textContent = currentUser.nome || 'Cuidelar';
+  document.getElementById('userAvatar').textContent = (currentUser.nome || 'Cuidelar')[0].toUpperCase();
   document.getElementById('today-date-label').textContent = new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'});
 
   // Inicializa ícones
@@ -1135,6 +1135,7 @@ async function loadAllData() {
     allEscalas = escalas || [];
     renderEscalas(allEscalas);
     renderEscalasHoje(allEscalas);
+    updateAgendaBadge();
 
     // Popula selects dos modais
     populateSelects();
@@ -1166,6 +1167,7 @@ async function loadDashboard() {
     document.getElementById('kpi-faturamento').textContent  = 'R$ ' + faturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2});
     document.getElementById('kpi-alertas').textContent      = '1';
     document.getElementById('kpi-alertas-badge').textContent = '1';
+    updateAgendaBadge();
     renderCharts();
     return;
   }
@@ -1448,6 +1450,18 @@ function renderCharts() {
     <span class="legend-item"><span class="legend-dot" style="background:#BA95CB"></span>Agendadas (${agendadas})</span>
     <span class="legend-item"><span class="legend-dot" style="background:#C8A8B8"></span>Canceladas (${canceladas})</span>
   `;
+}
+
+function updateAgendaBadge() {
+  const badgeEl = document.getElementById('badge-agenda');
+  if (!badgeEl) return;
+  const activeEscalas = (allEscalas || []).filter(e => e.status === 'em_andamento' || e.status === 'agendado').length;
+  if (activeEscalas > 0) {
+    badgeEl.textContent = activeEscalas;
+    badgeEl.style.display = 'inline-flex';
+  } else {
+    badgeEl.style.display = 'none';
+  }
 }
 
 // ============================================================

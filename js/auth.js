@@ -18,7 +18,7 @@ import { supabase, getUserProfile, DEMO_MODE } from './supabase-client.js';
 const DEMO_USERS = {
   'admin@cuidelar.com': {
     senha: 'admin123',
-    profile: { id: 'demo-admin', nome: 'Admin Cuidelar', email: 'admin@cuidelar.com', tipo: 'administrador' }
+    profile: { id: 'demo-admin', nome: 'Cuidelar', email: 'admin@cuidelar.com', tipo: 'administrador' }
   },
   'cuidador@cuidelar.com': {
     senha: 'cuida123',
