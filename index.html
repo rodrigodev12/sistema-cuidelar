@@ -353,7 +353,8 @@
           showToast(`Bem-vindo, ${profile.nome.split(' ')[0]}! 🎉`, 'success', 2000);
           setTimeout(() => { window.location.href = REDIRECT_MAP[profile.tipo]; }, 900);
         } catch (err) {
-          errMsg.textContent = err.message || 'Erro ao realizar login.';
+          console.error('Erro de login:', err);
+          errMsg.textContent = (err && typeof err.message === 'string') ? err.message : 'Erro ao realizar login. Verifique os dados.';
           errEl.classList.add('visible');
           btn.classList.remove('loading');
           btn.disabled = false;
