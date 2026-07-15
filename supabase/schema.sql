@@ -272,6 +272,7 @@ CREATE OR REPLACE FUNCTION public.criar_usuario_com_senha(
 ) RETURNS UUID AS $$
 DECLARE
   v_auth_id UUID;
+  v_user_id UUID;
   v_is_admin BOOLEAN;
 BEGIN
   -- Verificar se o usuário autenticado que está chamando a função é administrador
@@ -314,9 +315,10 @@ BEGIN
 
   -- Insere na tabela public.usuarios
   INSERT INTO public.usuarios (auth_id, nome, email, tipo, ativo)
-  VALUES (v_auth_id, p_nome, p_email, p_tipo, true);
+  VALUES (v_auth_id, p_nome, p_email, p_tipo, true)
+  RETURNING id INTO v_user_id;
 
-  RETURN v_auth_id;
+  RETURN v_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
