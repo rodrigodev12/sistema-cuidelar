@@ -1173,10 +1173,20 @@ async function loadDashboard() {
     const { count: idosCount } = await supabase.from('idosos').select('*', {count:'exact', head:true}).eq('ativo', true);
     const { count: cuidCount } = await supabase.from('cuidadores').select('*', {count:'exact', head:true}).eq('status','ativo');
 
+    // Calcular faturamento real das escalas concluídas/pagas
+    const faturamentoReal = (allEscalas || [])
+      .filter(e => e.status === 'concluido' || e.pago)
+      .reduce((sum, e) => sum + (e.valor_total || 0), 0);
+
+    const alertasCount = document.getElementById('alertasContainer')?.querySelectorAll('.alert-card')?.length || 0;
+
     document.getElementById('kpi-idosos').textContent = idosCount ?? '—';
     document.getElementById('kpi-cuidadores').textContent = cuidCount ?? '—';
-    document.getElementById('kpi-faturamento').textContent = 'R$ 0';
-    document.getElementById('kpi-alertas').textContent = '0';
+    document.getElementById('kpi-faturamento').textContent = 'R$ ' + faturamentoReal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    document.getElementById('kpi-alertas').textContent = alertasCount;
+    if (document.getElementById('kpi-alertas-badge')) {
+      document.getElementById('kpi-alertas-badge').textContent = alertasCount;
+    }
   } catch(e) {
     // Demo mode
     document.getElementById('kpi-idosos').textContent = '24';
@@ -1327,7 +1337,43 @@ function renderDynamicAlerts() {
 // ============================================================
 function renderCharts() {
   const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul'];
-  const values = [22400, 27100, 31500, 28900, 33200, 36100, 38400];
+  let values = [22400, 27100, 31500, 28900, 33200, 36100, 38400];
+
+  let concluidas = 78;
+  let emAndamento = 12;
+  let agendadas = 24;
+  let canceladas = 6;
+
+  if (!DEMO_MODE) {
+    // Calcular faturamento real por mês nos últimos 7 meses
+    const ultimosMeses = [];
+    const faturamentoPorMes = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const nomeMes = d.toLocaleDateString('pt-BR', { month: 'short' });
+      ultimosMeses.push(nomeMes.replace('.', ''));
+      
+      const ano = d.getFullYear();
+      const mes = d.getMonth();
+      const totalMes = (allEscalas || [])
+        .filter(e => {
+          if (!e.data_inicio) return false;
+          const dataEsc = new Date(e.data_inicio);
+          return dataEsc.getFullYear() === ano && dataEsc.getMonth() === mes && (e.status === 'concluido' || e.pago);
+        })
+        .reduce((sum, e) => sum + (e.valor_total || 0), 0);
+      faturamentoPorMes.push(totalMes);
+    }
+    months.splice(0, months.length, ...ultimosMeses);
+    values = faturamentoPorMes;
+
+    // Calcular as escalas reais por status
+    concluidas = (allEscalas || []).filter(e => e.status === 'concluido').length;
+    emAndamento = (allEscalas || []).filter(e => e.status === 'em_andamento').length;
+    agendadas = (allEscalas || []).filter(e => e.status === 'agendado').length;
+    canceladas = (allEscalas || []).filter(e => e.status === 'cancelado').length;
+  }
 
   // Chart Faturamento
   const ctxFat = document.getElementById('chartFaturamento');
@@ -1365,7 +1411,7 @@ function renderCharts() {
           ticks: {
             color: '#7B5589',
             font:{size:12},
-            callback: v => 'R$ ' + (v/1000).toFixed(0) + 'k'
+            callback: v => v >= 1000 ? 'R$ ' + (v/1000).toFixed(0) + 'k' : 'R$ ' + v
           }
         }
       }
@@ -1380,7 +1426,7 @@ function renderCharts() {
     data: {
       labels: ['Concluídas','Em Andamento','Agendadas','Canceladas'],
       datasets: [{
-        data: [78, 12, 24, 6],
+        data: [concluidas, emAndamento, agendadas, canceladas],
         backgroundColor: ['#5C3C67','#E07A8A','#BA95CB','#C8A8B8'],
         borderWidth: 0,
         hoverOffset: 8,
@@ -1397,10 +1443,10 @@ function renderCharts() {
 
   // Legenda manual
   document.getElementById('chartEscalasLegend').innerHTML = `
-    <span class="legend-item"><span class="legend-dot" style="background:#5C3C67"></span>Concluídas (78)</span>
-    <span class="legend-item"><span class="legend-dot" style="background:#E07A8A"></span>Andamento (12)</span>
-    <span class="legend-item"><span class="legend-dot" style="background:#BA95CB"></span>Agendadas (24)</span>
-    <span class="legend-item"><span class="legend-dot" style="background:#C8A8B8"></span>Canceladas (6)</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#5C3C67"></span>Concluídas (${concluidas})</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#E07A8A"></span>Andamento (${emAndamento})</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#BA95CB"></span>Agendadas (${agendadas})</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#C8A8B8"></span>Canceladas (${canceladas})</span>
   `;
 }
 

@@ -168,7 +168,7 @@
             <a href="#" id="requestAccessLink">Solicitar cadastro</a>
           </p>
           <p style="margin-top:0.5rem; color: var(--text-muted);">
-            Cuidelar &copy; 2025 — Todos os direitos reservados
+            Cuidelar &copy; 2026 — Todos os direitos reservados
           </p>
         </div>
 
@@ -243,9 +243,9 @@
 
     // Credenciais demo
     const DEMO_USERS = {
-      'admin@cuidelar.com':    { senha: 'admin123',   tipo: 'administrador', nome: 'Admin Cuidelar',     id: 'demo-admin' },
-      'cuidador@cuidelar.com': { senha: 'cuida123',   tipo: 'cuidador',      nome: 'Ana Paula Ferreira', id: 'demo-cuidador' },
-      'familia@cuidelar.com':  { senha: 'familia123', tipo: 'cliente',       nome: 'João Silva',         id: 'demo-familia' },
+      'admin@cuidelar.com': { senha: 'admin123', tipo: 'administrador', nome: 'Admin Cuidelar', id: 'demo-admin' },
+      'cuidador@cuidelar.com': { senha: 'cuida123', tipo: 'cuidador', nome: 'Ana Paula Ferreira', id: 'demo-cuidador' },
+      'familia@cuidelar.com': { senha: 'familia123', tipo: 'cliente', nome: 'João Silva', id: 'demo-familia' },
     };
 
     const REDIRECT_MAP = {
@@ -352,7 +352,7 @@
           localStorage.setItem('cuidelar_user', JSON.stringify(profile));
           showToast(`Bem-vindo, ${profile.nome.split(' ')[0]}! 🎉`, 'success', 2000);
           setTimeout(() => { window.location.href = REDIRECT_MAP[profile.tipo]; }, 900);
-        } catch(err) {
+        } catch (err) {
           errMsg.textContent = err.message || 'Erro ao realizar login.';
           errEl.classList.add('visible');
           btn.classList.remove('loading');
