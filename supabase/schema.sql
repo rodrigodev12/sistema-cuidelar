@@ -260,6 +260,88 @@ INSERT INTO usuarios (nome, email, tipo) VALUES
 -- ALTER TABLE cuidadores ADD COLUMN IF NOT EXISTS publico_atendido TEXT[] DEFAULT ARRAY['idoso']::TEXT[] NOT NULL;
 
 -- ============================================================
--- FIM DO SCHEMA
+-- FUNÇÃO RPC DE CADASTRO SEGURO (Cuidadoras e Famílias)
 -- ============================================================
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE OR REPLACE FUNCTION public.criar_usuario_com_senha(
+  p_nome TEXT,
+  p_email TEXT,
+  p_tipo TEXT,
+  p_senha TEXT
+) RETURNS UUID AS $$
+DECLARE
+  v_auth_id UUID;
+  v_user_id UUID;
+  v_instance_id UUID;
+  v_is_admin BOOLEAN;
+BEGIN
+  -- Verificar se o usuário autenticado que está chamando a função é administrador
+  SELECT EXISTS (
+    SELECT 1 FROM public.usuarios
+    WHERE auth_id = auth.uid() AND tipo = 'administrador'
+  ) INTO v_is_admin;
+
+  -- Se não for o primeiro admin sendo criado, valida privilégios
+  IF EXISTS (SELECT 1 FROM public.usuarios WHERE tipo = 'administrador') AND NOT v_is_admin THEN
+    RAISE EXCEPTION 'Apenas administradores podem criar novos usuários.';
+  END IF;
+
+  -- Obter o instance_id atual do projeto
+  SELECT instance_id INTO v_instance_id FROM auth.users LIMIT 1;
+
+  -- 1. Insere o usuário na tabela auth.users do Supabase
+  INSERT INTO auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at
+  ) VALUES (
+    v_instance_id,
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    p_email,
+    crypt(p_senha, gen_salt('bf')),
+    now(),
+    '{"provider":"email","providers":["email"]}',
+    '{}',
+    now(),
+    now()
+  ) RETURNING id INTO v_auth_id;
+
+  -- 2. Insere na tabela auth.identities para associar o provedor de e-mail ao GoTrue
+  INSERT INTO auth.identities (
+    id,
+    user_id,
+    identity_data,
+    provider,
+    last_sign_in_at,
+    created_at,
+    updated_at
+  ) VALUES (
+    v_auth_id::text,
+    v_auth_id,
+    json_build_object('sub', v_auth_id, 'email', p_email)::jsonb,
+    'email',
+    now(),
+    now(),
+    now()
+  );
+
+  -- 3. Insere na tabela public.usuarios (Retornando o ID público correto)
+  INSERT INTO public.usuarios (auth_id, nome, email, tipo, ativo)
+  VALUES (v_auth_id, p_nome, p_email, p_tipo, true)
+  RETURNING id INTO v_user_id;
+
+  RETURN v_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+

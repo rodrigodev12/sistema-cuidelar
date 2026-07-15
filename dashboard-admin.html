@@ -2006,32 +2006,20 @@ window.submitCuidador = async (e) => {
 
         showToast('Cuidador atualizado com sucesso!', 'success');
       } else {
-        // 1. Cadastra o usuário no Supabase Auth via signUp (sem deslogar o admin)
-        const { data: signUpData, error: signUpErr } = await signUpWithoutLogin(email, senha);
-        if (signUpErr) throw signUpErr;
-        if (!signUpData || !signUpData.user) {
-          throw new Error('Não foi possível gerar a conta de autenticação. Verifique se o e-mail já existe.');
-        }
+        // RPC: Cria usuário na autenticação Supabase (com identidades) e na tabela public.usuarios
+        const { data: newUserUuid, error: rpcErr } = await supabase.rpc('criar_usuario_com_senha', {
+          p_nome: nome,
+          p_email: email,
+          p_tipo: 'cuidador',
+          p_senha: senha
+        });
+        if (rpcErr) throw rpcErr;
 
-        // 2. Insere na tabela public.usuarios
-        const { data: newUser, error: userErr } = await supabase
-          .from('usuarios')
-          .insert({
-            auth_id: signUpData.user.id,
-            nome,
-            email,
-            tipo: 'cuidador',
-            ativo: true
-          })
-          .select()
-          .single();
-        if (userErr) throw userErr;
-
-        // 3. Insere na tabela public.cuidadores
+        // Insere na tabela public.cuidadores
         const { error: cuidErr } = await supabase
           .from('cuidadores')
           .insert({
-            id_usuario: newUser.id,
+            id_usuario: newUserUuid,
             ...data
           });
         if (cuidErr) throw cuidErr;
@@ -2114,32 +2102,20 @@ window.submitFamilia = async (e) => {
 
         showToast('Família atualizada com sucesso!', 'success');
       } else {
-        // 1. Cadastra o usuário no Supabase Auth via signUp (sem deslogar o admin)
-        const { data: signUpData, error: signUpErr } = await signUpWithoutLogin(email, senha);
-        if (signUpErr) throw signUpErr;
-        if (!signUpData || !signUpData.user) {
-          throw new Error('Não foi possível gerar a conta de autenticação. Verifique se o e-mail já existe.');
-        }
+        // RPC: Cria usuário na autenticação Supabase (com identidades) e na tabela public.usuarios
+        const { data: newUserUuid, error: rpcErr } = await supabase.rpc('criar_usuario_com_senha', {
+          p_nome: nome,
+          p_email: email,
+          p_tipo: 'cliente',
+          p_senha: senha
+        });
+        if (rpcErr) throw rpcErr;
 
-        // 2. Insere na tabela public.usuarios
-        const { data: newUser, error: userErr } = await supabase
-          .from('usuarios')
-          .insert({
-            auth_id: signUpData.user.id,
-            nome,
-            email,
-            tipo: 'cliente',
-            ativo: true
-          })
-          .select()
-          .single();
-        if (userErr) throw userErr;
-
-        // 3. Insere na tabela public.clientes_familia
+        // Insere na tabela public.clientes_familia
         const { error: famErr } = await supabase
           .from('clientes_familia')
           .insert({
-            id_usuario: newUser.id,
+            id_usuario: newUserUuid,
             ...data
           });
         if (famErr) throw famErr;
