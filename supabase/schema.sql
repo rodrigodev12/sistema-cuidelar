@@ -320,6 +320,7 @@ BEGIN
   -- 2. Insere na tabela auth.identities para associar o provedor de e-mail ao GoTrue
   INSERT INTO auth.identities (
     id,
+    provider_id,
     user_id,
     identity_data,
     provider,
@@ -327,7 +328,8 @@ BEGIN
     created_at,
     updated_at
   ) VALUES (
-    v_auth_id, -- Removido ::text
+    v_auth_id,
+    v_auth_id::text,
     v_auth_id,
     json_build_object('sub', v_auth_id, 'email', p_email)::jsonb,
     'email',
