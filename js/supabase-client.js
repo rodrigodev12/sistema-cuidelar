@@ -159,3 +159,12 @@ export function listenDiario(escalaid, callback) {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'diario_cuidados', filter: `id_escala=eq.${escalaid}` }, (p) => callback(p.new))
     .subscribe();
 }
+
+export async function signUpWithoutLogin(email, password) {
+  if (DEMO_MODE) return { data: { user: { id: 'demo-' + Math.random() } }, error: null };
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const tempClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+  return await tempClient.auth.signUp({ email, password });
+}
