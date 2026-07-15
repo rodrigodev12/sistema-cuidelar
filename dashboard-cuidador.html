@@ -398,6 +398,8 @@ async function initDatabase() {
     const clientModule = await import('./js/supabase-client.js?v=6');
     DEMO_MODE = clientModule.DEMO_MODE;
     supabase = DEMO_MODE ? _stubSupabase : clientModule.supabase;
+    const btnDemo = document.getElementById('btnAlternarDemo');
+    if (btnDemo) btnDemo.style.display = DEMO_MODE ? 'flex' : 'none';
   } catch (e) {
     console.warn('Erro ao carregar cliente Supabase, usando stubs locais.', e);
     supabase = _stubSupabase;
@@ -799,7 +801,7 @@ async function loadEscalaCuidador() {
 
     if (cuidErr || !cuidador) {
       console.warn('Cuidador não encontrado no banco:', cuidErr);
-      showDemoData();
+      if (DEMO_MODE) showDemoData(); else showEmptyState();
       return;
     }
 
@@ -815,7 +817,7 @@ async function loadEscalaCuidador() {
 
     if (escErr) {
       console.error('Erro ao consultar escalas no Supabase:', escErr);
-      showDemoData();
+      if (DEMO_MODE) showDemoData(); else showEmptyState();
       return;
     }
 
@@ -825,11 +827,67 @@ async function loadEscalaCuidador() {
       updateEscalaUI(currentEscala);
       await loadHistorico();
     } else {
-      showDemoData();
+      if (DEMO_MODE) showDemoData(); else showEmptyState();
     }
   } catch(e) {
     console.error('Erro na rotina loadEscalaCuidador:', e);
-    showDemoData();
+    if (DEMO_MODE) showDemoData(); else showEmptyState();
+  }
+}
+
+function showEmptyState() {
+  currentEscala = null;
+  
+  const btnDemo = document.getElementById('btnAlternarDemo');
+  if (btnDemo) btnDemo.style.display = 'none';
+
+  document.getElementById('shift-time').textContent = 'Sem plantão agendado';
+  document.getElementById('shift-date').textContent = 'Nenhuma escala ativa no momento';
+  document.getElementById('shift-patient-name').textContent = 'Nenhum paciente';
+  document.getElementById('shift-patient-addr').textContent = 'Endereço não disponível';
+  document.getElementById('shift-patient-avatar').textContent = '🤷';
+
+  const user = window.__cuidelarUser || currentUser || {};
+  const nomeExibicao = user.nome ? user.nome.split(' ')[0] : 'Cuidador(a)';
+  document.getElementById('greetingText').textContent = `Olá, ${nomeExibicao}!`;
+  document.getElementById('greetingDate').textContent = 'Você não tem plantões agendados para hoje.';
+
+  document.getElementById('stat-plantoes').textContent = '0';
+  document.getElementById('stat-horas').textContent = '0h';
+  document.getElementById('stat-ganhos').textContent = 'R$0';
+
+  document.getElementById('escala-do-dia-title').textContent = '👵 Paciente do Dia';
+  const badge = document.getElementById('escala-status-badge');
+  if (badge) {
+    badge.className = 'badge badge-neutral';
+    badge.textContent = 'Sem escala';
+  }
+  document.getElementById('idoso-nome').textContent = 'Nenhum assistido vinculado';
+  document.getElementById('idoso-photo').textContent = '👵';
+  
+  const metaContainer = document.querySelector('.idoso-detail-meta');
+  if (metaContainer) {
+    metaContainer.innerHTML = '<span>Aguardando escala de serviço.</span>';
+  }
+  
+  const pillsContainer = document.getElementById('idoso-pills');
+  if (pillsContainer) {
+    pillsContainer.innerHTML = '<span class="alert-pill neutral">Nenhuma restrição médica cadastrada</span>';
+  }
+  
+  const medicamentosContainer = document.getElementById('medicamentos-lista');
+  if (medicamentosContainer) {
+    medicamentosContainer.innerHTML = 'Nenhum medicamento cadastrado.';
+  }
+
+  const checkinInfo = document.getElementById('checkinInfo');
+  if (checkinInfo) {
+    checkinInfo.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">O check-in estará disponível quando houver um plantão ativo.</p>';
+  }
+
+  const checklistArea = document.getElementById('checklist-items');
+  if (checklistArea) {
+    checklistArea.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">Nenhuma atividade cadastrada. Aguardando plantão.</p>';
   }
 }
 

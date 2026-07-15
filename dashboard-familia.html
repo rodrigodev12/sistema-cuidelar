@@ -581,7 +581,10 @@ async function loadFamiliaData() {
       .eq('id_usuario', currentUser.id)
       .single();
 
-    if (!cliente) { showDemoData(); return; }
+    if (!cliente) {
+      if (DEMO_MODE) showDemoData(); else showEmptyState();
+      return;
+    }
 
     // Buscar idoso
     const { data: idosos } = await supabase
@@ -594,6 +597,9 @@ async function loadFamiliaData() {
     if (idosos?.length) {
       idosoData = idosos[0];
       updateIdosoUI(idosoData);
+    } else {
+      if (DEMO_MODE) showDemoData(); else showEmptyState();
+      return;
     }
 
     // Buscar escalas futuras
@@ -612,7 +618,7 @@ async function loadFamiliaData() {
 
   } catch(e) {
     console.error('Erro ao carregar dados família:', e);
-    showDemoData();
+    if (DEMO_MODE) showDemoData(); else showEmptyState();
   }
 }
 
@@ -670,6 +676,56 @@ function showDemoData() {
   populateAvaliacaoSelect(escalasData.filter(e => e.status === 'concluido'));
 }
 
+function showEmptyState() {
+  idosoData = null;
+  document.getElementById('sideIdosoNome').textContent = 'Nenhum assistido';
+  document.getElementById('sideIdosoAge').textContent  = 'Sem idade';
+  document.getElementById('sideIdosoPhoto').textContent = '👵';
+  
+  // Perfil de saúde
+  document.getElementById('perfNome').textContent       = 'Nenhum assistido cadastrado';
+  document.getElementById('perfNasc').textContent       = '—';
+  document.getElementById('perfSangue').textContent     = '—';
+  document.getElementById('perfGenero').textContent     = '—';
+  document.getElementById('perfMedico').textContent     = '—';
+  document.getElementById('perfPlano').textContent      = '—';
+  document.getElementById('perfRestricoes').textContent = 'Nenhuma';
+  document.getElementById('perfAlergias').textContent   = 'Nenhuma';
+  document.getElementById('perfMedicamentos').textContent = 'Nenhum';
+  document.getElementById('perfContEmer').textContent   = '—';
+  document.getElementById('perfFoneEmer').textContent   = '—';
+
+  // Last registers
+  document.getElementById('lastBat').textContent = '—';
+  document.getElementById('lastPA').textContent = '—';
+  document.getElementById('lastTemp').textContent = '—';
+  document.getElementById('lastAlim').textContent = '—';
+  document.getElementById('lastAlim').style.color = 'var(--text-muted)';
+  document.getElementById('lastMed').textContent = '—';
+  document.getElementById('lastMed').style.color = 'var(--text-muted)';
+
+  // Checkin banner
+  const checkinStatusCard = document.getElementById('checkinStatusCard');
+  if (checkinStatusCard) {
+    checkinStatusCard.style.display = 'none';
+  }
+
+  // Plantoes & Faturamento sections
+  const listPlantoes = document.getElementById('listPlantoes');
+  if (listPlantoes) {
+    listPlantoes.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.9rem;">Nenhum plantão agendado ou concluído.</div>';
+  }
+
+  const kpiTotal = document.getElementById('kpi-total-investido');
+  if (kpiTotal) kpiTotal.textContent = 'R$ 0';
+
+  const kpiHoras = document.getElementById('kpi-horas-cuidadas');
+  if (kpiHoras) kpiHoras.textContent = '0h';
+
+  const kpiMedia = document.getElementById('kpi-valor-medio');
+  if (kpiMedia) kpiMedia.textContent = 'R$ 0/h';
+}
+
 function updateIdosoUI(idoso) {
   const idade = idoso.data_nascimento
     ? Math.floor((Date.now() - new Date(idoso.data_nascimento)) / (365.25*24*3600000))
@@ -715,14 +771,14 @@ window.loadFeed = async () => {
 
     // 2. Tenta banco (Supabase real)
     if (!idosoData || !escalasData.length) {
-      feedEntries = getDemoFeedEntries();
+      feedEntries = DEMO_MODE ? getDemoFeedEntries() : [];
       renderFeed(feedEntries);
       return;
     }
     const hoje = new Date().toISOString().split('T')[0];
     const escalaHoje = escalasData.find(e => e.data_inicio?.startsWith(hoje));
     if (!escalaHoje) {
-      feedEntries = getDemoFeedEntries();
+      feedEntries = DEMO_MODE ? getDemoFeedEntries() : [];
     } else {
       const { data } = await supabase
         .from('diario_cuidados')
@@ -731,12 +787,12 @@ window.loadFeed = async () => {
         .eq('visivel_familia', true)
         .order('horario', { ascending: false })
         .limit(20);
-      feedEntries = data?.length ? data : getDemoFeedEntries();
+      feedEntries = data?.length ? data : (DEMO_MODE ? getDemoFeedEntries() : []);
     }
     renderFeed(feedEntries);
     if (feedEntries[0]) updateSidebarQuickInfo(feedEntries[0]);
   } catch(e) {
-    feedEntries = getDemoFeedEntries();
+    feedEntries = DEMO_MODE ? getDemoFeedEntries() : [];
     renderFeed(feedEntries);
   }
 };
