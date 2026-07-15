@@ -413,9 +413,51 @@ function _publishUpdate(type, payload) {
   localStorage.setItem('cl_last_update', JSON.stringify(msg));
 }
 
+function setupCrossSync() {
+  if (_bc) {
+    _bc.onmessage = (event) => {
+      const { type, payload } = event.data;
+      handleRemoteUpdate(type, payload);
+    };
+  }
+
+  // Fallback: polling cl_current_profile a cada 8 segundos
+  setInterval(() => {
+    const savedProfile = localStorage.getItem('cl_current_profile');
+    if (savedProfile && savedProfile !== currentDemoProfile) {
+      currentDemoProfile = savedProfile;
+      showDemoData();
+      loadDefaultChecklist();
+      restoreChecklist();
+      if (timerInterval) clearInterval(timerInterval);
+      checkinActive = false;
+      document.getElementById('checkinDetails').style.display = 'none';
+      document.getElementById('checkinInfo').style.display    = 'block';
+      restoreCheckinState();
+      showToast(`Paciente alterado via painel da família: ${currentDemoProfile === 'idoso' ? 'Maria' : 'Enzo'}`, 'info');
+    }
+  }, 8000);
+}
+
+function handleRemoteUpdate(type, payload) {
+  if (type === 'profile_change' && payload && payload.profile && payload.profile !== currentDemoProfile) {
+    currentDemoProfile = payload.profile;
+    showDemoData();
+    loadDefaultChecklist();
+    restoreChecklist();
+    if (timerInterval) clearInterval(timerInterval);
+    checkinActive = false;
+    document.getElementById('checkinDetails').style.display = 'none';
+    document.getElementById('checkinInfo').style.display    = 'block';
+    restoreCheckinState();
+    showToast(`Paciente alterado via painel da família: ${currentDemoProfile === 'idoso' ? 'Maria' : 'Enzo'}`, 'info');
+  }
+}
+
 const registrarCheckin = async (id, lat, lng) => {
   const estado = { id, lat, lng, hora: new Date().toISOString(), ativo: true,
-    cuidadorNome: (window.__cuidelarUser||{}).nome || 'Cuidador(a)' };
+    cuidadorNome: (window.__cuidelarUser||{}).nome || 'Cuidador(a)',
+    perfil: currentDemoProfile };
 
   if (!DEMO_MODE) {
     try {
@@ -435,13 +477,14 @@ const registrarCheckin = async (id, lat, lng) => {
     }
   }
 
-  localStorage.setItem('cl_checkin', JSON.stringify(estado));
+  localStorage.setItem(getLSCheckinKey(), JSON.stringify(estado));
   _publishUpdate('checkin', estado);
 };
 
 const registrarCheckout = async (id, lat, lng) => {
-  const estado = JSON.parse(localStorage.getItem('cl_checkin') || '{}');
+  const estado = JSON.parse(localStorage.getItem(getLSCheckinKey()) || '{}');
   estado.ativo = false; estado.horaOut = new Date().toISOString();
+  estado.perfil = currentDemoProfile;
 
   if (!DEMO_MODE) {
     try {
@@ -461,7 +504,7 @@ const registrarCheckout = async (id, lat, lng) => {
     }
   }
 
-  localStorage.setItem('cl_checkin', JSON.stringify(estado));
+  localStorage.setItem(getLSCheckinKey(), JSON.stringify(estado));
   _publishUpdate('checkout', estado);
 };
 
@@ -561,14 +604,20 @@ let checklistData   = [];
 let diarioHistorico = [];
 let userCoords      = { lat: null, lng: null };
 
-const LS_CHECKIN   = 'cl_checkin';
-const LS_CHECKLIST = 'cl_checklist';
+const getLSCheckinKey = () => 'cl_checkin' + (DEMO_MODE ? '_' + currentDemoProfile : '');
+const getLSChecklistKey = () => 'cl_checklist' + (DEMO_MODE ? '_' + currentDemoProfile : '');
 
 // ============================================================
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
   await initDatabase();
+
+  const savedProfile = localStorage.getItem('cl_current_profile');
+  if (savedProfile === 'idoso' || savedProfile === 'autista') {
+    currentDemoProfile = savedProfile;
+  }
+  setupCrossSync();
 
   if (!DEMO_MODE) {
     const btn = document.getElementById('btnAlternarDemo');
@@ -670,19 +719,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ============================================================
 function restoreCheckinState() {
   try {
-    const saved = JSON.parse(localStorage.getItem(LS_CHECKIN) || 'null');
+    const saved = JSON.parse(localStorage.getItem(getLSCheckinKey()) || 'null');
     if (!saved) return;
 
     // Limpa o cache se o ID da escala do banco de dados for diferente do ID do cache local
     if (currentEscala && saved.id !== currentEscala.id) {
-      localStorage.removeItem(LS_CHECKIN);
+      localStorage.removeItem(getLSCheckinKey());
       return;
     }
 
     // Verifica se é do mesmo dia
     const savedDay = new Date(saved.hora).toDateString();
     if (savedDay !== new Date().toDateString()) {
-      localStorage.removeItem(LS_CHECKIN);
+      localStorage.removeItem(getLSCheckinKey());
       return;
     }
 
@@ -721,7 +770,7 @@ function restoreCheckinState() {
 // ============================================================
 function restoreChecklist() {
   try {
-    const saved = JSON.parse(localStorage.getItem(LS_CHECKLIST) || 'null');
+    const saved = JSON.parse(localStorage.getItem(getLSChecklistKey()) || 'null');
     if (!saved || saved.day !== new Date().toDateString()) return;
     saved.items.forEach(si => {
       const item = checklistData.find(i => i.id === si.id);
@@ -734,7 +783,7 @@ function restoreChecklist() {
 function saveChecklistState() {
   const data = { day: new Date().toDateString(),
     items: checklistData.map(i => ({ id: i.id, done: i.done })) };
-  localStorage.setItem(LS_CHECKLIST, JSON.stringify(data));
+  localStorage.setItem(getLSChecklistKey(), JSON.stringify(data));
 }
 
 // ============================================================
@@ -788,14 +837,23 @@ let currentDemoProfile = 'idoso';
 
 window.alternarDemoPaciente = () => {
   currentDemoProfile = currentDemoProfile === 'idoso' ? 'autista' : 'idoso';
+  localStorage.setItem('cl_current_profile', currentDemoProfile);
+  _publishUpdate('profile_change', { profile: currentDemoProfile });
   showDemoData();
+  loadDefaultChecklist();
+  restoreChecklist();
+  if (timerInterval) clearInterval(timerInterval);
+  checkinActive = false;
+  document.getElementById('checkinDetails').style.display = 'none';
+  document.getElementById('checkinInfo').style.display    = 'block';
+  restoreCheckinState();
   showToast(`Paciente demo alterado para: ${currentDemoProfile === 'idoso' ? 'Maria das Graças (Idoso)' : 'Enzo Gabriel (Criança Autista)'}`, 'info');
 };
 
 function showDemoData() {
   // Dados demo para visualização
   const demoEscala = {
-    id: 'demo',
+    id: 'demo_' + currentDemoProfile,
     data_inicio: new Date().setHours(8,0,0,0),
     data_termino: new Date().setHours(14,0,0,0),
     valor_hora: 45,
@@ -1231,6 +1289,7 @@ window.salvarDiario = async () => {
   try {
     const registro = {
       id_escala:              escalaPendingId || currentEscala?.id || 'demo',
+      perfil:                 currentDemoProfile,
       batimento_cardiaco:     parseInt(document.getElementById('vitBat').value)   || null,
       pressao_arterial:       document.getElementById('vitPA').value              || null,
       temperatura:            parseFloat(document.getElementById('vitTemp').value) || null,
@@ -1275,7 +1334,7 @@ window.salvarDiario = async () => {
 
 async function loadHistorico() {
   try {
-    const key   = 'cl_diario_' + (escalaPendingId || 'demo');
+    const key   = 'cl_diario_' + (escalaPendingId || currentEscala?.id || 'demo');
     let saved = [];
     try {
       saved = JSON.parse(localStorage.getItem(key) || '[]');

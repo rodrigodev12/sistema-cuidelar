@@ -369,6 +369,15 @@ function setupCrossSync() {
 
   // Fallback: polling localStorage a cada 8 segundos
   setInterval(() => {
+    const savedProfile = localStorage.getItem('cl_current_profile');
+    if (savedProfile && savedProfile !== currentDemoProfile) {
+      currentDemoProfile = savedProfile;
+      showDemoData();
+      loadFeed();
+      restoreCheckinStatus();
+      showToast(`Familiar alterado via painel da cuidadora: ${currentDemoProfile === 'idoso' ? 'Maria' : 'Enzo'}`, 'info');
+    }
+
     const raw = localStorage.getItem('cl_last_update');
     if (!raw) return;
     try {
@@ -384,6 +393,21 @@ function setupCrossSync() {
 }
 
 function handleRemoteUpdate(type, payload) {
+  let profileChanged = false;
+  if (payload && payload.perfil && payload.perfil !== currentDemoProfile) {
+    currentDemoProfile = payload.perfil;
+    profileChanged = true;
+  } else if (type === 'profile_change' && payload && payload.profile && payload.profile !== currentDemoProfile) {
+    currentDemoProfile = payload.profile;
+    profileChanged = true;
+  }
+
+  if (profileChanged) {
+    localStorage.setItem('cl_current_profile', currentDemoProfile);
+    showDemoData();
+    restoreCheckinStatus();
+  }
+
   if (type === 'checkin') {
     // Cuidador fez check-in
     const card = document.getElementById('checkinStatusCard');
@@ -414,11 +438,7 @@ function handleRemoteUpdate(type, payload) {
     }
     showToast('🟡 Plantão encerrado.', 'info');
   } else if (type === 'diario') {
-    // Novo registro do diário
-    feedEntries.unshift(payload);
-    renderFeed(feedEntries);
-    // Atualiza quick-info sidebar
-    updateSidebarQuickInfo(payload);
+    loadFeed();
     showToast('📋 Novo registro do(a) cuidador(a)!', 'info');
   }
 }
@@ -441,10 +461,16 @@ function updateSidebarQuickInfo(entry) {
 // Restaura status do checkin ao carregar
 function restoreCheckinStatus() {
   try {
-    const saved = JSON.parse(localStorage.getItem('cl_checkin') || 'null');
-    if (!saved) return;
+    const saved = JSON.parse(localStorage.getItem('cl_checkin_' + currentDemoProfile) || 'null');
+    if (!saved) {
+      resetCheckinStatusCard();
+      return;
+    }
     // Verifica se é de hoje
-    if (new Date(saved.hora).toDateString() !== new Date().toDateString()) return;
+    if (new Date(saved.hora).toDateString() !== new Date().toDateString()) {
+      resetCheckinStatusCard();
+      return;
+    }
 
     if (saved.ativo) {
       const badge = document.getElementById('checkinStatusBadge');
@@ -460,13 +486,34 @@ function restoreCheckinStatus() {
     } else if (saved.horaOut) {
       const badge = document.getElementById('checkinStatusBadge');
       if (badge) { badge.className = 'badge badge-neutral'; badge.textContent = 'Encerrado'; }
+      const title = document.getElementById('checkinStatusTitle');
+      if (title) title.textContent = 'Plantão encerrado';
+      const desc = document.getElementById('checkinStatusDesc');
+      if (desc) desc.textContent = `Check-out às ${new Date(saved.horaOut).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+      const cuidadorStatus = document.getElementById('cuidadorStatus');
+      if (cuidadorStatus) {
+        cuidadorStatus.innerHTML = `<div class="cuidador-online" style="color:var(--text-muted)"><div class="status-dot inactive" aria-hidden="true"></div>Plantão encerrado</div>`;
+      }
     }
   } catch(e) {}
 }
 
+function resetCheckinStatusCard() {
+  const badge = document.getElementById('checkinStatusBadge');
+  if (badge) { badge.className = 'badge badge-neutral'; badge.textContent = 'Inativo'; }
+  const title = document.getElementById('checkinStatusTitle');
+  if (title) title.textContent = 'Nenhum plantão ativo';
+  const desc = document.getElementById('checkinStatusDesc');
+  if (desc) desc.textContent = 'Aguardando início do plantão da cuidadora';
+  const cuidadorStatus = document.getElementById('cuidadorStatus');
+  if (cuidadorStatus) {
+    cuidadorStatus.innerHTML = `<div class="cuidador-online" style="color:var(--text-muted)"><div class="status-dot inactive" aria-hidden="true"></div>Cuidadora ausente</div>`;
+  }
+}
+
 // Carrega entradas do diário do localStorage para o feed
 function loadDiarioFromStorage() {
-  const key   = 'cl_diario_demo';
+  const key   = 'cl_diario_demo_' + currentDemoProfile;
   const saved = JSON.parse(localStorage.getItem(key) || '[]');
   const today = new Date().toDateString();
   return saved.filter(e => new Date(e.horario).toDateString() === today);
@@ -492,6 +539,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initDatabase();
   currentUser = await protectRoute(['cliente']);
   if (!currentUser) return;
+
+  const savedProfile = localStorage.getItem('cl_current_profile');
+  if (savedProfile === 'idoso' || savedProfile === 'autista') {
+    currentDemoProfile = savedProfile;
+  }
 
   // Restaura seção ativa anterior (ou carrega default)
   const savedSection = localStorage.getItem('familia_active_section');
@@ -568,8 +620,12 @@ let currentDemoProfile = 'idoso';
 
 window.alternarDemoFamilia = () => {
   currentDemoProfile = currentDemoProfile === 'idoso' ? 'autista' : 'idoso';
+  localStorage.setItem('cl_current_profile', currentDemoProfile);
+  if (_bc) _bc.postMessage({ type: 'profile_change', payload: { profile: currentDemoProfile } });
+  localStorage.setItem('cl_last_update', JSON.stringify({ type: 'profile_change', payload: { profile: currentDemoProfile }, ts: Date.now() }));
   showDemoData();
   loadFeed();
+  restoreCheckinStatus();
   showToast(`Familiar demo alterado para: ${currentDemoProfile === 'idoso' ? 'Maria das Graças (Idoso)' : 'Enzo Gabriel (Criança Autista)'}`, 'info');
 };
 

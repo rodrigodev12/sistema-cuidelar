@@ -801,8 +801,8 @@
       </div>
       <div class="form-grid-3 mb-4">
         <div class="form-group">
-          <label class="form-label" for="cuidCPF">CPF</label>
-          <input type="text" class="form-input" id="cuidCPF" placeholder="000.000.000-00" />
+          <label class="form-label" for="cuidCPF">CPF *</label>
+          <input type="text" class="form-input" id="cuidCPF" required placeholder="000.000.000-00" />
         </div>
         <div class="form-group">
           <label class="form-label" for="cuidTel">Telefone</label>
@@ -871,8 +871,8 @@
         <input type="tel" class="form-input" id="famCelular" placeholder="(11) 99999-9999" />
       </div>
       <div class="form-group mb-4">
-        <label class="form-label" for="famCpf">CPF</label>
-        <input type="text" class="form-input" id="famCpf" placeholder="000.000.000-00" />
+        <label class="form-label" for="famCpf">CPF *</label>
+        <input type="text" class="form-input" id="famCpf" required placeholder="000.000.000-00" />
       </div>
       <div class="form-grid-2 mb-6">
         <div class="form-group">
@@ -1905,11 +1905,20 @@ window.submitCuidador = async (e) => {
     if (document.getElementById('cuidPublicoIdoso').checked) publico.push('idoso');
     if (document.getElementById('cuidPublicoAutista').checked) publico.push('crianca_autista');
 
+    const rawCpf = document.getElementById('cuidCPF').value.replace(/\D/g, '');
+    if (rawCpf.length < 6) {
+      throw new Error('O CPF deve conter pelo menos 6 dígitos para gerar a senha inicial.');
+    }
+    const senha = rawCpf.substring(0, 6);
+
     const data = {
       status:           document.getElementById('cuidStatus').value,
       valor_hora:       parseFloat(document.getElementById('cuidValor').value || 0),
       formacao:         document.getElementById('cuidFormacao').value || 'Sem formação informada',
-      publico_atendido: publico
+      publico_atendido: publico,
+      cpf:              rawCpf,
+      telefone:         document.getElementById('cuidTel').value || null,
+      bio:              document.getElementById('cuidBio').value || null
     };
 
     const nome = document.getElementById('cuidNome').value;
@@ -1935,19 +1944,20 @@ window.submitCuidador = async (e) => {
 
         showToast('Cuidador atualizado com sucesso!', 'success');
       } else {
-        // Insere usuarios
-        const { data: newUser, error: userErr } = await supabase
-          .from('usuarios')
-          .insert({ nome, email, tipo: 'cuidador' })
-          .select()
-          .single();
-        if (userErr) throw userErr;
+        // RPC: Cria usuário na autenticação Supabase e na tabela public.usuarios
+        const { data: newUserUuid, error: rpcErr } = await supabase.rpc('criar_usuario_com_senha', {
+          p_nome: nome,
+          p_email: email,
+          p_tipo: 'cuidador',
+          p_senha: senha
+        });
+        if (rpcErr) throw rpcErr;
 
         // Insere cuidadores
         const { error: cuidErr } = await supabase
           .from('cuidadores')
           .insert({
-            id_usuario: newUser.id,
+            id_usuario: newUserUuid,
             ...data
           });
         if (cuidErr) throw cuidErr;
@@ -1994,11 +2004,17 @@ window.submitCuidador = async (e) => {
 window.submitFamilia = async (e) => {
   e.preventDefault();
   try {
+    const rawCpf = document.getElementById('famCpf').value.replace(/\D/g, '');
+    if (rawCpf.length < 6) {
+      throw new Error('O CPF deve conter pelo menos 6 dígitos para gerar a senha inicial.');
+    }
+    const senha = rawCpf.substring(0, 6);
+
     const data = {
       cidade: document.getElementById('famCidade').value,
       estado: document.getElementById('famEstado').value,
       celular: document.getElementById('famCelular').value,
-      cpf: document.getElementById('famCpf').value
+      cpf: rawCpf
     };
 
     const nome = document.getElementById('famNome').value;
@@ -2024,19 +2040,20 @@ window.submitFamilia = async (e) => {
 
         showToast('Família atualizada com sucesso!', 'success');
       } else {
-        // Insere usuarios
-        const { data: newUser, error: userErr } = await supabase
-          .from('usuarios')
-          .insert({ nome, email, tipo: 'cliente' })
-          .select()
-          .single();
-        if (userErr) throw userErr;
+        // RPC: Cria usuário na autenticação Supabase e na tabela public.usuarios
+        const { data: newUserUuid, error: rpcErr } = await supabase.rpc('criar_usuario_com_senha', {
+          p_nome: nome,
+          p_email: email,
+          p_tipo: 'cliente',
+          p_senha: senha
+        });
+        if (rpcErr) throw rpcErr;
 
         // Insere clientes_familia
         const { error: famErr } = await supabase
           .from('clientes_familia')
           .insert({
-            id_usuario: newUser.id,
+            id_usuario: newUserUuid,
             ...data
           });
         if (famErr) throw famErr;
