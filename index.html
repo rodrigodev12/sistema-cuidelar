@@ -89,10 +89,12 @@
 
         <div class="login-header animate-fade-in-up">
           <div class="login-logo-wrap">
-            <img src="assets/logo-cuidelar.png" alt="CuideLar — Assistência Domiciliar e Hospitalar" class="login-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+            <img src="assets/logo-cuidelar.png" alt="CuideLar — Assistência Domiciliar e Hospitalar"
+              class="login-logo-img"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
             <div class="login-logo-fallback" style="display:none;">
               <div class="login-logo-icon">🏠</div>
-              <span class="login-logo-name">CuideLar</span>
+              <span class="login-logo-name">Cuidelar</span>
             </div>
           </div>
           <h2>Bem-vindo de volta</h2>
@@ -108,21 +110,27 @@
               <div class="role-option">
                 <input type="radio" name="role" id="role-admin" value="administrador" />
                 <label for="role-admin">
-                  <span class="role-emoji">🔷</span>
+                  <span class="role-avatar role-avatar--admin">
+                    <i data-lucide="shield-check" aria-hidden="true"></i>
+                  </span>
                   <span class="role-name">Admin</span>
                 </label>
               </div>
               <div class="role-option">
                 <input type="radio" name="role" id="role-cuidador" value="cuidador" checked />
                 <label for="role-cuidador">
-                  <span class="role-emoji">🟢</span>
+                  <span class="role-avatar role-avatar--cuidador">
+                    <i data-lucide="heart-handshake" aria-hidden="true"></i>
+                  </span>
                   <span class="role-name">Cuidador(a)</span>
                 </label>
               </div>
               <div class="role-option">
                 <input type="radio" name="role" id="role-familia" value="cliente" />
                 <label for="role-familia">
-                  <span class="role-emoji">🟡</span>
+                  <span class="role-avatar role-avatar--familia">
+                    <i data-lucide="users" aria-hidden="true"></i>
+                  </span>
                   <span class="role-name">Família</span>
                 </label>
               </div>

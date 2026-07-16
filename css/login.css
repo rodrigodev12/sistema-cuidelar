@@ -406,7 +406,59 @@
   text-align: center;
 }
 
-.role-option label .role-emoji { font-size: 1.5rem; }
+.role-option label .role-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.role-avatar svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.75;
+  transition: all var(--transition-fast);
+}
+
+/* Cores por perfil — estado normal */
+.role-avatar--admin {
+  background: rgba(99, 60, 130, 0.12);
+  color: var(--brand-dark);
+}
+.role-avatar--cuidador {
+  background: rgba(224, 122, 138, 0.12);
+  color: var(--brand-rose);
+}
+.role-avatar--familia {
+  background: rgba(20, 184, 166, 0.12);
+  color: #0d9488;
+}
+
+/* Estado selecionado */
+.role-option input:checked + label .role-avatar--admin {
+  background: var(--brand-dark);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(92,60,103,0.35);
+}
+.role-option input:checked + label .role-avatar--cuidador {
+  background: var(--gradient-primary);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(224,122,138,0.4);
+}
+.role-option input:checked + label .role-avatar--familia {
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(20,184,166,0.35);
+}
+
+/* Hover nos avatares */
+.role-option label:hover .role-avatar--admin   { background: rgba(99,60,130,0.2); }
+.role-option label:hover .role-avatar--cuidador { background: rgba(224,122,138,0.2); }
+.role-option label:hover .role-avatar--familia  { background: rgba(20,184,166,0.2); }
 .role-option label .role-name {
   font-size: 0.75rem;
   font-weight: 600;
