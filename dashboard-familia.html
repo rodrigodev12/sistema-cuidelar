@@ -82,9 +82,6 @@
       <div class="familia-nav-item" id="nav-plantoes" onclick="showFamiliaSection('plantoes', this)">
         <i data-lucide="calendar" aria-hidden="true"></i> Próximos Plantões
       </div>
-      <div class="familia-nav-item" id="nav-faturamento" onclick="showFamiliaSection('faturamento', this)">
-        <i data-lucide="credit-card" aria-hidden="true"></i> Faturamento
-      </div>
       <div class="familia-nav-item" id="nav-avaliacao" onclick="showFamiliaSection('avaliacao', this)">
         <i data-lucide="star" aria-hidden="true"></i> Avaliar Cuidador(a)
       </div>
@@ -239,42 +236,7 @@
 
     </div>
 
-    <!-- ==============================
-         SEÇÃO: FATURAMENTO
-         ============================== -->
-    <div class="familia-page familia-section" id="section-faturamento" style="display:none">
-      <h1 style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;">💳 Faturamento</h1>
 
-      <!-- Resumo financeiro -->
-      <div class="fat-summary animate-fade-in">
-        <div class="fat-stat">
-          <div class="fat-value" id="fatTotal">—</div>
-          <div class="fat-label">Total Gasto</div>
-        </div>
-        <div class="fat-stat">
-          <div class="fat-value" id="fatHoras">—</div>
-          <div class="fat-label">Horas Contratadas</div>
-        </div>
-        <div class="fat-stat">
-          <div class="fat-value" id="fatPendente" style="-webkit-text-fill-color:var(--warning);color:var(--warning)">R$ 0</div>
-          <div class="fat-label">Pendente</div>
-        </div>
-      </div>
-
-      <!-- Histórico de faturas -->
-      <div class="saude-section animate-fade-in-up delay-100">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-          <div class="saude-title" style="margin:0">📄 Histórico de Cobranças</div>
-          <button class="btn btn-secondary btn-sm" onclick="exportarHistorico()">
-            <i data-lucide="download" aria-hidden="true"></i> Exportar
-          </button>
-        </div>
-        <div id="faturasHistorico">
-          <!-- Renderizado via JS -->
-        </div>
-      </div>
-
-    </div>
 
     <!-- ==============================
          SEÇÃO: AVALIAR CUIDADOR
@@ -941,32 +903,10 @@ function renderPlantoes(escalas) {
 }
 
 // ============================================================
-// FATURAMENTO
+// FATURAMENTO (Desabilitado)
 // ============================================================
 function renderFaturamento(escalas) {
-  const total = escalas.reduce((a, e) => a + (e.valor_total || 0), 0);
-  const horas = escalas.reduce((a, e) => a + (new Date(e.data_termino) - new Date(e.data_inicio)) / 3600000, 0);
-  const pendente = escalas.filter(e => !e.pago).reduce((a, e) => a + (e.valor_total || 0), 0);
-
-  document.getElementById('fatTotal').textContent    = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2});
-  document.getElementById('fatHoras').textContent    = horas.toFixed(0) + 'h';
-  document.getElementById('fatPendente').textContent = 'R$ ' + pendente.toFixed(2).replace('.',',');
-
-  const hist = document.getElementById('faturasHistorico');
-  hist.innerHTML = escalas.map(e => {
-    const d = new Date(e.data_inicio);
-    return `
-    <div class="fatura-row">
-      <div>
-        <div class="fatura-desc">${e.cuidadores?.usuarios?.nome || 'Cuidador(a)'} · ${d.toLocaleDateString('pt-BR')}</div>
-        <div class="fatura-date">${d.toLocaleDateString('pt-BR',{weekday:'long'})} · Status: ${e.status}</div>
-      </div>
-      <div>
-        <div class="fatura-valor ${e.pago ? 'pago' : 'pendente'}">R$ ${(e.valor_total||0).toFixed(2).replace('.',',')}</div>
-        <div style="font-size:.75rem;text-align:right;color:var(--text-muted)">${e.pago ? '✅ Pago' : '⏳ Pendente'}</div>
-      </div>
-    </div>`;
-  }).join('');
+  // Desabilitado temporariamente
 }
 
 // ============================================================
