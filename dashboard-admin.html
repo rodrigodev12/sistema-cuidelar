@@ -658,24 +658,24 @@
       </div>
       <!-- Bloco Financeiro (O cérebro do negócio) -->
       <div class="mb-4" style="padding: var(--space-4); background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius-md);">
-        <div class="form-grid-3 mb-3">
+        <div class="form-grid-3 mb-3" style="align-items: start;">
           <div class="form-group">
-            <label class="form-label" for="escTipoCobranca">Tipo de Cobrança *</label>
+            <label class="form-label" for="escTipoCobranca" id="labelTipoCobranca" style="min-height: 48px; display: flex; align-items: flex-end; margin-bottom: 4px;">Tipo de Cobrança *</label>
             <select class="form-select" id="escTipoCobranca" required>
               <option value="Por Hora">Por Hora</option>
-              <option value="Por Plantão">Por Plantão</option>
+              <option value="Por Plantão">Por Plantão (12h)</option>
               <option value="Mensal Fixado">Mensal Fixado</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="escValorCliente" id="labelValorCliente">Valor Cliente (R$) *</label>
+            <label class="form-label" for="escValorCliente" id="labelValorCliente" style="min-height: 48px; display: flex; align-items: flex-end; margin-bottom: 4px;">Valor Cliente (R$) *</label>
             <input type="number" class="form-input" id="escValorCliente" step="0.01" placeholder="0,00" required />
-            <span id="escValorClienteHelper" style="display:block; font-size:0.75rem; color:var(--text-muted); margin-top:2px;"></span>
+            <span id="escValorClienteHelper" style="display:none; font-size:0.75rem; color:var(--primary); margin-top:6px; padding: 6px var(--space-3); background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius-sm); text-align: center; font-weight: 500; box-sizing: border-box;"></span>
           </div>
           <div class="form-group">
-            <label class="form-label" for="escValorRepasse" id="labelValorRepasse">Repasse Cuidador (R$) *</label>
+            <label class="form-label" for="escValorRepasse" id="labelValorRepasse" style="min-height: 48px; display: flex; align-items: flex-end; margin-bottom: 4px;">Repasse Cuidador (R$) *</label>
             <input type="number" class="form-input" id="escValorRepasse" step="0.01" placeholder="0,00" required />
-            <span id="escValorRepasseHelper" style="display:block; font-size:0.75rem; color:var(--text-muted); margin-top:2px;"></span>
+            <span id="escValorRepasseHelper" style="display:none; font-size:0.75rem; color:rgb(219, 39, 119); margin-top:6px; padding: 6px var(--space-3); background: rgba(219,39,119,0.08); border: 1px solid rgba(219,39,119,0.15); border-radius: var(--radius-sm); text-align: center; font-weight: 500; box-sizing: border-box;"></span>
           </div>
         </div>
         <div class="form-grid-2">
@@ -1888,6 +1888,11 @@ window.submitEscala = async (e) => {
     const horas = (new Date(termino) - new Date(inicio)) / 3600000;
     const valorHora = horas > 0 ? (valorRepasse / horas) : 0;
 
+    // Calcula os valores totais conforme o tipo de cobrança antes de salvar
+    const resCalcs = calcularValoresEscala(inicio, termino, tipoCobranca, valorCliente, valorRepasse);
+    const totalCliente = resCalcs.valorFinalCliente;
+    const totalRepasse = resCalcs.valorFinalRepasse;
+
     const idosoId = document.getElementById('escIdoso').value;
     const idosoObj = allIdosos.find(i => i.id === idosoId);
 
@@ -1914,10 +1919,10 @@ window.submitEscala = async (e) => {
         id_cuidador: cuidId,
         data_inicio: startIso,
         data_termino: endIso,
-        valor_total: valorCliente,
+        valor_total: totalCliente,
         tipo_cobranca: tipoCobranca,
-        valor_cliente: valorCliente,
-        valor_repasse_cuidador: valorRepasse,
+        valor_cliente: totalCliente,
+        valor_repasse_cuidador: totalRepasse,
         status: status,
         observacoes: document.getElementById('escObs').value
       };
@@ -1953,10 +1958,10 @@ window.submitEscala = async (e) => {
           data_inicio: startIso,
           data_termino: endIso,
           valor_hora: valorHora,
-          valor_total: valorCliente,
+          valor_total: totalCliente,
           tipo_cobranca: tipoCobranca,
-          valor_cliente: valorCliente,
-          valor_repasse_cuidador: valorRepasse,
+          valor_cliente: totalCliente,
+          valor_repasse_cuidador: totalRepasse,
           status: status,
           observacoes: document.getElementById('escObs').value
         };
@@ -1971,10 +1976,10 @@ window.submitEscala = async (e) => {
         data_inicio: startIso,
         data_termino: endIso,
         valor_hora: valorHora,
-        valor_total: valorCliente,
+        valor_total: totalCliente,
         tipo_cobranca: tipoCobranca,
-        valor_cliente: valorCliente,
-        valor_repasse_cuidador: valorRepasse,
+        valor_cliente: totalCliente,
+        valor_repasse_cuidador: totalRepasse,
         status: status,
         observacoes: document.getElementById('escObs').value
       };
@@ -2718,7 +2723,7 @@ window.editEscala = (id) => {
       unitCliente = totalCliente / horas;
       unitRepasse = totalRepasse / horas;
     }
-  } else if (tipo === 'Por Plantão') {
+  } else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') {
     const qtdPlantoes = Math.ceil(horas / 12) || 1;
     unitCliente = totalCliente / qtdPlantoes;
     unitRepasse = totalRepasse / qtdPlantoes;
@@ -2784,6 +2789,7 @@ document.getElementById('escInicio')?.addEventListener('change', calcularValores
 document.getElementById('escTermino')?.addEventListener('change', calcularValoresPadrao);
 
 function calcularValoresEscala(dataInicio, dataFim, tipoCobranca, valorInseridoCliente, valorInseridoRepasse) {
+  // 1. Calcula o total de horas entre as duas datas
   const horasTotais = (new Date(dataFim) - new Date(dataInicio)) / (1000 * 60 * 60);
   
   let valorFinalCliente = 0;
@@ -2791,23 +2797,28 @@ function calcularValoresEscala(dataInicio, dataFim, tipoCobranca, valorInseridoC
 
   switch(tipoCobranca) {
     case 'Mensal Fixado':
+      // O valor digitado já é o total do mês. Não multiplica por nada.
       valorFinalCliente = valorInseridoCliente;
       valorFinalRepasse = valorInseridoRepasse;
       break;
 
     case 'Por Plantão':
-      const quantidadePlantoes12h = Math.ceil(horasTotais / 12) || 1;
+    case 'Por Plantão (12h)':
+      // Descobre quantos plantões de 12h cabem no período e multiplica
+      const quantidadePlantoes12h = Math.ceil(horasTotais / 12) || 0;
       valorFinalCliente = valorInseridoCliente * quantidadePlantoes12h;
       valorFinalRepasse = valorInseridoRepasse * quantidadePlantoes12h;
       break;
 
     case 'Por Hora':
     default:
-      valorFinalCliente = valorInseridoCliente * horasTotais;
-      valorFinalRepasse = valorInseridoRepasse * horasTotais;
+      // Lógica antiga que você já tem rodando
+      valorFinalCliente = valorInseridoCliente * (horasTotais || 0);
+      valorFinalRepasse = valorInseridoRepasse * (horasTotais || 0);
       break;
   }
 
+  // 2. Calcula Lucro e Margem
   const lucroBruto = valorFinalCliente - valorFinalRepasse;
   const margemAgencia = valorFinalCliente > 0 ? (lucroBruto / valorFinalCliente) * 100 : 0;
 
@@ -2836,7 +2847,7 @@ function calcularValoresPadrao() {
   if (tipo === 'Por Hora') {
     valRepasseEl.value = vh.toFixed(2);
     valClienteEl.value = (vh * 1.35).toFixed(2);
-  } else if (tipo === 'Por Plantão') {
+  } else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') {
     const rateRepasse = vh * 12;
     valRepasseEl.value = rateRepasse.toFixed(2);
     valClienteEl.value = (rateRepasse * 1.35).toFixed(2);
@@ -2860,37 +2871,80 @@ function calcularFinanceiro() {
   const labelRepasse = document.getElementById('labelValorRepasse');
   const helperCliente = document.getElementById('escValorClienteHelper');
   const helperRepasse = document.getElementById('escValorRepasseHelper');
+  const inputCliente = document.getElementById('escValorCliente');
+  const inputRepasse = document.getElementById('escValorRepasse');
   
   let horas = 0;
-  if (deVal && ateVal) {
+  const hasDates = deVal && ateVal;
+  if (hasDates) {
     horas = (new Date(ateVal) - new Date(deVal)) / 3600000;
   }
   
   if (tipo === 'Por Hora') {
     if (labelCliente) labelCliente.textContent = 'Valor por Hora (R$) *';
     if (labelRepasse) labelRepasse.textContent = 'Repasse por Hora (R$) *';
+    if (inputCliente) inputCliente.placeholder = '0,00';
+    if (inputRepasse) inputRepasse.placeholder = '0,00';
     
     const res = calcularValoresEscala(deVal || new Date(), ateVal || new Date(), tipo, vc, vr);
-    if (helperCliente) helperCliente.textContent = `Total estimado: R$ ${res.valorFinalCliente.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${horas.toFixed(1)}h)`;
-    if (helperRepasse) helperRepasse.textContent = `Total estimado: R$ ${res.valorFinalRepasse.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${horas.toFixed(1)}h)`;
+    
+    if (hasDates && (vc > 0 || vr > 0)) {
+      const hStr = horas.toFixed(1).replace('.', ',');
+      const unitHoras = horas === 1 ? 'hora' : 'horas';
+      if (helperCliente) {
+        helperCliente.textContent = `Total: R$ ${res.valorFinalCliente.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${hStr} ${unitHoras})`;
+        helperCliente.style.display = 'block';
+      }
+      if (helperRepasse) {
+        helperRepasse.textContent = `Total: R$ ${res.valorFinalRepasse.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${hStr} ${unitHoras})`;
+        helperRepasse.style.display = 'block';
+      }
+    } else {
+      if (helperCliente) helperCliente.style.display = 'none';
+      if (helperRepasse) helperRepasse.style.display = 'none';
+    }
     
     updateKPIs(res);
-  } else if (tipo === 'Por Plantão') {
-    if (labelCliente) labelCliente.textContent = 'Valor por Plantão (12h) (R$) *';
-    if (labelRepasse) labelRepasse.textContent = 'Repasse por Plantão (12h) (R$) *';
+  } else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') {
+    if (labelCliente) labelCliente.textContent = 'Valor Plantão (R$) *';
+    if (labelRepasse) labelRepasse.textContent = 'Repasse Plantão (R$) *';
+    if (inputCliente) inputCliente.placeholder = '0,00';
+    if (inputRepasse) inputRepasse.placeholder = '0,00';
     
     const res = calcularValoresEscala(deVal || new Date(), ateVal || new Date(), tipo, vc, vr);
     const qtdPlantoes = Math.ceil(horas / 12) || 1;
-    if (helperCliente) helperCliente.textContent = `Total estimado: R$ ${res.valorFinalCliente.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${qtdPlantoes} plantão/ões)`;
-    if (helperRepasse) helperRepasse.textContent = `Total estimado: R$ ${res.valorFinalRepasse.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${qtdPlantoes} plantão/ões)`;
+    
+    if (hasDates && (vc > 0 || vr > 0)) {
+      const unitPlantoes = qtdPlantoes === 1 ? 'plantão' : 'plantões';
+      if (helperCliente) {
+        helperCliente.textContent = `Total: R$ ${res.valorFinalCliente.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${qtdPlantoes} ${unitPlantoes})`;
+        helperCliente.style.display = 'block';
+      }
+      if (helperRepasse) {
+        helperRepasse.textContent = `Total: R$ ${res.valorFinalRepasse.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${qtdPlantoes} ${unitPlantoes})`;
+        helperRepasse.style.display = 'block';
+      }
+    } else {
+      if (helperCliente) helperCliente.style.display = 'none';
+      if (helperRepasse) helperRepasse.style.display = 'none';
+    }
     
     updateKPIs(res);
   } else if (tipo === 'Mensal Fixado') {
-    if (labelCliente) labelCliente.textContent = 'Valor Mensal Contrato (R$) *';
-    if (labelRepasse) labelRepasse.textContent = 'Repasse Mensal Cuidador (R$) *';
+    if (labelCliente) labelCliente.textContent = 'Mensal Cliente (R$) *';
+    if (labelRepasse) labelRepasse.textContent = 'Mensal Cuidador (R$) *';
     
-    if (helperCliente) helperCliente.textContent = '(Valor total do contrato mensal)';
-    if (helperRepasse) helperRepasse.textContent = '(Valor total do repasse mensal)';
+    if (inputCliente) inputCliente.placeholder = 'Valor total do contrato mensal';
+    if (inputRepasse) inputRepasse.placeholder = 'Valor total do repasse mensal';
+    
+    if (helperCliente) {
+      helperCliente.textContent = '(Valor total do contrato mensal)';
+      helperCliente.style.display = 'block';
+    }
+    if (helperRepasse) {
+      helperRepasse.textContent = '(Valor total do repasse mensal)';
+      helperRepasse.style.display = 'block';
+    }
     
     const res = calcularValoresEscala(deVal || new Date(), ateVal || new Date(), tipo, vc, vr);
     updateKPIs(res);
