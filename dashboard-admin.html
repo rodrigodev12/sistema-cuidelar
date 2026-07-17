@@ -1835,6 +1835,12 @@ function populateSelects() {
     selFamilia.innerHTML = '<option value="">Selecione...</option>';
     allFamilias.forEach(f => selFamilia.add(new Option(f.usuarios?.nome || '—', f.id)));
   }
+  // Select cuidadores no filtro de relatórios
+  const selRelCuidador = document.getElementById('relCuidador');
+  if (selRelCuidador) {
+    selRelCuidador.innerHTML = '<option value="">Todos</option>';
+    allCuidadores.forEach(c => selRelCuidador.add(new Option(c.usuarios?.nome || '—', c.id)));
+  }
 }
 
 // ============================================================
@@ -2433,22 +2439,107 @@ window.toggleIdososView = () => {
 // ============================================================
 // RELATÓRIOS
 // ============================================================
+let chartRel = null;
+
+function renderRelatorioChart(filteredList) {
+  const ctx = document.getElementById('chartRelatorio');
+  if (!ctx) return;
+  
+  if (chartRel) chartRel.destroy();
+  
+  // Agrupa faturamento por data de início
+  const agrupado = {};
+  filteredList.forEach(e => {
+    if (!e.data_inicio) return;
+    const dateStr = new Date(e.data_inicio).toLocaleDateString('pt-BR');
+    agrupado[dateStr] = (agrupado[dateStr] || 0) + (e.valor_cliente || e.valor_total || 0);
+  });
+  
+  // Ordena as datas cronologicamente
+  const labels = Object.keys(agrupado).sort((a, b) => {
+    const parseDate = s => {
+      const parts = s.split('/');
+      return new Date(parts[2], parts[1] - 1, parts[0]);
+    };
+    return parseDate(a) - parseDate(b);
+  });
+  
+  const data = labels.map(l => agrupado[l]);
+  
+  chartRel = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels.length ? labels : ['Sem dados'],
+      datasets: [{
+        label: 'Faturamento (R$)',
+        data: data.length ? data : [0],
+        backgroundColor: '#5C3C67',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(92,60,103,0.06)' },
+          ticks: { color: '#7B5589' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#7B5589' }
+        }
+      }
+    }
+  });
+}
+
 window.gerarRelatorio = () => {
-  document.getElementById('rel-total-escalas').textContent = allEscalas.length;
-  const horas = allEscalas.reduce((acc, e) => acc + (new Date(e.data_termino) - new Date(e.data_inicio)) / 3600000, 0);
+  const deVal = document.getElementById('relDe').value;
+  const ateVal = document.getElementById('relAte').value;
+  const cuidVal = document.getElementById('relCuidador').value;
+  
+  // Desconsidera escalas canceladas no relatório financeiro/operacional
+  let filtered = (allEscalas || []).filter(e => e.status !== 'cancelado');
+  
+  if (deVal) {
+    const deLimit = new Date(deVal + 'T00:00:00').getTime();
+    filtered = filtered.filter(e => new Date(e.data_inicio).getTime() >= deLimit);
+  }
+  
+  if (ateVal) {
+    const ateLimit = new Date(ateVal + 'T23:59:59').getTime();
+    filtered = filtered.filter(e => new Date(e.data_inicio).getTime() <= ateLimit);
+  }
+  
+  if (cuidVal) {
+    filtered = filtered.filter(e => {
+      const dbCuidId = e.id_cuidador || (e.cuidadores && e.cuidadores.id);
+      return dbCuidId === cuidVal;
+    });
+  }
+
+  document.getElementById('rel-total-escalas').textContent = filtered.length;
+  
+  const horas = filtered.reduce((acc, e) => acc + (new Date(e.data_termino) - new Date(e.data_inicio)) / 3600000, 0);
   document.getElementById('rel-horas').textContent = horas.toFixed(0) + 'h';
   
-  const fat = allEscalas.reduce((acc, e) => acc + (e.valor_cliente || e.valor_total || 0), 0);
-  const repasse = allEscalas.reduce((acc, e) => acc + (e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0)), 0);
+  const fat = filtered.reduce((acc, e) => acc + (e.valor_cliente || e.valor_total || 0), 0);
+  const repasse = filtered.reduce((acc, e) => acc + (e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0)), 0);
   const lucro = fat - repasse;
   const margem = fat > 0 ? (lucro / fat) * 100 : 0;
   
   document.getElementById('rel-faturamento').textContent = 'R$ ' + fat.toLocaleString('pt-BR', {minimumFractionDigits:2});
-  document.getElementById('rel-ticket').textContent = allEscalas.length ? 'R$ ' + (fat/allEscalas.length).toFixed(2) : '—';
+  document.getElementById('rel-ticket').textContent = filtered.length ? 'R$ ' + (fat/filtered.length).toFixed(2) : '—';
   if (document.getElementById('rel-lucro')) {
     document.getElementById('rel-lucro').textContent = 'R$ ' + lucro.toLocaleString('pt-BR', {minimumFractionDigits:2}) + ` (${margem.toFixed(1)}%)`;
   }
-  showToast('Relatório gerado!', 'success');
+  
+  renderRelatorioChart(filtered);
+  showToast('Relatório gerado com sucesso!', 'success');
 };
 
 // ============================================================
