@@ -62,7 +62,7 @@
         <div class="shift-patient-avatar" id="shift-patient-avatar">👴</div>
         <div class="shift-patient-info">
           <div class="patient-name" id="shift-patient-name">Maria das Graças Oliveira</div>
-          <div class="patient-addr" id="shift-patient-addr">📍 Rua das Flores, 123 — São Paulo/SP</div>
+          <div class="patient-addr" id="shift-patient-addr">📍 Rua das Flores, 123 — São Luís/MA</div>
         </div>
       </div>
     </div>
@@ -968,7 +968,7 @@ function updateEscalaUI(escala) {
 
     let addressStr = 'Endereço não cadastrado';
     if (escala.id === 'demo' || !escala.id) {
-      addressStr = 'Rua das Flores, 123 — São Paulo/SP';
+      addressStr = 'Rua das Flores, 123 — São Luís/MA';
     } else if (idoso.endereco) {
       addressStr = idoso.endereco;
     } else if (idoso.clientes_familia) {
@@ -1035,7 +1035,7 @@ async function handleCheckin() {
     let lng = userCoords.lng;
     if (!lat) {
       showToast('⚠️ GPS não obtido — usando localização estimada (demo).', 'warning');
-      lat = -23.5505; lng = -46.6333; // São Paulo fallback
+      lat = -2.53073; lng = -44.3068; // São Luís fallback
     }
     try {
       await registrarCheckin(currentEscala?.id || 'demo', lat, lng);
@@ -1144,8 +1144,8 @@ function stopTimer() {
 // ============================================================
 function getLocation() {
   if (!navigator.geolocation) {
-    document.getElementById('mapCoords').textContent = 'GPS não disponível (demo: São Paulo)';
-    userCoords.lat = -23.5505; userCoords.lng = -46.6333;
+    document.getElementById('mapCoords').textContent = 'GPS não disponível (demo: São Luís)';
+    userCoords.lat = -2.53073; userCoords.lng = -44.3068;
     return;
   }
   navigator.geolocation.getCurrentPosition(
@@ -1157,9 +1157,9 @@ function getLocation() {
       document.getElementById('mapPin').style.color = 'var(--primary-400)';
     },
     () => {
-      // Fallback de demo: São Paulo
-      userCoords.lat = -23.5505; userCoords.lng = -46.6333;
-      document.getElementById('mapCoords').textContent = '📍 São Paulo, SP (demo)';
+      // Fallback de demo: São Luís
+      userCoords.lat = -2.53073; userCoords.lng = -44.3068;
+      document.getElementById('mapCoords').textContent = '📍 São Luís, MA (demo)';
       document.getElementById('mapPin').style.color = 'var(--warning)';
     },
     { enableHighAccuracy: true, timeout: 8000 }

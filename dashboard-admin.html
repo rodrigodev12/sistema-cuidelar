@@ -765,7 +765,7 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="idFoneEmer">Telefone Emergência</label>
-            <input type="tel" class="form-input" id="idFoneEmer" placeholder="(11) 99999-9999" />
+            <input type="tel" class="form-input" id="idFoneEmer" placeholder="(98) 99999-9999" />
           </div>
         </div>
       </div>
@@ -806,7 +806,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="cuidTel">Telefone</label>
-          <input type="tel" class="form-input" id="cuidTel" placeholder="(11) 99999-9999" />
+          <input type="tel" class="form-input" id="cuidTel" placeholder="(98) 99999-9999" />
         </div>
         <div class="form-group">
           <label class="form-label" for="cuidValor">Valor/Hora (R$)</label>
@@ -868,7 +868,7 @@
       </div>
       <div class="form-group mb-4">
         <label class="form-label" for="famCelular">Celular / Telefone</label>
-        <input type="tel" class="form-input" id="famCelular" placeholder="(11) 99999-9999" />
+        <input type="tel" class="form-input" id="famCelular" placeholder="(98) 99999-9999" />
       </div>
       <div class="form-group mb-4">
         <label class="form-label" for="famCpf">CPF *</label>
@@ -877,11 +877,11 @@
       <div class="form-grid-2 mb-6">
         <div class="form-group">
           <label class="form-label" for="famCidade">Cidade</label>
-          <input type="text" class="form-input" id="famCidade" placeholder="Ex: São Paulo" />
+          <input type="text" class="form-input" id="famCidade" placeholder="Ex: São Luís" />
         </div>
         <div class="form-group">
           <label class="form-label" for="famEstado">Estado</label>
-          <input type="text" class="form-input" id="famEstado" placeholder="SP" maxlength="2" />
+          <input type="text" class="form-input" id="famEstado" placeholder="MA" maxlength="2" />
         </div>
       </div>
       <div class="flex gap-3 justify-end">
@@ -1216,10 +1216,10 @@ function loadDemoData() {
   const semanaM = new Date(); semanaM.setDate(semanaM.getDate()+3); semanaM.setHours(14,0,0,0);
 
   allCuidadores = [
-    { id:'c1', status:'ativo',   valor_hora: 45, avaliacao_media: 4.9, total_avaliacoes: 47, formacao:'Técnica em Enfermagem', usuarios:{nome:'Ana Paula Ferreira', email:'ana@cuidar.com'}, publico_atendido: ['idoso', 'crianca_autista'], cpf: '123.456.789-01', telefone: '(11) 98765-4321', bio: 'Técnica em enfermagem com experiência em cuidados intensivos e atendimento home care de alta complexidade.' },
-    { id:'c2', status:'ativo',   valor_hora: 38, avaliacao_media: 4.7, total_avaliacoes: 32, formacao:'Cuidador(a) de Idosos', usuarios:{nome:'Carlos Mendes', email:'carlos@cuidar.com'}, publico_atendido: ['idoso'], cpf: '234.567.890-12', telefone: '(11) 97654-3210', bio: 'Cuidador experiente focado no bem-estar físico e mental de idosos, estimulando atividades cognitivas e físicas.' },
+    { id:'c1', status:'ativo',   valor_hora: 45, avaliacao_media: 4.9, total_avaliacoes: 47, formacao:'Técnica em Enfermagem', usuarios:{nome:'Ana Paula Ferreira', email:'ana@cuidar.com'}, publico_atendido: ['idoso', 'crianca_autista'], cpf: '123.456.789-01', telefone: '(98) 98765-4321', bio: 'Técnica em enfermagem com experiência em cuidados intensivos e atendimento home care de alta complexidade.' },
+    { id:'c2', status:'ativo',   valor_hora: 38, avaliacao_media: 4.7, total_avaliacoes: 32, formacao:'Cuidador(a) de Idosos', usuarios:{nome:'Carlos Mendes', email:'carlos@cuidar.com'}, publico_atendido: ['idoso'], cpf: '234.567.890-12', telefone: '(98) 97654-3210', bio: 'Cuidador experiente focado no bem-estar físico e mental de idosos, estimulando atividades cognitivas e físicas.' },
     { id:'c3', status:'ferias',  valor_hora: 52, avaliacao_media: 5.0, total_avaliacoes: 19, formacao:'Psicomotricista', usuarios:{nome:'Beatriz Lima', email:'bia@cuidar.com'}, publico_atendido: ['crianca_autista'], cpf: '345.678.901-23', telefone: '(21) 96543-2109', bio: 'Profissional dedicada ao acompanhamento terapêutico e psicomotor de crianças no espectro autista.' },
-    { id:'c4', status:'ativo',   valor_hora: 40, avaliacao_media: 4.8, total_avaliacoes: 28, formacao:'Aux. de Enfermagem', usuarios:{nome:'Roberto Santos', email:'roberto@cuidar.com'}, publico_atendido: ['idoso'], cpf: '456.789.012-34', telefone: '(11) 95432-1098', bio: 'Auxiliar de enfermagem com foco em acompanhamento pós-operatório e administração de medicamentos.' },
+    { id:'c4', status:'ativo',   valor_hora: 40, avaliacao_media: 4.8, total_avaliacoes: 28, formacao:'Aux. de Enfermagem', usuarios:{nome:'Roberto Santos', email:'roberto@cuidar.com'}, publico_atendido: ['idoso'], cpf: '456.789.012-34', telefone: '(98) 95432-1098', bio: 'Auxiliar de enfermagem com foco em acompanhamento pós-operatório e administração de medicamentos.' },
     { id:'c5', status:'inativo', valor_hora: 35, avaliacao_media: 4.5, total_avaliacoes: 11, formacao:'Cuidador(a) Residencial', usuarios:{nome:'Fernanda Costa', email:'fernanda@cuidar.com'}, publico_atendido: ['idoso'], cpf: '567.890.123-45', telefone: '(19) 94321-0987', bio: 'Cuidadora de idosos com experiência em rotinas diárias, alimentação saudável e companhia.' },
   ];
   allIdosos = [
@@ -1230,10 +1230,10 @@ function loadDemoData() {
     { id:'i5', nome:'Lucas Pereira',             data_nascimento:'2016-09-10', tipo_sanguineo:'O-', genero:'masculino', restricoes_medicas:'Autismo + TDAH', clientes_familia:{usuarios:{nome:'Pereira Família'}}, perfil:'crianca_autista', ativo:true },
   ];
   allFamilias = [
-    { id:'f1', cidade:'São Paulo', estado:'SP', usuarios:{nome:'João Silva', email:'joao@email.com'}, celular:'(11) 99999-0000' },
-    { id:'f2', cidade:'São Paulo', estado:'SP', usuarios:{nome:'Família Neto', email:'neto@email.com'}, celular:'(11) 98888-0000' },
-    { id:'f3', cidade:'Guarulhos', estado:'SP', usuarios:{nome:'Almeida Família', email:'almeida@email.com'}, celular:'(11) 97777-0000' },
-    { id:'f4', cidade:'São Paulo', estado:'SP', usuarios:{nome:'Fernandes Família', email:'fernandes@email.com'}, celular:'(11) 96666-0000' },
+    { id:'f1', cidade:'São Luís', estado:'MA', usuarios:{nome:'João Silva', email:'joao@email.com'}, celular:'(98) 99999-0000' },
+    { id:'f2', cidade:'São Luís', estado:'MA', usuarios:{nome:'Família Neto', email:'neto@email.com'}, celular:'(98) 98888-0000' },
+    { id:'f3', cidade:'São Luís', estado:'MA', usuarios:{nome:'Almeida Família', email:'almeida@email.com'}, celular:'(98) 97777-0000' },
+    { id:'f4', cidade:'São Luís', estado:'MA', usuarios:{nome:'Fernandes Família', email:'fernandes@email.com'}, celular:'(98) 96666-0000' },
   ];
   allEscalas = [
     { id:'e1', idosos:{nome:'Maria das Graças Oliveira'}, cuidadores:{usuarios:{nome:'Ana Paula Ferreira'}}, data_inicio: hoje.toISOString(),  data_termino: hojeM.toISOString(),  valor_total: 270, status:'em_andamento' },
