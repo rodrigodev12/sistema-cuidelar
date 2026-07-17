@@ -551,7 +551,7 @@
 @media (max-width: 768px) {
   /* Evita que colunas de tabelas esmaguem */
   .table-container table {
-    min-width: 750px;
+    min-width: 1000px;
   }
   
   /* Ajusta o cabeçalho mobile do painel */

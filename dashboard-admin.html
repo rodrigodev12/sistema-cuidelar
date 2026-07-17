@@ -388,9 +388,11 @@
             <tr>
               <th>Assistido</th>
               <th>Cuidador(a)</th>
-              <th>Início</th>
-              <th>Término</th>
-              <th>Valor</th>
+              <th>Período</th>
+              <th>Cobrança</th>
+              <th>Valor Cliente</th>
+              <th>Repasse</th>
+              <th>Lucro (Margem)</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -633,14 +635,38 @@
           <input type="datetime-local" class="form-input" id="escTermino" required />
         </div>
       </div>
-      <div class="form-grid-2 mb-4">
-        <div class="form-group">
-          <label class="form-label" for="escValorHora">Valor/Hora (R$)</label>
-          <input type="number" class="form-input" id="escValorHora" step="0.01" placeholder="0,00" />
+      <!-- Bloco Financeiro (O cérebro do negócio) -->
+      <div class="mb-4" style="padding: var(--space-4); background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius-md);">
+        <h4 style="margin-top:0; margin-bottom: var(--space-3); color: var(--primary-300); display:flex; align-items:center; gap:6px; font-size: 0.9rem;">
+          <span>📊</span> Bloco Financeiro (O cérebro do negócio)
+        </h4>
+        <div class="form-grid-3 mb-3">
+          <div class="form-group">
+            <label class="form-label" for="escTipoCobranca">Tipo de Cobrança *</label>
+            <select class="form-select" id="escTipoCobranca" required>
+              <option value="Por Hora">Por Hora</option>
+              <option value="Por Plantão">Por Plantão</option>
+              <option value="Mensal Fixado">Mensal Fixado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="escValorCliente">Valor Cliente (Bruto R$) *</label>
+            <input type="number" class="form-input" id="escValorCliente" step="0.01" placeholder="0,00" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="escValorRepasse">Repasse Cuidador (Líquido R$) *</label>
+            <input type="number" class="form-input" id="escValorRepasse" step="0.01" placeholder="0,00" required />
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="escValorTotal">Valor Total (R$)</label>
-          <input type="number" class="form-input" id="escValorTotal" step="0.01" placeholder="Calculado auto" readonly />
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label" for="escLucroBruto">Lucro Bruto (R$)</label>
+            <input type="text" class="form-input" id="escLucroBruto" readonly placeholder="Calculado auto" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border-color: rgba(255,255,255,0.1);" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="escMargemLucro">Margem da Agência (%)</label>
+            <input type="text" class="form-input" id="escMargemLucro" readonly placeholder="Calculado auto" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border-color: rgba(255,255,255,0.1); font-weight: bold;" />
+          </div>
         </div>
       </div>
       <div class="form-group mb-6">
@@ -1236,12 +1262,12 @@ function loadDemoData() {
     { id:'f4', cidade:'São Luís', estado:'MA', usuarios:{nome:'Fernandes Família', email:'fernandes@email.com'}, celular:'(98) 96666-0000' },
   ];
   allEscalas = [
-    { id:'e1', idosos:{nome:'Maria das Graças Oliveira'}, cuidadores:{usuarios:{nome:'Ana Paula Ferreira'}}, data_inicio: hoje.toISOString(),  data_termino: hojeM.toISOString(),  valor_total: 270, status:'em_andamento' },
-    { id:'e2', idosos:{nome:'Enzo Gabriel Neto'},         cuidadores:{usuarios:{nome:'Carlos Mendes'}},      data_inicio: hojeA.toISOString(), data_termino: hojeAM.toISOString(), valor_total: 228, status:'agendado' },
-    { id:'e3', idosos:{nome:'José Almeida'},              cuidadores:{usuarios:{nome:'Roberto Santos'}},    data_inicio: amanha.toISOString(), data_termino: amanhaM.toISOString(), valor_total: 240, status:'agendado' },
-    { id:'e4', idosos:{nome:'Helena Fernandes'},          cuidadores:{usuarios:{nome:'Ana Paula Ferreira'}}, data_inicio: semana.toISOString(), data_termino: semanaM.toISOString(),  valor_total: 270, status:'agendado' },
-    { id:'e5', idosos:{nome:'Maria das Graças Oliveira'}, cuidadores:{usuarios:{nome:'Carlos Mendes'}},      data_inicio: ontem.toISOString(),  data_termino: ontemM.toISOString(),  valor_total: 228, status:'concluido' },
-    { id:'e6', idosos:{nome:'Lucas Pereira'},             cuidadores:{usuarios:{nome:'Beatriz Lima'}},      data_inicio: new Date(Date.now()-3*24*3600000).toISOString(), data_termino: new Date(Date.now()-3*24*3600000+6*3600000).toISOString(), valor_total: 312, status:'concluido' },
+    { id:'e1', idosos:{nome:'Maria das Graças Oliveira'}, cuidadores:{usuarios:{nome:'Ana Paula Ferreira'}}, data_inicio: hoje.toISOString(),  data_termino: hojeM.toISOString(),  valor_total: 270, status:'em_andamento', tipo_cobranca: 'Por Hora', valor_cliente: 270, valor_repasse_cuidador: 180 },
+    { id:'e2', idosos:{nome:'Enzo Gabriel Neto'},         cuidadores:{usuarios:{nome:'Carlos Mendes'}},      data_inicio: hojeA.toISOString(), data_termino: hojeAM.toISOString(), valor_total: 228, status:'agendado', tipo_cobranca: 'Por Hora', valor_cliente: 228, valor_repasse_cuidador: 150 },
+    { id:'e3', idosos:{nome:'José Almeida'},              cuidadores:{usuarios:{nome:'Roberto Santos'}},    data_inicio: amanha.toISOString(), data_termino: amanhaM.toISOString(), valor_total: 240, status:'agendado', tipo_cobranca: 'Por Hora', valor_cliente: 240, valor_repasse_cuidador: 160 },
+    { id:'e4', idosos:{nome:'Helena Fernandes'},          cuidadores:{usuarios:{nome:'Ana Paula Ferreira'}}, data_inicio: semana.toISOString(), data_termino: semanaM.toISOString(),  valor_total: 270, status:'agendado', tipo_cobranca: 'Por Hora', valor_cliente: 270, valor_repasse_cuidador: 180 },
+    { id:'e5', idosos:{nome:'Maria das Graças Oliveira'}, cuidadores:{usuarios:{nome:'Carlos Mendes'}},      data_inicio: ontem.toISOString(),  data_termino: ontemM.toISOString(),  valor_total: 228, status:'concluido', tipo_cobranca: 'Por Hora', valor_cliente: 228, valor_repasse_cuidador: 150 },
+    { id:'e6', idosos:{nome:'Lucas Pereira'},             cuidadores:{usuarios:{nome:'Beatriz Lima'}},      data_inicio: new Date(Date.now()-3*24*3600000).toISOString(), data_termino: new Date(Date.now()-3*24*3600000+6*3600000).toISOString(), valor_total: 312, status:'concluido', tipo_cobranca: 'Por Hora', valor_cliente: 312, valor_repasse_cuidador: 210 },
   ];
 
   renderCuidadores(allCuidadores);
@@ -1674,26 +1700,42 @@ function renderEscalas(list) {
   const tbody = document.getElementById('tabelaEscalasBody');
   if (!tbody) return;
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhuma escala encontrada</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhuma escala encontrada</td></tr>';
     return;
   }
   const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
-  tbody.innerHTML = list.map(e => `
-    <tr>
-      <td>${e.idosos?.nome || '—'}</td>
-      <td>${e.cuidadores?.usuarios?.nome || '—'}</td>
-      <td>${formatDate(e.data_inicio)}</td>
-      <td>${formatDate(e.data_termino)}</td>
-      <td>R$ ${(e.valor_total || 0).toFixed(2).replace('.',',')}</td>
-      <td><span class="badge ${statusMap[e.status] || 'badge-neutral'}">${e.status?.replace('_',' ') || '—'}</span></td>
-      <td>
-        <div class="flex gap-1">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="editEscala('${e.id}')"><i data-lucide="edit-2"></i></button>
-          <button class="btn btn-danger btn-icon btn-sm" onclick="cancelarEscala('${e.id}')"><i data-lucide="x"></i></button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = list.map(e => {
+    const vc = e.valor_cliente || e.valor_total || 0;
+    const vr = e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0);
+    const lucro = vc - vr;
+    const margem = vc > 0 ? (lucro / vc) * 100 : 0;
+    const margemColor = margem <= 0 ? 'color:var(--danger)' : margem < 20 ? 'color:var(--warning)' : 'color:var(--success)';
+    
+    return `
+      <tr>
+        <td>${e.idosos?.nome || '—'}</td>
+        <td>${e.cuidadores?.usuarios?.nome || '—'}</td>
+        <td>
+          <div style="font-size:0.8125rem">${formatDate(e.data_inicio)}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted)">até ${formatDate(e.data_termino)}</div>
+        </td>
+        <td><span class="badge badge-neutral">${e.tipo_cobranca || 'Por Hora'}</span></td>
+        <td style="font-weight:600">R$ ${vc.toFixed(2).replace('.', ',')}</td>
+        <td style="color:var(--text-secondary)">R$ ${vr.toFixed(2).replace('.', ',')}</td>
+        <td>
+          <div style="font-weight:600">R$ ${lucro.toFixed(2).replace('.', ',')}</div>
+          <div style="font-size:0.75rem; ${margemColor}; font-weight:bold">${margem.toFixed(1)}%</div>
+        </td>
+        <td><span class="badge ${statusMap[e.status] || 'badge-neutral'}">${e.status?.replace('_',' ') || '—'}</span></td>
+        <td>
+          <div class="flex gap-1">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="editEscala('${e.id}')"><i data-lucide="edit-2"></i></button>
+            <button class="btn btn-danger btn-icon btn-sm" onclick="cancelarEscala('${e.id}')"><i data-lucide="x"></i></button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
   lucide.createIcons();
 }
 
@@ -1784,9 +1826,11 @@ window.submitEscala = async (e) => {
   try {
     const inicio  = document.getElementById('escInicio').value;
     const termino = document.getElementById('escTermino').value;
-    const valorHora = parseFloat(document.getElementById('escValorHora').value || 0);
+    const tipoCobranca = document.getElementById('escTipoCobranca').value;
+    const valorCliente = parseFloat(document.getElementById('escValorCliente').value || 0);
+    const valorRepasse = parseFloat(document.getElementById('escValorRepasse').value || 0);
     const horas = (new Date(termino) - new Date(inicio)) / 3600000;
-    const valorTotal = valorHora * horas;
+    const valorHora = horas > 0 ? (valorRepasse / horas) : 0;
 
     const idosoId = document.getElementById('escIdoso').value;
     const idosoObj = allIdosos.find(i => i.id === idosoId);
@@ -1814,7 +1858,10 @@ window.submitEscala = async (e) => {
         id_cuidador: cuidId,
         data_inicio: startIso,
         data_termino: endIso,
-        valor_total: valorTotal,
+        valor_total: valorCliente,
+        tipo_cobranca: tipoCobranca,
+        valor_cliente: valorCliente,
+        valor_repasse_cuidador: valorRepasse,
         status: status,
         observacoes: document.getElementById('escObs').value
       };
@@ -1850,7 +1897,10 @@ window.submitEscala = async (e) => {
           data_inicio: startIso,
           data_termino: endIso,
           valor_hora: valorHora,
-          valor_total: valorTotal,
+          valor_total: valorCliente,
+          tipo_cobranca: tipoCobranca,
+          valor_cliente: valorCliente,
+          valor_repasse_cuidador: valorRepasse,
           status: status,
           observacoes: document.getElementById('escObs').value
         };
@@ -1865,7 +1915,10 @@ window.submitEscala = async (e) => {
         data_inicio: startIso,
         data_termino: endIso,
         valor_hora: valorHora,
-        valor_total: valorTotal,
+        valor_total: valorCliente,
+        tipo_cobranca: tipoCobranca,
+        valor_cliente: valorCliente,
+        valor_repasse_cuidador: valorRepasse,
         status: status,
         observacoes: document.getElementById('escObs').value
       };
@@ -2221,9 +2274,22 @@ window.closeModal = (id) => {
     window._editingFamiliaId = null;
     document.getElementById('modalFamiliaTitle').textContent = 'Cadastrar Família';
     document.getElementById('formFamilia').reset();
+  } else if (id === 'modalEscala') {
+    window._editingEscalaId = null;
+    document.getElementById('modalEscalaTitle').textContent = 'Cadastrar Escala de Serviço';
+    document.getElementById('formEscala').reset();
+    document.getElementById('escLucroBruto').value = '';
+    document.getElementById('escMargemLucro').value = '';
   }
 };
-window.openModalEscala  = () => openModal('modalEscala');
+window.openModalEscala  = () => {
+  window._editingEscalaId = null;
+  document.getElementById('modalEscalaTitle').textContent = 'Cadastrar Escala de Serviço';
+  document.getElementById('formEscala').reset();
+  document.getElementById('escLucroBruto').value = '';
+  document.getElementById('escMargemLucro').value = '';
+  openModal('modalEscala');
+};
 window.openModalIdoso   = () => {
   window._editingIdosoId = null;
   document.getElementById('formIdoso').reset();
@@ -2476,9 +2542,11 @@ window.editEscala = (id) => {
     document.getElementById('escTermino').value = new Date(e.data_termino).toISOString().substring(0, 16);
   }
 
-  document.getElementById('escValorHora').value = e.valor_hora || 45;
-  document.getElementById('escValorTotal').value = e.valor_total || '';
+  document.getElementById('escTipoCobranca').value = e.tipo_cobranca || 'Por Hora';
+  document.getElementById('escValorCliente').value = e.valor_cliente || e.valor_total || '';
+  document.getElementById('escValorRepasse').value = e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : '');
   document.getElementById('escObs').value = e.observacoes || '';
+  calcularFinanceiro();
   openModal('modalEscala');
 };
 
@@ -2526,18 +2594,73 @@ window.editFamilia = (id) => {
   openModal('modalFamilia');
 };
 
-// Calcular valor total automaticamente
-document.getElementById('escValorHora')?.addEventListener('input', calcularTotal);
-document.getElementById('escInicio')?.addEventListener('change', calcularTotal);
-document.getElementById('escTermino')?.addEventListener('change', calcularTotal);
+// Listeners para o cálculo financeiro em tempo real e auto-preenchimento
+document.getElementById('escValorCliente')?.addEventListener('input', calcularFinanceiro);
+document.getElementById('escValorRepasse')?.addEventListener('input', calcularFinanceiro);
+document.getElementById('escTipoCobranca')?.addEventListener('change', calcularValoresPadrao);
+document.getElementById('escCuidador')?.addEventListener('change', calcularValoresPadrao);
+document.getElementById('escInicio')?.addEventListener('change', calcularValoresPadrao);
+document.getElementById('escTermino')?.addEventListener('change', calcularValoresPadrao);
 
-function calcularTotal() {
-  const ini = document.getElementById('escInicio').value;
-  const fim = document.getElementById('escTermino').value;
-  const vh  = parseFloat(document.getElementById('escValorHora').value || 0);
-  if (ini && fim && vh) {
-    const horas = (new Date(fim) - new Date(ini)) / 3600000;
-    document.getElementById('escValorTotal').value = (vh * horas).toFixed(2);
+function calcularValoresPadrao() {
+  const tipo = document.getElementById('escTipoCobranca').value;
+  const cuidId = document.getElementById('escCuidador').value;
+  const inicio = document.getElementById('escInicio').value;
+  const termino = document.getElementById('escTermino').value;
+  
+  if (!cuidId || !inicio || !termino) return;
+  
+  const cuid = allCuidadores.find(c => c.id === cuidId);
+  if (!cuid) return;
+  
+  const vh = parseFloat(cuid.valor_hora || 0);
+  const horas = (new Date(termino) - new Date(inicio)) / 3600000;
+  
+  const valClienteEl = document.getElementById('escValorCliente');
+  const valRepasseEl = document.getElementById('escValorRepasse');
+  
+  if (tipo === 'Por Hora') {
+    if (vh > 0 && horas > 0) {
+      const repasse = vh * horas;
+      const cliente = repasse * 1.35; // 35% margin markup
+      valRepasseEl.value = repasse.toFixed(2);
+      valClienteEl.value = cliente.toFixed(2);
+    }
+  } else if (tipo === 'Por Plantão') {
+    if (vh > 0) {
+      const repasse = vh * horas;
+      const cliente = repasse * 1.35;
+      valRepasseEl.value = repasse.toFixed(2);
+      valClienteEl.value = cliente.toFixed(2);
+    }
+  }
+  
+  calcularFinanceiro();
+}
+
+function calcularFinanceiro() {
+  const vc = parseFloat(document.getElementById('escValorCliente').value || 0);
+  const vr = parseFloat(document.getElementById('escValorRepasse').value || 0);
+  const lucro = vc - vr;
+  const margem = vc > 0 ? (lucro / vc) * 100 : 0;
+  
+  const lucroEl = document.getElementById('escLucroBruto');
+  const margemEl = document.getElementById('escMargemLucro');
+  
+  if (lucroEl) {
+    lucroEl.value = 'R$ ' + lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    lucroEl.style.color = lucro < 0 ? 'var(--danger)' : 'var(--success)';
+  }
+  
+  if (margemEl) {
+    margemEl.value = margem.toFixed(1) + '%';
+    if (margem <= 0) {
+      margemEl.style.color = 'var(--danger)';
+    } else if (margem < 20) {
+      margemEl.style.color = 'var(--warning)';
+    } else {
+      margemEl.style.color = 'var(--success)';
+    }
   }
 }
 </script>
