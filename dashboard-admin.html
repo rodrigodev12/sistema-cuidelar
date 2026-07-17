@@ -228,6 +228,21 @@
           </div>
         </div>
 
+        <div class="kpi-card animate-fade-in-up delay-250">
+          <div class="flex justify-between items-center">
+            <div class="kpi-icon" style="background:rgba(99,102,241,0.15);">📈</div>
+            <span class="badge badge-primary">Lucro</span>
+          </div>
+          <div>
+            <div class="kpi-value" id="kpi-lucro-agencia">—</div>
+            <div class="kpi-label">Lucro Agência Mês</div>
+          </div>
+          <div class="kpi-change positive" id="kpi-lucro-margem">
+            <i data-lucide="trending-up" style="width:14px;height:14px"></i>
+            — margem
+          </div>
+        </div>
+
         <div class="kpi-card animate-fade-in-up delay-300">
           <div class="flex justify-between items-center">
             <div class="kpi-icon" style="background:rgba(245,158,11,0.15);">⚠️</div>
@@ -582,6 +597,12 @@
           <div class="report-stat">
             <div class="stat-number" id="rel-ticket">—</div>
             <div class="stat-label">Ticket Médio</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="report-stat">
+            <div class="stat-number" id="rel-lucro" style="color: var(--success);">—</div>
+            <div class="stat-label">Lucro da Agência</div>
           </div>
         </div>
       </div>
@@ -1185,11 +1206,20 @@ async function loadDashboard() {
     const ativos  = (allCuidadores.length || 5);
     const idosos  = (allIdosos.length || 8);
     const escsHoje = (allEscalas || []).filter(e => new Date(e.data_inicio).toDateString() === hoje);
-    const faturamento = (allEscalas || []).reduce((acc, e) => acc + (e.valor_total || 0), 0);
+    const faturamento = (allEscalas || []).reduce((acc, e) => acc + (e.valor_cliente || e.valor_total || 0), 0);
+    const repasse = (allEscalas || []).reduce((acc, e) => acc + (e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0)), 0);
+    const lucro = faturamento - repasse;
+    const margemMedia = faturamento > 0 ? (lucro / faturamento) * 100 : 0;
 
     document.getElementById('kpi-idosos').textContent       = idosos;
     document.getElementById('kpi-cuidadores').textContent   = ativos;
     document.getElementById('kpi-faturamento').textContent  = 'R$ ' + faturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    if (document.getElementById('kpi-lucro-agencia')) {
+      document.getElementById('kpi-lucro-agencia').textContent = 'R$ ' + lucro.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    }
+    if (document.getElementById('kpi-lucro-margem')) {
+      document.getElementById('kpi-lucro-margem').innerHTML = `<i data-lucide="trending-up" style="width:14px;height:14px"></i> ${margemMedia.toFixed(1)}% margem média`;
+    }
     document.getElementById('kpi-alertas').textContent      = '1';
     document.getElementById('kpi-alertas-badge').textContent = '1';
     updateAgendaBadge();
@@ -1201,15 +1231,23 @@ async function loadDashboard() {
     const { count: cuidCount } = await supabase.from('cuidadores').select('*', {count:'exact', head:true}).eq('status','ativo');
 
     // Calcular faturamento real das escalas concluídas/pagas
-    const faturamentoReal = (allEscalas || [])
-      .filter(e => e.status === 'concluido' || e.pago)
-      .reduce((sum, e) => sum + (e.valor_total || 0), 0);
+    const concluidas = (allEscalas || []).filter(e => e.status === 'concluido' || e.pago);
+    const faturamentoReal = concluidas.reduce((sum, e) => sum + (e.valor_cliente || e.valor_total || 0), 0);
+    const repasseReal = concluidas.reduce((sum, e) => sum + (e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0)), 0);
+    const lucroReal = faturamentoReal - repasseReal;
+    const margemReal = faturamentoReal > 0 ? (lucroReal / faturamentoReal) * 100 : 0;
 
     const alertasCount = document.getElementById('alertasContainer')?.querySelectorAll('.alert-card')?.length || 0;
 
     document.getElementById('kpi-idosos').textContent = idosCount ?? '—';
     document.getElementById('kpi-cuidadores').textContent = cuidCount ?? '—';
     document.getElementById('kpi-faturamento').textContent = 'R$ ' + faturamentoReal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    if (document.getElementById('kpi-lucro-agencia')) {
+      document.getElementById('kpi-lucro-agencia').textContent = 'R$ ' + lucroReal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    }
+    if (document.getElementById('kpi-lucro-margem')) {
+      document.getElementById('kpi-lucro-margem').innerHTML = `<i data-lucide="trending-up" style="width:14px;height:14px"></i> ${margemReal.toFixed(1)}% margem real`;
+    }
     document.getElementById('kpi-alertas').textContent = alertasCount;
     if (document.getElementById('kpi-alertas-badge')) {
       document.getElementById('kpi-alertas-badge').textContent = alertasCount;
@@ -1219,6 +1257,12 @@ async function loadDashboard() {
     document.getElementById('kpi-idosos').textContent = '24';
     document.getElementById('kpi-cuidadores').textContent = '18';
     document.getElementById('kpi-faturamento').textContent = 'R$ 38.4k';
+    if (document.getElementById('kpi-lucro-agencia')) {
+      document.getElementById('kpi-lucro-agencia').textContent = 'R$ 12.8k';
+    }
+    if (document.getElementById('kpi-lucro-margem')) {
+      document.getElementById('kpi-lucro-margem').innerHTML = `<i data-lucide="trending-up" style="width:14px;height:14px"></i> 33.3% margem`;
+    }
     document.getElementById('kpi-alertas').textContent = '2';
   }
 
@@ -2386,9 +2430,17 @@ window.gerarRelatorio = () => {
   document.getElementById('rel-total-escalas').textContent = allEscalas.length;
   const horas = allEscalas.reduce((acc, e) => acc + (new Date(e.data_termino) - new Date(e.data_inicio)) / 3600000, 0);
   document.getElementById('rel-horas').textContent = horas.toFixed(0) + 'h';
-  const fat = allEscalas.reduce((acc, e) => acc + (e.valor_total || 0), 0);
+  
+  const fat = allEscalas.reduce((acc, e) => acc + (e.valor_cliente || e.valor_total || 0), 0);
+  const repasse = allEscalas.reduce((acc, e) => acc + (e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0)), 0);
+  const lucro = fat - repasse;
+  const margem = fat > 0 ? (lucro / fat) * 100 : 0;
+  
   document.getElementById('rel-faturamento').textContent = 'R$ ' + fat.toLocaleString('pt-BR', {minimumFractionDigits:2});
   document.getElementById('rel-ticket').textContent = allEscalas.length ? 'R$ ' + (fat/allEscalas.length).toFixed(2) : '—';
+  if (document.getElementById('rel-lucro')) {
+    document.getElementById('rel-lucro').textContent = 'R$ ' + lucro.toLocaleString('pt-BR', {minimumFractionDigits:2}) + ` (${margem.toFixed(1)}%)`;
+  }
   showToast('Relatório gerado!', 'success');
 };
 
