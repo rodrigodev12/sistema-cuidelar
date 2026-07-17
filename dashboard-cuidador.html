@@ -916,6 +916,7 @@ function showDemoData() {
     data_termino: new Date().setHours(14,0,0,0),
     valor_hora: 45,
     valor_total: 270,
+    valor_repasse_cuidador: 180,
     status: 'agendado',
     idosos: currentDemoProfile === 'idoso' ? {
       nome: 'Maria das Graças Oliveira',
@@ -955,7 +956,10 @@ function updateEscalaUI(escala) {
   const isHoje = ini.toDateString() === new Date().toDateString();
   document.getElementById('stat-plantoes').textContent = isHoje ? '1' : '0';
   document.getElementById('stat-horas').textContent = isHoje ? horas.toFixed(0) + 'h' : '0h';
-  document.getElementById('stat-ganhos').textContent = isHoje ? 'R$' + (escala.valor_total || 0).toFixed(0) : 'R$0';
+  
+  // Exibe o valor de repasse líquido (ganho real da cuidadora) ao invés do valor total cobrado do cliente
+  const repasse = escala.valor_repasse_cuidador || (escala.valor_total ? escala.valor_total * 0.7 : 0);
+  document.getElementById('stat-ganhos').textContent = isHoje ? 'R$' + repasse.toFixed(0) : 'R$0';
 
   const badge = document.getElementById('escala-status-badge');
   const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
