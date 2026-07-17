@@ -1392,7 +1392,8 @@ window.salvarDiario = async () => {
 
 async function loadHistorico() {
   try {
-    const key   = 'cl_diario_' + (escalaPendingId || currentEscala?.id || 'demo');
+    const escalaId = escalaPendingId || currentEscala?.id || 'demo';
+    const key   = 'cl_diario_' + escalaId;
     let saved = [];
     try {
       saved = JSON.parse(localStorage.getItem(key) || '[]');
@@ -1406,16 +1407,19 @@ async function loadHistorico() {
     if (todayEntries.length > 0) {
       diarioHistorico = todayEntries;
     } else {
-      diarioHistorico = [
-        { horario: new Date(Date.now()-7200000).toISOString(), batimento_cardiaco:72, pressao_arterial:'118/78', temperatura:36.4, alimentacao:'aceitou', medicamento_ministrado:true, observacoes:'Paciente bem disposta, tomou café da manhã com apetite.' }
-      ];
+      // Apenas exibe registro mockado se for escala de demonstração (demo)
+      if (escalaId.toString().startsWith('demo')) {
+        diarioHistorico = [
+          { horario: new Date(Date.now()-7200000).toISOString(), batimento_cardiaco:72, pressao_arterial:'118/78', temperatura:36.4, alimentacao:'aceitou', medicamento_ministrado:true, observacoes:'Paciente bem disposta, tomou café da manhã com apetite.' }
+        ];
+      } else {
+        diarioHistorico = [];
+      }
     }
     renderHistorico();
   } catch (err) {
     console.error('Erro no loadHistorico:', err);
-    diarioHistorico = [
-      { horario: new Date(Date.now()-7200000).toISOString(), batimento_cardiaco:72, pressao_arterial:'118/78', temperatura:36.4, alimentacao:'aceitou', medicamento_ministrado:true, observacoes:'Paciente bem disposta, tomou café da manhã com apetite.' }
-    ];
+    diarioHistorico = [];
     renderHistorico();
   }
 }

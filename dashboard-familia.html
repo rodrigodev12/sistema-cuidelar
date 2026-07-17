@@ -730,14 +730,14 @@ window.loadFeed = async () => {
 
     // 2. Tenta banco (Supabase real)
     if (!idosoData || !escalasData.length) {
-      feedEntries = DEMO_MODE ? getDemoFeedEntries() : [];
+      feedEntries = [];
       renderFeed(feedEntries);
       return;
     }
     const hoje = new Date().toISOString().split('T')[0];
     const escalaHoje = escalasData.find(e => e.data_inicio?.startsWith(hoje));
     if (!escalaHoje) {
-      feedEntries = DEMO_MODE ? getDemoFeedEntries() : [];
+      feedEntries = [];
     } else {
       const { data } = await supabase
         .from('diario_cuidados')
@@ -746,12 +746,13 @@ window.loadFeed = async () => {
         .eq('visivel_familia', true)
         .order('horario', { ascending: false })
         .limit(20);
-      feedEntries = data?.length ? data : (DEMO_MODE ? getDemoFeedEntries() : []);
+      const isDemo = escalaHoje.id.toString().startsWith('demo');
+      feedEntries = data?.length ? data : (isDemo ? getDemoFeedEntries() : []);
     }
     renderFeed(feedEntries);
     if (feedEntries[0]) updateSidebarQuickInfo(feedEntries[0]);
   } catch(e) {
-    feedEntries = DEMO_MODE ? getDemoFeedEntries() : [];
+    feedEntries = [];
     renderFeed(feedEntries);
   }
 };
