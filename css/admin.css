@@ -718,3 +718,37 @@
   }
 }
 
+/* Responsividade para a barra de ferramentas e botões das tabelas */
+@media (max-width: 768px) {
+  .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: var(--space-3) !important;
+  }
+
+  .table-search {
+    max-width: 100% !important;
+  }
+
+  .table-actions {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    gap: var(--space-2) !important;
+  }
+
+  /* Força o botão de ação principal (como Novo Cuidador) a ocupar largura total na linha de baixo */
+  .table-actions .btn-primary {
+    width: 100% !important;
+    justify-content: center !important;
+    order: 10 !important;
+  }
+
+  /* Elementos secundários (como chips de filtro e select) ficam no topo */
+  .table-actions .filter-chip,
+  .table-actions select,
+  .table-actions .btn-secondary {
+    order: 1 !important;
+  }
+}
+
