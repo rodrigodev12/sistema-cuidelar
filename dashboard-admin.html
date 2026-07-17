@@ -668,12 +668,14 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="escValorCliente">Valor Cliente (R$) *</label>
+            <label class="form-label" for="escValorCliente" id="labelValorCliente">Valor Cliente (R$) *</label>
             <input type="number" class="form-input" id="escValorCliente" step="0.01" placeholder="0,00" required />
+            <span id="escValorClienteHelper" style="display:block; font-size:0.75rem; color:var(--text-muted); margin-top:2px;"></span>
           </div>
           <div class="form-group">
-            <label class="form-label" for="escValorRepasse">Repasse Cuidador (R$) *</label>
+            <label class="form-label" for="escValorRepasse" id="labelValorRepasse">Repasse Cuidador (R$) *</label>
             <input type="number" class="form-input" id="escValorRepasse" step="0.01" placeholder="0,00" required />
+            <span id="escValorRepasseHelper" style="display:block; font-size:0.75rem; color:var(--text-muted); margin-top:2px;"></span>
           </div>
         </div>
         <div class="form-grid-2">
@@ -2336,6 +2338,8 @@ window.closeModal = (id) => {
     document.getElementById('escLucroBrutoLabel').style.color = '';
     document.getElementById('escMargemLucroLabel').textContent = '0.0%';
     document.getElementById('escMargemLucroLabel').style.color = '';
+    document.getElementById('escValorClienteHelper').textContent = '';
+    document.getElementById('escValorRepasseHelper').textContent = '';
   }
 };
 window.openModalEscala  = () => {
@@ -2346,6 +2350,8 @@ window.openModalEscala  = () => {
   document.getElementById('escLucroBrutoLabel').style.color = '';
   document.getElementById('escMargemLucroLabel').textContent = '0.0%';
   document.getElementById('escMargemLucroLabel').style.color = '';
+  document.getElementById('escValorClienteHelper').textContent = '';
+  document.getElementById('escValorRepasseHelper').textContent = '';
   openModal('modalEscala');
 };
 window.openModalIdoso   = () => {
@@ -2693,9 +2699,33 @@ window.editEscala = (id) => {
     document.getElementById('escTermino').value = new Date(e.data_termino).toISOString().substring(0, 16);
   }
 
-  document.getElementById('escTipoCobranca').value = e.tipo_cobranca || 'Por Hora';
-  document.getElementById('escValorCliente').value = e.valor_cliente || e.valor_total || '';
-  document.getElementById('escValorRepasse').value = e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : '');
+  const tipo = e.tipo_cobranca || 'Por Hora';
+  document.getElementById('escTipoCobranca').value = tipo;
+  
+  let horas = 0;
+  if (e.data_inicio && e.data_termino) {
+    horas = (new Date(e.data_termino) - new Date(e.data_inicio)) / 3600000;
+  }
+  
+  const totalCliente = e.valor_cliente || e.valor_total || 0;
+  const totalRepasse = e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0);
+  
+  let unitCliente = totalCliente;
+  let unitRepasse = totalRepasse;
+  
+  if (tipo === 'Por Hora') {
+    if (horas > 0) {
+      unitCliente = totalCliente / horas;
+      unitRepasse = totalRepasse / horas;
+    }
+  } else if (tipo === 'Por Plantão') {
+    const qtdPlantoes = Math.ceil(horas / 12) || 1;
+    unitCliente = totalCliente / qtdPlantoes;
+    unitRepasse = totalRepasse / qtdPlantoes;
+  }
+  
+  document.getElementById('escValorCliente').value = unitCliente ? parseFloat(unitCliente.toFixed(2)) : '';
+  document.getElementById('escValorRepasse').value = unitRepasse ? parseFloat(unitRepasse.toFixed(2)) : '';
   document.getElementById('escObs').value = e.observacoes || '';
   calcularFinanceiro();
   openModal('modalEscala');
@@ -2753,61 +2783,135 @@ document.getElementById('escCuidador')?.addEventListener('change', calcularValor
 document.getElementById('escInicio')?.addEventListener('change', calcularValoresPadrao);
 document.getElementById('escTermino')?.addEventListener('change', calcularValoresPadrao);
 
+function calcularValoresEscala(dataInicio, dataFim, tipoCobranca, valorInseridoCliente, valorInseridoRepasse) {
+  const horasTotais = (new Date(dataFim) - new Date(dataInicio)) / (1000 * 60 * 60);
+  
+  let valorFinalCliente = 0;
+  let valorFinalRepasse = 0;
+
+  switch(tipoCobranca) {
+    case 'Mensal Fixado':
+      valorFinalCliente = valorInseridoCliente;
+      valorFinalRepasse = valorInseridoRepasse;
+      break;
+
+    case 'Por Plantão':
+      const quantidadePlantoes12h = Math.ceil(horasTotais / 12) || 1;
+      valorFinalCliente = valorInseridoCliente * quantidadePlantoes12h;
+      valorFinalRepasse = valorInseridoRepasse * quantidadePlantoes12h;
+      break;
+
+    case 'Por Hora':
+    default:
+      valorFinalCliente = valorInseridoCliente * horasTotais;
+      valorFinalRepasse = valorInseridoRepasse * horasTotais;
+      break;
+  }
+
+  const lucroBruto = valorFinalCliente - valorFinalRepasse;
+  const margemAgencia = valorFinalCliente > 0 ? (lucroBruto / valorFinalCliente) * 100 : 0;
+
+  return {
+    valorFinalCliente,
+    valorFinalRepasse,
+    lucroBruto,
+    margemAgencia: margemAgencia.toFixed(1) + '%'
+  };
+}
+
 function calcularValoresPadrao() {
   const tipo = document.getElementById('escTipoCobranca').value;
   const cuidId = document.getElementById('escCuidador').value;
-  const inicio = document.getElementById('escInicio').value;
-  const termino = document.getElementById('escTermino').value;
   
-  if (!cuidId || !inicio || !termino) return;
+  if (!cuidId) return;
   
   const cuid = allCuidadores.find(c => c.id === cuidId);
   if (!cuid) return;
   
-  const vh = parseFloat(cuid.valor_hora || 0);
-  const horas = (new Date(termino) - new Date(inicio)) / 3600000;
+  const vh = parseFloat(cuid.valor_hora || 45);
   
   const valClienteEl = document.getElementById('escValorCliente');
   const valRepasseEl = document.getElementById('escValorRepasse');
   
   if (tipo === 'Por Hora') {
-    if (vh > 0 && horas > 0) {
-      const repasse = vh * horas;
-      const cliente = repasse * 1.35; // 35% margin markup
-      valRepasseEl.value = repasse.toFixed(2);
-      valClienteEl.value = cliente.toFixed(2);
-    }
+    valRepasseEl.value = vh.toFixed(2);
+    valClienteEl.value = (vh * 1.35).toFixed(2);
   } else if (tipo === 'Por Plantão') {
-    if (vh > 0) {
-      const repasse = vh * horas;
-      const cliente = repasse * 1.35;
-      valRepasseEl.value = repasse.toFixed(2);
-      valClienteEl.value = cliente.toFixed(2);
-    }
+    const rateRepasse = vh * 12;
+    valRepasseEl.value = rateRepasse.toFixed(2);
+    valClienteEl.value = (rateRepasse * 1.35).toFixed(2);
+  } else if (tipo === 'Mensal Fixado') {
+    const rateRepasse = vh * 12 * 22;
+    valRepasseEl.value = rateRepasse.toFixed(2);
+    valClienteEl.value = (rateRepasse * 1.35).toFixed(2);
   }
   
   calcularFinanceiro();
 }
 
 function calcularFinanceiro() {
+  const deVal = document.getElementById('escInicio').value;
+  const ateVal = document.getElementById('escTermino').value;
+  const tipo = document.getElementById('escTipoCobranca').value;
   const vc = parseFloat(document.getElementById('escValorCliente').value || 0);
   const vr = parseFloat(document.getElementById('escValorRepasse').value || 0);
-  const lucro = vc - vr;
-  const margem = vc > 0 ? (lucro / vc) * 100 : 0;
   
+  const labelCliente = document.getElementById('labelValorCliente');
+  const labelRepasse = document.getElementById('labelValorRepasse');
+  const helperCliente = document.getElementById('escValorClienteHelper');
+  const helperRepasse = document.getElementById('escValorRepasseHelper');
+  
+  let horas = 0;
+  if (deVal && ateVal) {
+    horas = (new Date(ateVal) - new Date(deVal)) / 3600000;
+  }
+  
+  if (tipo === 'Por Hora') {
+    if (labelCliente) labelCliente.textContent = 'Valor por Hora (R$) *';
+    if (labelRepasse) labelRepasse.textContent = 'Repasse por Hora (R$) *';
+    
+    const res = calcularValoresEscala(deVal || new Date(), ateVal || new Date(), tipo, vc, vr);
+    if (helperCliente) helperCliente.textContent = `Total estimado: R$ ${res.valorFinalCliente.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${horas.toFixed(1)}h)`;
+    if (helperRepasse) helperRepasse.textContent = `Total estimado: R$ ${res.valorFinalRepasse.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${horas.toFixed(1)}h)`;
+    
+    updateKPIs(res);
+  } else if (tipo === 'Por Plantão') {
+    if (labelCliente) labelCliente.textContent = 'Valor por Plantão (12h) (R$) *';
+    if (labelRepasse) labelRepasse.textContent = 'Repasse por Plantão (12h) (R$) *';
+    
+    const res = calcularValoresEscala(deVal || new Date(), ateVal || new Date(), tipo, vc, vr);
+    const qtdPlantoes = Math.ceil(horas / 12) || 1;
+    if (helperCliente) helperCliente.textContent = `Total estimado: R$ ${res.valorFinalCliente.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${qtdPlantoes} plantão/ões)`;
+    if (helperRepasse) helperRepasse.textContent = `Total estimado: R$ ${res.valorFinalRepasse.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${qtdPlantoes} plantão/ões)`;
+    
+    updateKPIs(res);
+  } else if (tipo === 'Mensal Fixado') {
+    if (labelCliente) labelCliente.textContent = 'Valor Mensal Contrato (R$) *';
+    if (labelRepasse) labelRepasse.textContent = 'Repasse Mensal Cuidador (R$) *';
+    
+    if (helperCliente) helperCliente.textContent = '(Valor total do contrato mensal)';
+    if (helperRepasse) helperRepasse.textContent = '(Valor total do repasse mensal)';
+    
+    const res = calcularValoresEscala(deVal || new Date(), ateVal || new Date(), tipo, vc, vr);
+    updateKPIs(res);
+  }
+}
+
+function updateKPIs(res) {
   const lucroEl = document.getElementById('escLucroBrutoLabel');
   const margemEl = document.getElementById('escMargemLucroLabel');
   
   if (lucroEl) {
-    lucroEl.textContent = 'R$ ' + lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    lucroEl.style.color = lucro < 0 ? 'var(--danger)' : 'var(--success)';
+    lucroEl.textContent = 'R$ ' + res.lucroBruto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    lucroEl.style.color = res.lucroBruto < 0 ? 'var(--danger)' : 'var(--success)';
   }
   
   if (margemEl) {
-    margemEl.textContent = margem.toFixed(1) + '%';
-    if (margem <= 0) {
+    margemEl.textContent = res.margemAgencia;
+    const margemVal = parseFloat(res.margemAgencia);
+    if (margemVal <= 0) {
       margemEl.style.color = 'var(--danger)';
-    } else if (margem < 20) {
+    } else if (margemVal < 20) {
       margemEl.style.color = 'var(--warning)';
     } else {
       margemEl.style.color = 'var(--success)';
