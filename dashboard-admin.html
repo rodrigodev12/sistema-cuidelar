@@ -1137,10 +1137,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicializa ícones
   lucide.createIcons();
 
-  // Carrega dados iniciais
-  await Promise.all([loadDashboard(), loadAllData()]);
+  // Carrega dados iniciais sequencialmente para evitar condições de corrida (race conditions) nos gráficos
+  await loadAllData();
+  await loadDashboard();
 
   // Sidebar toggle is handled inline via onclick
+  window.toggleSidebar = () => {
+    const sidebar = document.querySelector('.sidebar');
+    const layout = document.querySelector('.app-layout');
+    sidebar.classList.toggle('mobile-open');
+    layout.classList.toggle('menu-open');
+  };
 });
 
 // ============================================================
