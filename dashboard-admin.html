@@ -637,9 +637,6 @@
       </div>
       <!-- Bloco Financeiro (O cérebro do negócio) -->
       <div class="mb-4" style="padding: var(--space-4); background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius-md);">
-        <h4 style="margin-top:0; margin-bottom: var(--space-3); color: var(--primary-300); display:flex; align-items:center; gap:6px; font-size: 0.9rem;">
-          <span>📊</span> Bloco Financeiro (O cérebro do negócio)
-        </h4>
         <div class="form-grid-3 mb-3">
           <div class="form-group">
             <label class="form-label" for="escTipoCobranca">Tipo de Cobrança *</label>
@@ -650,22 +647,22 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="escValorCliente">Valor Cliente (Bruto R$) *</label>
+            <label class="form-label" for="escValorCliente">Valor Cliente (R$) *</label>
             <input type="number" class="form-input" id="escValorCliente" step="0.01" placeholder="0,00" required />
           </div>
           <div class="form-group">
-            <label class="form-label" for="escValorRepasse">Repasse Cuidador (Líquido R$) *</label>
+            <label class="form-label" for="escValorRepasse">Repasse Cuidador (R$) *</label>
             <input type="number" class="form-input" id="escValorRepasse" step="0.01" placeholder="0,00" required />
           </div>
         </div>
         <div class="form-grid-2">
-          <div class="form-group">
-            <label class="form-label" for="escLucroBruto">Lucro Bruto (R$)</label>
-            <input type="text" class="form-input" id="escLucroBruto" readonly placeholder="Calculado auto" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border-color: rgba(255,255,255,0.1);" />
+          <div style="background: rgba(255,255,255,0.03); padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.05); text-align: center;">
+            <span class="text-xs text-muted" style="display:block; margin-bottom: 2px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Lucro Bruto</span>
+            <span id="escLucroBrutoLabel" style="font-size: 1.25rem; font-weight: 700; font-family: var(--font-display); color: var(--success);">R$ 0,00</span>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="escMargemLucro">Margem da Agência (%)</label>
-            <input type="text" class="form-input" id="escMargemLucro" readonly placeholder="Calculado auto" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border-color: rgba(255,255,255,0.1); font-weight: bold;" />
+          <div style="background: rgba(255,255,255,0.03); padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.05); text-align: center;">
+            <span class="text-xs text-muted" style="display:block; margin-bottom: 2px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Margem da Agência</span>
+            <span id="escMargemLucroLabel" style="font-size: 1.25rem; font-weight: 700; font-family: var(--font-display); color: var(--success);">0.0%</span>
           </div>
         </div>
       </div>
@@ -2278,16 +2275,20 @@ window.closeModal = (id) => {
     window._editingEscalaId = null;
     document.getElementById('modalEscalaTitle').textContent = 'Cadastrar Escala de Serviço';
     document.getElementById('formEscala').reset();
-    document.getElementById('escLucroBruto').value = '';
-    document.getElementById('escMargemLucro').value = '';
+    document.getElementById('escLucroBrutoLabel').textContent = 'R$ 0,00';
+    document.getElementById('escLucroBrutoLabel').style.color = '';
+    document.getElementById('escMargemLucroLabel').textContent = '0.0%';
+    document.getElementById('escMargemLucroLabel').style.color = '';
   }
 };
 window.openModalEscala  = () => {
   window._editingEscalaId = null;
   document.getElementById('modalEscalaTitle').textContent = 'Cadastrar Escala de Serviço';
   document.getElementById('formEscala').reset();
-  document.getElementById('escLucroBruto').value = '';
-  document.getElementById('escMargemLucro').value = '';
+  document.getElementById('escLucroBrutoLabel').textContent = 'R$ 0,00';
+  document.getElementById('escLucroBrutoLabel').style.color = '';
+  document.getElementById('escMargemLucroLabel').textContent = '0.0%';
+  document.getElementById('escMargemLucroLabel').style.color = '';
   openModal('modalEscala');
 };
 window.openModalIdoso   = () => {
@@ -2644,16 +2645,16 @@ function calcularFinanceiro() {
   const lucro = vc - vr;
   const margem = vc > 0 ? (lucro / vc) * 100 : 0;
   
-  const lucroEl = document.getElementById('escLucroBruto');
-  const margemEl = document.getElementById('escMargemLucro');
+  const lucroEl = document.getElementById('escLucroBrutoLabel');
+  const margemEl = document.getElementById('escMargemLucroLabel');
   
   if (lucroEl) {
-    lucroEl.value = 'R$ ' + lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    lucroEl.textContent = 'R$ ' + lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     lucroEl.style.color = lucro < 0 ? 'var(--danger)' : 'var(--success)';
   }
   
   if (margemEl) {
-    margemEl.value = margem.toFixed(1) + '%';
+    margemEl.textContent = margem.toFixed(1) + '%';
     if (margem <= 0) {
       margemEl.style.color = 'var(--danger)';
     } else if (margem < 20) {
