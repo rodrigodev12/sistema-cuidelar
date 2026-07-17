@@ -1216,11 +1216,11 @@ function loadDemoData() {
   const semanaM = new Date(); semanaM.setDate(semanaM.getDate()+3); semanaM.setHours(14,0,0,0);
 
   allCuidadores = [
-    { id:'c1', status:'ativo',   valor_hora: 45, avaliacao_media: 4.9, total_avaliacoes: 47, formacao:'Técnica em Enfermagem', usuarios:{nome:'Ana Paula Ferreira', email:'ana@cuidar.com'}, publico_atendido: ['idoso', 'crianca_autista'] },
-    { id:'c2', status:'ativo',   valor_hora: 38, avaliacao_media: 4.7, total_avaliacoes: 32, formacao:'Cuidador(a) de Idosos', usuarios:{nome:'Carlos Mendes', email:'carlos@cuidar.com'}, publico_atendido: ['idoso'] },
-    { id:'c3', status:'ferias',  valor_hora: 52, avaliacao_media: 5.0, total_avaliacoes: 19, formacao:'Psicomotricista', usuarios:{nome:'Beatriz Lima', email:'bia@cuidar.com'}, publico_atendido: ['crianca_autista'] },
-    { id:'c4', status:'ativo',   valor_hora: 40, avaliacao_media: 4.8, total_avaliacoes: 28, formacao:'Aux. de Enfermagem', usuarios:{nome:'Roberto Santos', email:'roberto@cuidar.com'}, publico_atendido: ['idoso'] },
-    { id:'c5', status:'inativo', valor_hora: 35, avaliacao_media: 4.5, total_avaliacoes: 11, formacao:'Cuidador(a) Residencial', usuarios:{nome:'Fernanda Costa', email:'fernanda@cuidar.com'}, publico_atendido: ['idoso'] },
+    { id:'c1', status:'ativo',   valor_hora: 45, avaliacao_media: 4.9, total_avaliacoes: 47, formacao:'Técnica em Enfermagem', usuarios:{nome:'Ana Paula Ferreira', email:'ana@cuidar.com'}, publico_atendido: ['idoso', 'crianca_autista'], cpf: '123.456.789-01', telefone: '(11) 98765-4321', bio: 'Técnica em enfermagem com experiência em cuidados intensivos e atendimento home care de alta complexidade.' },
+    { id:'c2', status:'ativo',   valor_hora: 38, avaliacao_media: 4.7, total_avaliacoes: 32, formacao:'Cuidador(a) de Idosos', usuarios:{nome:'Carlos Mendes', email:'carlos@cuidar.com'}, publico_atendido: ['idoso'], cpf: '234.567.890-12', telefone: '(11) 97654-3210', bio: 'Cuidador experiente focado no bem-estar físico e mental de idosos, estimulando atividades cognitivas e físicas.' },
+    { id:'c3', status:'ferias',  valor_hora: 52, avaliacao_media: 5.0, total_avaliacoes: 19, formacao:'Psicomotricista', usuarios:{nome:'Beatriz Lima', email:'bia@cuidar.com'}, publico_atendido: ['crianca_autista'], cpf: '345.678.901-23', telefone: '(21) 96543-2109', bio: 'Profissional dedicada ao acompanhamento terapêutico e psicomotor de crianças no espectro autista.' },
+    { id:'c4', status:'ativo',   valor_hora: 40, avaliacao_media: 4.8, total_avaliacoes: 28, formacao:'Aux. de Enfermagem', usuarios:{nome:'Roberto Santos', email:'roberto@cuidar.com'}, publico_atendido: ['idoso'], cpf: '456.789.012-34', telefone: '(11) 95432-1098', bio: 'Auxiliar de enfermagem com foco em acompanhamento pós-operatório e administração de medicamentos.' },
+    { id:'c5', status:'inativo', valor_hora: 35, avaliacao_media: 4.5, total_avaliacoes: 11, formacao:'Cuidador(a) Residencial', usuarios:{nome:'Fernanda Costa', email:'fernanda@cuidar.com'}, publico_atendido: ['idoso'], cpf: '567.890.123-45', telefone: '(19) 94321-0987', bio: 'Cuidadora de idosos com experiência em rotinas diárias, alimentação saudável e companhia.' },
   ];
   allIdosos = [
     { id:'i1', nome:'Maria das Graças Oliveira', data_nascimento:'1942-05-10', tipo_sanguineo:'A+', genero:'feminino', restricoes_medicas:'Hipertensão, Diabetes', clientes_familia:{usuarios:{nome:'João Silva'}}, perfil:'idoso', ativo:true },
@@ -2208,6 +2208,20 @@ window.openModal = (id) => {
 window.closeModal = (id) => {
   document.getElementById(id)?.classList.remove('open');
   document.body.style.overflow = '';
+  
+  if (id === 'modalCuidador') {
+    window._editingCuidadorId = null;
+    document.getElementById('modalCuidadorTitle').textContent = 'Cadastrar Cuidador(a)';
+    document.getElementById('formCuidador').reset();
+  } else if (id === 'modalIdoso') {
+    window._editingIdosoId = null;
+    document.getElementById('modalIdosoTitle').textContent = 'Cadastrar Assistido';
+    document.getElementById('formIdoso').reset();
+  } else if (id === 'modalFamilia') {
+    window._editingFamiliaId = null;
+    document.getElementById('modalFamiliaTitle').textContent = 'Cadastrar Família';
+    document.getElementById('formFamilia').reset();
+  }
 };
 window.openModalEscala  = () => openModal('modalEscala');
 window.openModalIdoso   = () => {
@@ -2216,7 +2230,12 @@ window.openModalIdoso   = () => {
   document.getElementById('modalIdosoTitle').textContent = 'Cadastrar Assistido';
   openModal('modalIdoso');
 };
-window.openModalCuidador= () => openModal('modalCuidador');
+window.openModalCuidador= () => {
+  window._editingCuidadorId = null;
+  document.getElementById('modalCuidadorTitle').textContent = 'Cadastrar Cuidador(a)';
+  document.getElementById('formCuidador').reset();
+  openModal('modalCuidador');
+};
 window.openModalFamilia = () => showToast('Modal de família em desenvolvimento', 'info');
 window.openQuickModal   = () => openModal('modalEscala');
 
@@ -2339,8 +2358,11 @@ window.editCuidador = (id) => {
   document.getElementById('modalCuidadorTitle').textContent = 'Editar Cuidador(a)';
   document.getElementById('cuidNome').value = c.usuarios?.nome || '';
   document.getElementById('cuidEmail').value = c.usuarios?.email || '';
+  document.getElementById('cuidCPF').value = c.cpf || '';
+  document.getElementById('cuidTel').value = c.telefone || '';
   document.getElementById('cuidValor').value = c.valor_hora || '';
   document.getElementById('cuidFormacao').value = c.formacao || '';
+  document.getElementById('cuidBio').value = c.bio || '';
   document.getElementById('cuidStatus').value = c.status || 'ativo';
   document.getElementById('cuidPublicoIdoso').checked = c.publico_atendido?.includes('idoso');
   document.getElementById('cuidPublicoAutista').checked = c.publico_atendido?.includes('crianca_autista');
