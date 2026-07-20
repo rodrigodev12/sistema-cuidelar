@@ -2134,14 +2134,27 @@ window.submitCuidador = async (e) => {
           showToast('Cuidador atualizado com sucesso!', 'success');
         }
       } else {
-        // RPC: Cria usuário na autenticação Supabase (com identidades) e na tabela public.usuarios
-        const { data: newUserUuid, error: rpcErr } = await supabase.rpc('criar_usuario_com_senha', {
-          p_nome: nome,
-          p_email: email,
-          p_tipo: 'cuidador',
-          p_senha: senha
-        });
-        if (rpcErr) throw rpcErr;
+        // Verifica se o usuário já foi criado na tabela public.usuarios (reaproveita caso a tentativa anterior tenha falhado no meio)
+        let newUserUuid = null;
+        const { data: existingUser } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (existingUser && existingUser.id) {
+          newUserUuid = existingUser.id;
+        } else {
+          // RPC: Cria usuário na autenticação Supabase (com identidades) e na tabela public.usuarios
+          const { data: createdUuid, error: rpcErr } = await supabase.rpc('criar_usuario_com_senha', {
+            p_nome: nome,
+            p_email: email,
+            p_tipo: 'cuidador',
+            p_senha: senha
+          });
+          if (rpcErr) throw rpcErr;
+          newUserUuid = createdUuid;
+        }
 
         // Insere na tabela public.cuidadores
         let { error: cuidErr } = await supabase
