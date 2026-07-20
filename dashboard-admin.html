@@ -667,6 +667,16 @@
               <option value="Por Plantão (24h)">Por Plantão (24h)</option>
               <option value="Mensal Fixado">Mensal Fixado</option>
             </select>
+            <div class="form-group" id="divFrequenciaEscala" style="display:none; margin-top:8px;">
+              <label class="form-label" for="escFrequencia" style="font-weight: 600; font-size: 0.78rem; margin-bottom: 2px;">Frequência / Rotina *</label>
+              <select class="form-select" id="escFrequencia">
+                <option value="12x36">Escala 12x36 (Dia sim / Dia não)</option>
+                <option value="24x48">Escala 24x48 (A cada 2 dias)</option>
+                <option value="segunda_sexta">Segunda a Sexta-feira</option>
+                <option value="fim_semana">Finais de Semana (Sáb e Dom)</option>
+                <option value="diario">Todos os Dias (Contínuo)</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label" for="escValorCliente" id="labelValorCliente" style="margin-bottom: 6px; font-weight: 600; white-space: nowrap; font-size: 0.82rem;">Valor Cliente (R$) *</label>
@@ -698,6 +708,47 @@
         <button type="button" class="btn btn-secondary" onclick="closeModal('modalEscala')">Cancelar</button>
         <button type="submit" class="btn btn-primary">
           <i data-lucide="check" aria-hidden="true"></i> Salvar Escala
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =============================================
+     MODAL DE SUBSTITUIÇÃO DE CUIDADORA
+     ============================================= -->
+<div class="modal" id="modalSubstituicao" tabIndex="-1">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title">Substituir Cuidador(a) no Plantão</h3>
+      <button class="modal-close" onclick="closeModal('modalSubstituicao')">&times;</button>
+    </div>
+    <form id="formSubstituicao" onsubmit="submitSubstituicao(event)">
+      <input type="hidden" id="subPlantaoId" />
+      <div class="form-group mb-3">
+        <label class="form-label" style="font-weight:600; font-size:0.82rem;">Assistido</label>
+        <input type="text" class="form-input" id="subAssistidoNome" readonly style="opacity:0.8; background:rgba(255,255,255,0.05);" />
+      </div>
+      <div class="form-group mb-3">
+        <label class="form-label" style="font-weight:600; font-size:0.82rem;">Data e Horário do Plantão</label>
+        <input type="text" class="form-input" id="subDataHorario" readonly style="opacity:0.8; background:rgba(255,255,255,0.05);" />
+      </div>
+      <div class="form-group mb-3">
+        <label class="form-label" style="font-weight:600; font-size:0.82rem;">Cuidador(a) Titular</label>
+        <input type="text" class="form-input" id="subCuidadorTitular" readonly style="opacity:0.8; background:rgba(255,255,255,0.05);" />
+      </div>
+      <div class="form-group mb-3">
+        <label class="form-label" for="subCuidadorNova" style="font-weight:600; font-size:0.82rem; color:var(--primary);">Nova Cuidadora (Substituta) *</label>
+        <select class="form-select" id="subCuidadorNova" required></select>
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label" for="subObservacoes" style="font-weight:600; font-size:0.82rem;">Motivo / Observações</label>
+        <textarea class="form-input" id="subObservacoes" rows="2" placeholder="Ex: Substituição por motivo de saúde..."></textarea>
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalSubstituicao')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="user-check"></i> Confirmar Substituição
         </button>
       </div>
     </form>
@@ -1014,6 +1065,7 @@ async function initDatabase() {
 // ============================================================
 let currentUser = null;
 let allEscalas  = [];
+let allPlantoesDiarios = [];
 let allCuidadores = [];
 let allIdosos   = [];
 let allFamilias = [];
@@ -1557,14 +1609,46 @@ function initCalendar(escalas) {
     cancelado:    '#C8A8B8',
   };
 
-  const events = escalas.map(e => ({
-    id: e.id,
-    title: `${e.idosos?.nome || 'Idoso'} ← ${e.cuidadores?.usuarios?.nome || 'Cuidador(a)'}`,
-    start: e.data_inicio,
-    end: e.data_termino,
-    backgroundColor: statusColors[e.status] || '#4f46e5',
-    extendedProps: e,
-  }));
+  const events = [];
+
+  // 1. Escalas Normais / Contratos Mensais Pais
+  (escalas || []).forEach(e => {
+    if (e.tipo_cobranca === 'Mensal Fixado') {
+      events.push({
+        id: e.id,
+        title: `Contrato Mensal: ${e.idosos?.nome || 'Idoso'} (${e.cuidadores?.usuarios?.nome || 'Cuidador'})`,
+        start: e.data_inicio,
+        end: e.data_termino,
+        backgroundColor: '#8b5cf6',
+        borderColor: '#7c3aed',
+        extendedProps: { ...e, isMensalPai: true }
+      });
+    } else {
+      events.push({
+        id: e.id,
+        title: `${e.idosos?.nome || 'Idoso'} ← ${e.cuidadores?.usuarios?.nome || 'Cuidador'}`,
+        start: e.data_inicio,
+        end: e.data_termino,
+        backgroundColor: statusColors[e.status] || '#4f46e5',
+        extendedProps: e
+      });
+    }
+  });
+
+  // 2. Plantões Diários Desmembrados
+  (allPlantoesDiarios || []).forEach(p => {
+    const cuidNome = p.e_substituicao ? (p.cuidador_substituta?.usuarios?.nome || p.cuidadores?.usuarios?.nome) : (p.cuidadores?.usuarios?.nome || '—');
+    const tag = p.e_substituicao ? ' [Substituta]' : ' [Pacote Mensal]';
+    events.push({
+      id: p.id,
+      title: `Plantão: ${p.idosos?.nome || '—'} (${cuidNome})${tag}`,
+      start: p.data_inicio,
+      end: p.data_fim,
+      backgroundColor: p.e_substituicao ? '#ec4899' : '#06b6d4',
+      borderColor: p.e_substituicao ? '#db2777' : '#0891b2',
+      extendedProps: { ...p, isPlantaoDiario: true }
+    });
+  });
 
   if (calendarInstance) calendarInstance.destroy();
 
@@ -1586,7 +1670,12 @@ function initCalendar(escalas) {
     editable: true,
     selectable: true,
     eventClick: (info) => {
-      showToast(`Escala: ${info.event.title}`, 'info');
+      const props = info.event.extendedProps;
+      if (props.isPlantaoDiario) {
+        openModalSubstituicao(props.id);
+      } else {
+        showToast(`Escala: ${info.event.title}`, 'info');
+      }
     },
     select: (info) => {
       document.getElementById('escInicio').value = info.startStr.substring(0,16);
@@ -1986,6 +2075,13 @@ window.submitEscala = async (e) => {
         observacoes: document.getElementById('escObs').value
       };
       allEscalas.unshift(newEsc);
+
+      if (tipoCobranca === 'Mensal Fixado') {
+        const freq = document.getElementById('escFrequencia')?.value || '12x36';
+        const novosPlantoes = gerarPlantoesRecorrentes(newEsc.id, idosoId, idosoObj?.nome, cuidId, cuidObj?.usuarios?.nome, startDt, endDt, freq);
+        allPlantoesDiarios.push(...novosPlantoes);
+      }
+
       showToast('Escala criada com sucesso!', 'success');
     }
 
@@ -1997,6 +2093,105 @@ window.submitEscala = async (e) => {
   } catch(err) {
     showToast('Erro ao salvar escala: ' + err.message, 'error');
   }
+};
+
+function gerarPlantoesRecorrentes(escalaPaiId, idosoId, idosoNome, cuidId, cuidNome, startDt, endDt, frequencia) {
+  const plantoes = [];
+  const curr = new Date(startDt);
+  const end = new Date(endDt);
+  let diaCount = 0;
+
+  const startHour = startDt.getHours() || 8;
+  const startMin = startDt.getMinutes() || 0;
+
+  while (curr <= end) {
+    const dayOfWeek = curr.getDay(); // 0 = Dom, 1 = Seg, ..., 6 = Sáb
+    let deveGerar = false;
+
+    if (frequencia === '12x36') {
+      deveGerar = (diaCount % 2 === 0);
+    } else if (frequencia === '24x48') {
+      deveGerar = (diaCount % 3 === 0);
+    } else if (frequencia === 'segunda_sexta') {
+      deveGerar = (dayOfWeek >= 1 && dayOfWeek <= 5);
+    } else if (frequencia === 'fim_semana') {
+      deveGerar = (dayOfWeek === 0 || dayOfWeek === 6);
+    } else if (frequencia === 'diario') {
+      deveGerar = true;
+    }
+
+    if (deveGerar) {
+      const pInicio = new Date(curr);
+      pInicio.setHours(startHour, startMin, 0, 0);
+
+      const pFim = new Date(pInicio);
+      pFim.setHours(pInicio.getHours() + (frequencia === '24x48' ? 24 : 12));
+
+      plantoes.push({
+        id: 'p_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+        escala_pai_id: escalaPaiId,
+        assistido_id: idosoId,
+        idosos: { nome: idosoNome || '—' },
+        cuidador_id: cuidId,
+        cuidadores: { usuarios: { nome: cuidNome || '—' } },
+        data_inicio: pInicio.toISOString(),
+        data_fim: pFim.toISOString(),
+        status: 'agendado',
+        e_substituicao: false,
+        cuidador_substituta_id: null
+      });
+    }
+
+    curr.setDate(curr.getDate() + 1);
+    diaCount++;
+  }
+
+  return plantoes;
+}
+
+window.openModalSubstituicao = (plantaoId) => {
+  const p = allPlantoesDiarios.find(x => x.id === plantaoId);
+  if (!p) return;
+  document.getElementById('subPlantaoId').value = p.id;
+  document.getElementById('subAssistidoNome').value = p.idosos?.nome || '—';
+  
+  const dIni = new Date(p.data_inicio).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+  const dFim = new Date(p.data_fim).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+  document.getElementById('subDataHorario').value = `${dIni} até ${dFim}`;
+  document.getElementById('subCuidadorTitular').value = p.cuidadores?.usuarios?.nome || '—';
+
+  const selSub = document.getElementById('subCuidadorNova');
+  if (selSub) {
+    selSub.innerHTML = '<option value="">Selecione a substituta...</option>';
+    allCuidadores.forEach(c => {
+      if (c.id !== p.cuidador_id) {
+        selSub.add(new Option(c.usuarios?.nome || '—', c.id));
+      }
+    });
+  }
+
+  openModal('modalSubstituicao');
+};
+
+window.submitSubstituicao = async (e) => {
+  e.preventDefault();
+  const pId = document.getElementById('subPlantaoId').value;
+  const subId = document.getElementById('subCuidadorNova').value;
+  const obs = document.getElementById('subObservacoes').value;
+  const subObj = allCuidadores.find(c => c.id === subId);
+
+  const p = allPlantoesDiarios.find(x => x.id === pId);
+  if (p) {
+    p.e_substituicao = true;
+    p.cuidador_substituta_id = subId;
+    p.cuidador_substituta = subObj;
+    p.status = 'substituido';
+    p.observacoes = obs;
+  }
+
+  showToast('Substituição realizada com sucesso!', 'success');
+  closeModal('modalSubstituicao');
+  initCalendar(allEscalas);
 };
 
 window.submitIdoso = async (e) => {
@@ -2829,7 +3024,14 @@ window.editFamilia = (id) => {
 
 document.getElementById('escValorCliente')?.addEventListener('input', calcularValoresPadrao);
 document.getElementById('escValorRepasse')?.addEventListener('input', calcularFinanceiro);
-document.getElementById('escTipoCobranca')?.addEventListener('change', calcularValoresPadrao);
+document.getElementById('escTipoCobranca')?.addEventListener('change', () => {
+  const tipo = document.getElementById('escTipoCobranca').value;
+  const divFreq = document.getElementById('divFrequenciaEscala');
+  if (divFreq) {
+    divFreq.style.display = (tipo === 'Mensal Fixado') ? 'block' : 'none';
+  }
+  calcularValoresPadrao();
+});
 document.getElementById('escCuidador')?.addEventListener('change', calcularValoresPadrao);
 document.getElementById('escInicio')?.addEventListener('change', calcularFinanceiro);
 document.getElementById('escTermino')?.addEventListener('change', calcularFinanceiro);

@@ -378,5 +378,26 @@ ADD COLUMN IF NOT EXISTS valor_repasse_cuidador NUMERIC(10,2) DEFAULT 0;
 ALTER TABLE public.cuidadores
 ADD COLUMN IF NOT EXISTS porcentagem_agencia NUMERIC(5,2) DEFAULT 20.00;
 
+ALTER TABLE public.escalas_servicos 
+ADD COLUMN IF NOT EXISTS frequencia_escala TEXT DEFAULT '12x36';
 
+-- ============================================================
+-- TABELA DE PLANTÕES DIÁRIOS (DESMEMBRAMENTO DE ESCALAS MENSAIS)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.plantoes_diarios (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    escala_pai_id UUID REFERENCES public.escalas_servicos(id) ON DELETE CASCADE,
+    assistido_id UUID REFERENCES public.assistidos(id) ON DELETE CASCADE,
+    cuidador_id UUID REFERENCES public.cuidadores(id) ON DELETE CASCADE,
+    data_inicio TIMESTAMP WITH TIME ZONE NOT NULL,
+    data_fim TIMESTAMP WITH TIME ZONE NOT NULL,
+    status TEXT CHECK (status IN ('agendado', 'concluido', 'substituido', 'cancelado')) DEFAULT 'agendado',
+    e_substituicao BOOLEAN DEFAULT false,
+    cuidador_substituta_id UUID REFERENCES public.cuidadores(id) ON DELETE SET NULL,
+    observacoes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
 
+ALTER TABLE public.plantoes_diarios ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Leitura total em plantoes_diarios" ON public.plantoes_diarios FOR SELECT USING (true);
+CREATE POLICY "Escrita total em plantoes_diarios" ON public.plantoes_diarios FOR ALL USING (true);
