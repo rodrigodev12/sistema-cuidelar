@@ -1617,7 +1617,7 @@ function renderCuidadores(list) {
   const tbody = document.getElementById('tabelaCuidadoresBody');
   if (!tbody) return;
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhum(a) cuidador(a) cadastrado(a)</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhum(a) cuidador(a) cadastrado(a)</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(c => {
@@ -1643,7 +1643,6 @@ function renderCuidadores(list) {
       <td>${c.formacao || '—'}</td>
       <td><div class="flex flex-wrap gap-1">${publicoBadge}</div></td>
       <td><span class="badge badge-info">Ver agenda</span></td>
-      <td>R$ ${(c.valor_hora || 0).toFixed(2).replace('.',',')}/h</td>
       <td><span class="badge badge-neutral" style="font-weight: 600;">${pctAgencia}%</span></td>
       <td><span class="rating-stars">${stars} ${(c.avaliacao_media || 0).toFixed(1)}</span></td>
       <td><span class="badge ${status}">${c.status}</span></td>
