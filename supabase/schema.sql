@@ -288,6 +288,12 @@ BEGIN
     RAISE EXCEPTION 'Apenas administradores podem criar novos usuários.';
   END IF;
 
+  -- Se o usuário com este e-mail já existir na public.usuarios, retorna o ID existente (idempotência)
+  SELECT id INTO v_user_id FROM public.usuarios WHERE lower(email) = lower(p_email) LIMIT 1;
+  IF v_user_id IS NOT NULL THEN
+    RETURN v_user_id;
+  END IF;
+
   -- Obter o instance_id atual do projeto
   SELECT instance_id INTO v_instance_id FROM auth.users LIMIT 1;
 
