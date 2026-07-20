@@ -1870,8 +1870,9 @@ function renderEscalas(list) {
         <td><span class="badge ${statusMap[e.status] || 'badge-neutral'}">${e.status?.replace('_',' ') || '—'}</span></td>
         <td>
           <div class="flex gap-1">
-            <button class="btn btn-ghost btn-icon btn-sm" onclick="editEscala('${e.id}')"><i data-lucide="edit-2"></i></button>
-            <button class="btn btn-danger btn-icon btn-sm" onclick="cancelarEscala('${e.id}')"><i data-lucide="x"></i></button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="editEscala('${e.id}')" data-tooltip="Editar"><i data-lucide="edit-2"></i></button>
+            <button class="btn btn-ghost btn-icon btn-sm" style="color:var(--warning)" onclick="cancelarEscala('${e.id}')" data-tooltip="Cancelar"><i data-lucide="x"></i></button>
+            <button class="btn btn-ghost btn-icon btn-sm" style="color:var(--danger)" onclick="deleteEscala('${e.id}')" data-tooltip="Excluir"><i data-lucide="trash-2"></i></button>
           </div>
         </td>
       </tr>
@@ -3004,6 +3005,36 @@ window.cancelarEscala = async (id) => {
       }
     } catch(err) {
       showToast('Erro ao cancelar escala: ' + err.message, 'error');
+    }
+  }
+};
+
+window.deleteEscala = async (id) => {
+  if (confirm('Deseja realmente EXCLUIR permanentemente esta escala?')) {
+    try {
+      if (!DEMO_MODE) {
+        const { error } = await supabase
+          .from('escalas_servicos')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        showToast('Escala excluída com sucesso.', 'success');
+        await loadAllData();
+        loadDashboard();
+        return;
+      }
+
+      const idx = allEscalas.findIndex(x => x.id === id);
+      if (idx !== -1) {
+        allEscalas.splice(idx, 1);
+        renderEscalas(allEscalas);
+        renderEscalasHoje(allEscalas);
+        initCalendar(allEscalas);
+        loadDashboard();
+        showToast('Escala excluída com sucesso.', 'success');
+      }
+    } catch(err) {
+      showToast('Erro ao excluir escala: ' + err.message, 'error');
     }
   }
 };
