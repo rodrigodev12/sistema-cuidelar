@@ -494,13 +494,14 @@
               <th>Público Atendido</th>
               <th>Disponibilidade</th>
               <th>Valor/Hora</th>
+              <th>Taxa Agência</th>
               <th>Avaliação</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody id="tabelaCuidadoresBody">
-            <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">Carregando cuidadores...</td></tr>
+            <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">Carregando cuidadores...</td></tr>
           </tbody>
         </table>
       </div>
@@ -845,7 +846,7 @@
           <input type="email" class="form-input" id="cuidEmail" required placeholder="email@exemplo.com" />
         </div>
       </div>
-      <div class="form-grid-3 mb-4">
+      <div class="form-grid-4 mb-4">
         <div class="form-group">
           <label class="form-label" for="cuidCPF">CPF *</label>
           <input type="text" class="form-input" id="cuidCPF" required placeholder="000.000.000-00" />
@@ -857,6 +858,10 @@
         <div class="form-group">
           <label class="form-label" for="cuidValor">Valor/Hora (R$)</label>
           <input type="number" class="form-input" id="cuidValor" step="0.01" placeholder="0,00" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cuidPorcentagemAgencia">Taxa Agência (%)</label>
+          <input type="number" class="form-input" id="cuidPorcentagemAgencia" step="0.1" min="0" max="100" placeholder="20" value="20" />
         </div>
       </div>
       <div class="form-group mb-4">
@@ -1292,11 +1297,11 @@ function loadDemoData() {
   const semanaM = new Date(); semanaM.setDate(semanaM.getDate()+3); semanaM.setHours(14,0,0,0);
 
   allCuidadores = [
-    { id:'c1', status:'ativo',   valor_hora: 45, avaliacao_media: 4.9, total_avaliacoes: 47, formacao:'Técnica em Enfermagem', usuarios:{nome:'Ana Paula Ferreira', email:'ana@cuidar.com'}, publico_atendido: ['idoso', 'crianca_autista'], cpf: '123.456.789-01', telefone: '(98) 98765-4321', bio: 'Técnica em enfermagem com experiência em cuidados intensivos e atendimento home care de alta complexidade.' },
-    { id:'c2', status:'ativo',   valor_hora: 38, avaliacao_media: 4.7, total_avaliacoes: 32, formacao:'Cuidador(a) de Idosos', usuarios:{nome:'Carlos Mendes', email:'carlos@cuidar.com'}, publico_atendido: ['idoso'], cpf: '234.567.890-12', telefone: '(98) 97654-3210', bio: 'Cuidador experiente focado no bem-estar físico e mental de idosos, estimulando atividades cognitivas e físicas.' },
-    { id:'c3', status:'ferias',  valor_hora: 52, avaliacao_media: 5.0, total_avaliacoes: 19, formacao:'Psicomotricista', usuarios:{nome:'Beatriz Lima', email:'bia@cuidar.com'}, publico_atendido: ['crianca_autista'], cpf: '345.678.901-23', telefone: '(21) 96543-2109', bio: 'Profissional dedicada ao acompanhamento terapêutico e psicomotor de crianças no espectro autista.' },
-    { id:'c4', status:'ativo',   valor_hora: 40, avaliacao_media: 4.8, total_avaliacoes: 28, formacao:'Aux. de Enfermagem', usuarios:{nome:'Roberto Santos', email:'roberto@cuidar.com'}, publico_atendido: ['idoso'], cpf: '456.789.012-34', telefone: '(98) 95432-1098', bio: 'Auxiliar de enfermagem com foco em acompanhamento pós-operatório e administração de medicamentos.' },
-    { id:'c5', status:'inativo', valor_hora: 35, avaliacao_media: 4.5, total_avaliacoes: 11, formacao:'Cuidador(a) Residencial', usuarios:{nome:'Fernanda Costa', email:'fernanda@cuidar.com'}, publico_atendido: ['idoso'], cpf: '567.890.123-45', telefone: '(19) 94321-0987', bio: 'Cuidadora de idosos com experiência em rotinas diárias, alimentação saudável e companhia.' },
+    { id:'c1', status:'ativo',   valor_hora: 45, porcentagem_agencia: 20, avaliacao_media: 4.9, total_avaliacoes: 47, formacao:'Técnica em Enfermagem', usuarios:{nome:'Ana Paula Ferreira', email:'ana@cuidar.com'}, publico_atendido: ['idoso', 'crianca_autista'], cpf: '123.456.789-01', telefone: '(98) 98765-4321', bio: 'Técnica em enfermagem com experiência em cuidados intensivos e atendimento home care de alta complexidade.' },
+    { id:'c2', status:'ativo',   valor_hora: 38, porcentagem_agencia: 25, avaliacao_media: 4.7, total_avaliacoes: 32, formacao:'Cuidador(a) de Idosos', usuarios:{nome:'Carlos Mendes', email:'carlos@cuidar.com'}, publico_atendido: ['idoso'], cpf: '234.567.890-12', telefone: '(98) 97654-3210', bio: 'Cuidador experiente focado no bem-estar físico e mental de idosos, estimulando atividades cognitivas e físicas.' },
+    { id:'c3', status:'ferias',  valor_hora: 52, porcentagem_agencia: 20, avaliacao_media: 5.0, total_avaliacoes: 19, formacao:'Psicomotricista', usuarios:{nome:'Beatriz Lima', email:'bia@cuidar.com'}, publico_atendido: ['crianca_autista'], cpf: '345.678.901-23', telefone: '(21) 96543-2109', bio: 'Profissional dedicada ao acompanhamento terapêutico e psicomotor de crianças no espectro autista.' },
+    { id:'c4', status:'ativo',   valor_hora: 40, porcentagem_agencia: 15, avaliacao_media: 4.8, total_avaliacoes: 28, formacao:'Aux. de Enfermagem', usuarios:{nome:'Roberto Santos', email:'roberto@cuidar.com'}, publico_atendido: ['idoso'], cpf: '456.789.012-34', telefone: '(98) 95432-1098', bio: 'Auxiliar de enfermagem com foco em acompanhamento pós-operatório e administração de medicamentos.' },
+    { id:'c5', status:'inativo', valor_hora: 35, porcentagem_agencia: 20, avaliacao_media: 4.5, total_avaliacoes: 11, formacao:'Cuidador(a) Residencial', usuarios:{nome:'Fernanda Costa', email:'fernanda@cuidar.com'}, publico_atendido: ['idoso'], cpf: '567.890.123-45', telefone: '(19) 94321-0987', bio: 'Cuidadora de idosos com experiência em rotinas diárias, alimentação saudável e companhia.' },
   ];
   allIdosos = [
     { id:'i1', nome:'Maria das Graças Oliveira', data_nascimento:'1942-05-10', tipo_sanguineo:'A+', genero:'feminino', restricoes_medicas:'Hipertensão, Diabetes', clientes_familia:{usuarios:{nome:'João Silva'}}, perfil:'idoso', ativo:true },
@@ -1617,13 +1622,14 @@ function renderCuidadores(list) {
   const tbody = document.getElementById('tabelaCuidadoresBody');
   if (!tbody) return;
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhum(a) cuidador(a) cadastrado(a)</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhum(a) cuidador(a) cadastrado(a)</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(c => {
     const nome = c.usuarios?.nome || '—';
     const status = { ativo:'badge-success', inativo:'badge-neutral', ferias:'badge-warning' }[c.status] || 'badge-neutral';
     const stars = '★'.repeat(Math.round(c.avaliacao_media || 0)) + '☆'.repeat(5 - Math.round(c.avaliacao_media || 0));
+    const pctAgencia = (c.porcentagem_agencia !== undefined && c.porcentagem_agencia !== null) ? c.porcentagem_agencia : 20;
     const publicoBadge = (c.publico_atendido || ['idoso']).map(p => {
       if (p === 'idoso') return '<span class="badge badge-primary" style="margin-right:2px">Idosos</span>';
       if (p === 'crianca_autista') return '<span class="badge badge-info" style="background:#06b6d4;color:white;margin-right:2px">Autismo</span>';
@@ -1643,6 +1649,7 @@ function renderCuidadores(list) {
       <td><div class="flex flex-wrap gap-1">${publicoBadge}</div></td>
       <td><span class="badge badge-info">Ver agenda</span></td>
       <td>R$ ${(c.valor_hora || 0).toFixed(2).replace('.',',')}/h</td>
+      <td><span class="badge badge-neutral" style="font-weight: 600;">${pctAgencia}%</span></td>
       <td><span class="rating-stars">${stars} ${(c.avaliacao_media || 0).toFixed(1)}</span></td>
       <td><span class="badge ${status}">${c.status}</span></td>
       <td>
@@ -2088,13 +2095,14 @@ window.submitCuidador = async (e) => {
     const senha = rawCpf.substring(0, 6);
 
     const data = {
-      status:           document.getElementById('cuidStatus').value,
-      valor_hora:       parseFloat(document.getElementById('cuidValor').value || 0),
-      formacao:         document.getElementById('cuidFormacao').value || 'Sem formação informada',
-      publico_atendido: publico,
-      cpf:              rawCpf,
-      telefone:         document.getElementById('cuidTel').value || null,
-      bio:              document.getElementById('cuidBio').value || null
+      status:              document.getElementById('cuidStatus').value,
+      valor_hora:          parseFloat(document.getElementById('cuidValor').value || 0),
+      porcentagem_agencia: parseFloat(document.getElementById('cuidPorcentagemAgencia').value || 20),
+      formacao:            document.getElementById('cuidFormacao').value || 'Sem formação informada',
+      publico_atendido:    publico,
+      cpf:                 rawCpf,
+      telefone:            document.getElementById('cuidTel').value || null,
+      bio:                 document.getElementById('cuidBio').value || null
     };
 
     const nome = document.getElementById('cuidNome').value;
@@ -2369,6 +2377,8 @@ window.openModalCuidador= () => {
   window._editingCuidadorId = null;
   document.getElementById('modalCuidadorTitle').textContent = 'Cadastrar Cuidador(a)';
   document.getElementById('formCuidador').reset();
+  const pctInput = document.getElementById('cuidPorcentagemAgencia');
+  if (pctInput) pctInput.value = 20;
   openModal('modalCuidador');
 };
 window.openModalFamilia = () => showToast('Modal de família em desenvolvimento', 'info');
@@ -2589,6 +2599,7 @@ window.editCuidador = (id) => {
   document.getElementById('cuidCPF').value = c.cpf || '';
   document.getElementById('cuidTel').value = c.telefone || '';
   document.getElementById('cuidValor').value = c.valor_hora || '';
+  document.getElementById('cuidPorcentagemAgencia').value = (c.porcentagem_agencia !== undefined && c.porcentagem_agencia !== null) ? c.porcentagem_agencia : 20;
   document.getElementById('cuidFormacao').value = c.formacao || '';
   document.getElementById('cuidBio').value = c.bio || '';
   document.getElementById('cuidStatus').value = c.status || 'ativo';
@@ -2840,21 +2851,23 @@ function calcularValoresPadrao() {
   if (!cuid) return;
   
   const vh = parseFloat(cuid.valor_hora || 45);
+  const pct = parseFloat(cuid.porcentagem_agencia !== undefined && cuid.porcentagem_agencia !== null ? cuid.porcentagem_agencia : 20);
+  const fator = 1 + (pct / 100);
   
   const valClienteEl = document.getElementById('escValorCliente');
   const valRepasseEl = document.getElementById('escValorRepasse');
   
   if (tipo === 'Por Hora') {
     valRepasseEl.value = vh.toFixed(2);
-    valClienteEl.value = (vh * 1.35).toFixed(2);
+    valClienteEl.value = (vh * fator).toFixed(2);
   } else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') {
     const rateRepasse = vh * 12;
     valRepasseEl.value = rateRepasse.toFixed(2);
-    valClienteEl.value = (rateRepasse * 1.35).toFixed(2);
+    valClienteEl.value = (rateRepasse * fator).toFixed(2);
   } else if (tipo === 'Mensal Fixado') {
     const rateRepasse = vh * 12 * 22;
     valRepasseEl.value = rateRepasse.toFixed(2);
-    valClienteEl.value = (rateRepasse * 1.35).toFixed(2);
+    valClienteEl.value = (rateRepasse * fator).toFixed(2);
   }
   
   calcularFinanceiro();

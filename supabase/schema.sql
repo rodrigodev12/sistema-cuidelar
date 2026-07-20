@@ -83,8 +83,9 @@ CREATE TABLE IF NOT EXISTS cuidadores (
   especialidades  TEXT[],  -- array de especialidades
   publico_atendido TEXT[] DEFAULT ARRAY['idoso']::TEXT[] NOT NULL,  -- array de públicos atendidos
   disponibilidade JSONB DEFAULT '{}',  -- {"seg": ["08:00","18:00"], "ter": [...], ...}
-  valor_hora      NUMERIC(10,2) DEFAULT 0,
-  status          TEXT CHECK (status IN ('ativo', 'inativo', 'ferias')) DEFAULT 'ativo',
+  valor_hora          NUMERIC(10,2) DEFAULT 0,
+  porcentagem_agencia NUMERIC(5,2) DEFAULT 20.00,
+  status              TEXT CHECK (status IN ('ativo', 'inativo', 'ferias')) DEFAULT 'ativo',
   avaliacao_media NUMERIC(3,2) DEFAULT 0,
   total_avaliacoes INT DEFAULT 0,
   bio             TEXT,
@@ -367,5 +368,9 @@ ALTER TABLE public.escalas_servicos
 ADD COLUMN IF NOT EXISTS tipo_cobranca TEXT CHECK (tipo_cobranca IN ('Por Plantão', 'Por Hora', 'Mensal Fixado')) DEFAULT 'Por Hora',
 ADD COLUMN IF NOT EXISTS valor_cliente NUMERIC(10,2) DEFAULT 0,
 ADD COLUMN IF NOT EXISTS valor_repasse_cuidador NUMERIC(10,2) DEFAULT 0;
+
+ALTER TABLE public.cuidadores
+ADD COLUMN IF NOT EXISTS porcentagem_agencia NUMERIC(5,2) DEFAULT 20.00;
+
 
 

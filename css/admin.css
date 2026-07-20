@@ -504,9 +504,16 @@
   gap: var(--space-4);
 }
 
+.form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
 @media (max-width: 640px) {
   .form-grid-2,
-  .form-grid-3 { grid-template-columns: 1fr; }
+  .form-grid-3,
+  .form-grid-4 { grid-template-columns: 1fr; }
 }
 
 /* ============================================================
