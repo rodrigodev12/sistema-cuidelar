@@ -2114,13 +2114,25 @@ window.submitCuidador = async (e) => {
         if (userErr) throw userErr;
 
         // Atualiza cuidadores
-        const { error: cuidErr } = await supabase
+        let { error: cuidErr } = await supabase
           .from('cuidadores')
           .update(data)
           .eq('id', window._editingCuidadorId);
-        if (cuidErr) throw cuidErr;
-
-        showToast('Cuidador atualizado com sucesso!', 'success');
+        
+        if (cuidErr && cuidErr.message && cuidErr.message.includes('porcentagem_agencia')) {
+          const dataFallback = { ...data };
+          delete dataFallback.porcentagem_agencia;
+          const { error: fbErr } = await supabase
+            .from('cuidadores')
+            .update(dataFallback)
+            .eq('id', window._editingCuidadorId);
+          if (fbErr) throw fbErr;
+          showToast('Cuidador atualizado! Lembre-se de rodar o SQL no Supabase para salvar a Taxa Agência.', 'warning');
+        } else if (cuidErr) {
+          throw cuidErr;
+        } else {
+          showToast('Cuidador atualizado com sucesso!', 'success');
+        }
       } else {
         // RPC: Cria usuário na autenticação Supabase (com identidades) e na tabela public.usuarios
         const { data: newUserUuid, error: rpcErr } = await supabase.rpc('criar_usuario_com_senha', {
@@ -2132,15 +2144,29 @@ window.submitCuidador = async (e) => {
         if (rpcErr) throw rpcErr;
 
         // Insere na tabela public.cuidadores
-        const { error: cuidErr } = await supabase
+        let { error: cuidErr } = await supabase
           .from('cuidadores')
           .insert({
             id_usuario: newUserUuid,
             ...data
           });
-        if (cuidErr) throw cuidErr;
 
-        showToast('Cuidador cadastrado com sucesso!', 'success');
+        if (cuidErr && cuidErr.message && cuidErr.message.includes('porcentagem_agencia')) {
+          const dataFallback = { ...data };
+          delete dataFallback.porcentagem_agencia;
+          const { error: fbErr } = await supabase
+            .from('cuidadores')
+            .insert({
+              id_usuario: newUserUuid,
+              ...dataFallback
+            });
+          if (fbErr) throw fbErr;
+          showToast('Cuidador cadastrado! Lembre-se de rodar o SQL no Supabase para ativar a Taxa Agência.', 'warning');
+        } else if (cuidErr) {
+          throw cuidErr;
+        } else {
+          showToast('Cuidador cadastrado com sucesso!', 'success');
+        }
       }
       window._editingCuidadorId = null;
       closeModal('modalCuidador');
