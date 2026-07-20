@@ -2880,20 +2880,16 @@ function calcularValoresEscala(dataInicio, dataFim, tipoCobranca, valorInseridoC
 }
 
 function calcularValoresPadrao() {
-  const tipo = document.getElementById('escTipoCobranca').value;
   const cuidId = document.getElementById('escCuidador').value;
-  
   const valClienteEl = document.getElementById('escValorCliente');
   const valRepasseEl = document.getElementById('escValorRepasse');
   
   let valCliente = parseFloat(valClienteEl?.value || 0);
   
-  if (!valCliente) {
-    if (tipo === 'Por Hora') valCliente = 35.00;
-    else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') valCliente = 240.00;
-    else if (tipo === 'Por Plantão (24h)') valCliente = 480.00;
-    else if (tipo === 'Mensal Fixado') valCliente = 3500.00;
-    if (valClienteEl) valClienteEl.value = valCliente.toFixed(2);
+  if (!valCliente || isNaN(valCliente) || valCliente <= 0) {
+    if (valRepasseEl) valRepasseEl.value = '';
+    calcularFinanceiro();
+    return;
   }
   
   let pct = 20;
