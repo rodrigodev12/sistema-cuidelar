@@ -371,7 +371,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ALTERAÇÕES PARA O BLOCO FINANCEIRO NAS ESCALAS DE SERVIÇO
 -- ============================================================
 ALTER TABLE public.escalas_servicos 
-ADD COLUMN IF NOT EXISTS tipo_cobranca TEXT CHECK (tipo_cobranca IN ('Por Plantão', 'Por Hora', 'Mensal Fixado')) DEFAULT 'Por Hora',
+ADD COLUMN IF NOT EXISTS tipo_cobranca TEXT CHECK (tipo_cobranca IN ('Por Plantão', 'Por Plantão (12h)', 'Por Plantão (24h)', 'Por Hora', 'Mensal Fixado')) DEFAULT 'Por Hora',
 ADD COLUMN IF NOT EXISTS valor_cliente NUMERIC(10,2) DEFAULT 0,
 ADD COLUMN IF NOT EXISTS valor_repasse_cuidador NUMERIC(10,2) DEFAULT 0;
 

@@ -663,7 +663,8 @@
             <label class="form-label" for="escTipoCobranca" id="labelTipoCobranca" style="min-height: 48px; display: flex; align-items: flex-end; margin-bottom: 4px;">Tipo de Cobrança *</label>
             <select class="form-select" id="escTipoCobranca" required>
               <option value="Por Hora">Por Hora</option>
-              <option value="Por Plantão">Por Plantão (12h)</option>
+              <option value="Por Plantão (12h)">Por Plantão (12h)</option>
+              <option value="Por Plantão (24h)">Por Plantão (24h)</option>
               <option value="Mensal Fixado">Mensal Fixado</option>
             </select>
           </div>
@@ -2846,6 +2847,12 @@ function calcularValoresEscala(dataInicio, dataFim, tipoCobranca, valorInseridoC
       valorFinalRepasse = valorInseridoRepasse;
       break;
 
+    case 'Por Plantão (24h)':
+      const quantidadePlantoes24h = Math.ceil(horasTotais / 24) || 0;
+      valorFinalCliente = valorInseridoCliente * quantidadePlantoes24h;
+      valorFinalRepasse = valorInseridoRepasse * quantidadePlantoes24h;
+      break;
+
     case 'Por Plantão':
     case 'Por Plantão (12h)':
       const quantidadePlantoes12h = Math.ceil(horasTotais / 12) || 0;
@@ -2883,7 +2890,8 @@ function calcularValoresPadrao() {
   
   if (!valCliente) {
     if (tipo === 'Por Hora') valCliente = 35.00;
-    else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') valCliente = 350.00;
+    else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') valCliente = 240.00;
+    else if (tipo === 'Por Plantão (24h)') valCliente = 480.00;
     else if (tipo === 'Mensal Fixado') valCliente = 3500.00;
     if (valClienteEl) valClienteEl.value = valCliente.toFixed(2);
   }
@@ -2939,6 +2947,31 @@ function calcularFinanceiro() {
       }
       if (helperRepasse) {
         helperRepasse.textContent = `Total: R$ ${res.valorFinalRepasse.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${hStr} ${unitHoras})`;
+        helperRepasse.style.display = 'block';
+      }
+    } else {
+      if (helperCliente) helperCliente.style.display = 'none';
+      if (helperRepasse) helperRepasse.style.display = 'none';
+    }
+    
+    updateKPIs(res);
+  } else if (tipo === 'Por Plantão (24h)') {
+    if (labelCliente) labelCliente.textContent = 'Valor Plantão 24h (R$) *';
+    if (labelRepasse) labelRepasse.textContent = 'Repasse Plantão 24h (R$) *';
+    if (inputCliente) inputCliente.placeholder = '0,00';
+    if (inputRepasse) inputRepasse.placeholder = '0,00';
+    
+    const res = calcularValoresEscala(deVal || new Date(), ateVal || new Date(), tipo, vc, vr);
+    const qtdPlantoes = Math.ceil(horas / 24) || 1;
+    
+    if (hasDates && (vc > 0 || vr > 0)) {
+      const unitPlantoes = qtdPlantoes === 1 ? 'plantão (24h)' : 'plantões (24h)';
+      if (helperCliente) {
+        helperCliente.textContent = `Total: R$ ${res.valorFinalCliente.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${qtdPlantoes} ${unitPlantoes})`;
+        helperCliente.style.display = 'block';
+      }
+      if (helperRepasse) {
+        helperRepasse.textContent = `Total: R$ ${res.valorFinalRepasse.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})} (${qtdPlantoes} ${unitPlantoes})`;
         helperRepasse.style.display = 'block';
       }
     } else {
