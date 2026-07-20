@@ -493,7 +493,6 @@
               <th>Especialidade</th>
               <th>Público Atendido</th>
               <th>Disponibilidade</th>
-              <th>Valor/Hora</th>
               <th>Taxa Agência</th>
               <th>Avaliação</th>
               <th>Status</th>
@@ -501,7 +500,7 @@
             </tr>
           </thead>
           <tbody id="tabelaCuidadoresBody">
-            <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">Carregando cuidadores...</td></tr>
+            <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">Carregando cuidadores...</td></tr>
           </tbody>
         </table>
       </div>
@@ -846,7 +845,7 @@
           <input type="email" class="form-input" id="cuidEmail" required placeholder="email@exemplo.com" />
         </div>
       </div>
-      <div class="form-grid-4 mb-4">
+      <div class="form-grid-3 mb-4">
         <div class="form-group">
           <label class="form-label" for="cuidCPF">CPF *</label>
           <input type="text" class="form-input" id="cuidCPF" required placeholder="000.000.000-00" />
@@ -854,10 +853,6 @@
         <div class="form-group">
           <label class="form-label" for="cuidTel">Telefone</label>
           <input type="tel" class="form-input" id="cuidTel" placeholder="(98) 99999-9999" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="cuidValor">Valor/Hora (R$)</label>
-          <input type="number" class="form-input" id="cuidValor" step="0.01" placeholder="0,00" />
         </div>
         <div class="form-group">
           <label class="form-label" for="cuidPorcentagemAgencia">Taxa Agência (%)</label>
@@ -2096,7 +2091,6 @@ window.submitCuidador = async (e) => {
 
     const data = {
       status:              document.getElementById('cuidStatus').value,
-      valor_hora:          parseFloat(document.getElementById('cuidValor').value || 0),
       porcentagem_agencia: parseFloat(document.getElementById('cuidPorcentagemAgencia').value || 20),
       formacao:            document.getElementById('cuidFormacao').value || 'Sem formação informada',
       publico_atendido:    publico,
@@ -2598,7 +2592,6 @@ window.editCuidador = (id) => {
   document.getElementById('cuidEmail').value = c.usuarios?.email || '';
   document.getElementById('cuidCPF').value = c.cpf || '';
   document.getElementById('cuidTel').value = c.telefone || '';
-  document.getElementById('cuidValor').value = c.valor_hora || '';
   document.getElementById('cuidPorcentagemAgencia').value = (c.porcentagem_agencia !== undefined && c.porcentagem_agencia !== null) ? c.porcentagem_agencia : 20;
   document.getElementById('cuidFormacao').value = c.formacao || '';
   document.getElementById('cuidBio').value = c.bio || '';
@@ -2791,13 +2784,12 @@ window.editFamilia = (id) => {
   openModal('modalFamilia');
 };
 
-// Listeners para o cálculo financeiro em tempo real e auto-preenchimento
-document.getElementById('escValorCliente')?.addEventListener('input', calcularFinanceiro);
+document.getElementById('escValorCliente')?.addEventListener('input', calcularValoresPadrao);
 document.getElementById('escValorRepasse')?.addEventListener('input', calcularFinanceiro);
 document.getElementById('escTipoCobranca')?.addEventListener('change', calcularValoresPadrao);
 document.getElementById('escCuidador')?.addEventListener('change', calcularValoresPadrao);
-document.getElementById('escInicio')?.addEventListener('change', calcularValoresPadrao);
-document.getElementById('escTermino')?.addEventListener('change', calcularValoresPadrao);
+document.getElementById('escInicio')?.addEventListener('change', calcularFinanceiro);
+document.getElementById('escTermino')?.addEventListener('change', calcularFinanceiro);
 
 function calcularValoresEscala(dataInicio, dataFim, tipoCobranca, valorInseridoCliente, valorInseridoRepasse) {
   // 1. Calcula o total de horas entre as duas datas
@@ -2808,14 +2800,12 @@ function calcularValoresEscala(dataInicio, dataFim, tipoCobranca, valorInseridoC
 
   switch(tipoCobranca) {
     case 'Mensal Fixado':
-      // O valor digitado já é o total do mês. Não multiplica por nada.
       valorFinalCliente = valorInseridoCliente;
       valorFinalRepasse = valorInseridoRepasse;
       break;
 
     case 'Por Plantão':
     case 'Por Plantão (12h)':
-      // Descobre quantos plantões de 12h cabem no período e multiplica
       const quantidadePlantoes12h = Math.ceil(horasTotais / 12) || 0;
       valorFinalCliente = valorInseridoCliente * quantidadePlantoes12h;
       valorFinalRepasse = valorInseridoRepasse * quantidadePlantoes12h;
@@ -2823,7 +2813,6 @@ function calcularValoresEscala(dataInicio, dataFim, tipoCobranca, valorInseridoC
 
     case 'Por Hora':
     default:
-      // Lógica antiga que você já tem rodando
       valorFinalCliente = valorInseridoCliente * (horasTotais || 0);
       valorFinalRepasse = valorInseridoRepasse * (horasTotais || 0);
       break;
@@ -2845,30 +2834,28 @@ function calcularValoresPadrao() {
   const tipo = document.getElementById('escTipoCobranca').value;
   const cuidId = document.getElementById('escCuidador').value;
   
-  if (!cuidId) return;
-  
-  const cuid = allCuidadores.find(c => c.id === cuidId);
-  if (!cuid) return;
-  
-  const vh = parseFloat(cuid.valor_hora || 45);
-  const pct = parseFloat(cuid.porcentagem_agencia !== undefined && cuid.porcentagem_agencia !== null ? cuid.porcentagem_agencia : 20);
-  const fator = 1 + (pct / 100);
-  
   const valClienteEl = document.getElementById('escValorCliente');
   const valRepasseEl = document.getElementById('escValorRepasse');
   
-  if (tipo === 'Por Hora') {
-    valRepasseEl.value = vh.toFixed(2);
-    valClienteEl.value = (vh * fator).toFixed(2);
-  } else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') {
-    const rateRepasse = vh * 12;
-    valRepasseEl.value = rateRepasse.toFixed(2);
-    valClienteEl.value = (rateRepasse * fator).toFixed(2);
-  } else if (tipo === 'Mensal Fixado') {
-    const rateRepasse = vh * 12 * 22;
-    valRepasseEl.value = rateRepasse.toFixed(2);
-    valClienteEl.value = (rateRepasse * fator).toFixed(2);
+  let valCliente = parseFloat(valClienteEl?.value || 0);
+  
+  if (!valCliente) {
+    if (tipo === 'Por Hora') valCliente = 35.00;
+    else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') valCliente = 350.00;
+    else if (tipo === 'Mensal Fixado') valCliente = 3500.00;
+    if (valClienteEl) valClienteEl.value = valCliente.toFixed(2);
   }
+  
+  let pct = 20;
+  if (cuidId) {
+    const cuid = allCuidadores.find(c => c.id === cuidId);
+    if (cuid && cuid.porcentagem_agencia !== undefined && cuid.porcentagem_agencia !== null) {
+      pct = parseFloat(cuid.porcentagem_agencia);
+    }
+  }
+  
+  const valRepasse = valCliente * (1 - (pct / 100));
+  if (valRepasseEl) valRepasseEl.value = valRepasse.toFixed(2);
   
   calcularFinanceiro();
 }
