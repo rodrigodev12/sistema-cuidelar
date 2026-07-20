@@ -725,6 +725,7 @@
     </div>
     <form id="formSubstituicao" onsubmit="submitSubstituicao(event)">
       <input type="hidden" id="subPlantaoId" />
+      <input type="hidden" id="subIsEscalaOriginal" value="false" />
       <div class="form-group mb-3">
         <label class="form-label" style="font-weight:600; font-size:0.82rem;">Assistido</label>
         <input type="text" class="form-input" id="subAssistidoNome" readonly style="opacity:0.8; background:rgba(255,255,255,0.05);" />
@@ -1670,12 +1671,7 @@ function initCalendar(escalas) {
     editable: true,
     selectable: true,
     eventClick: (info) => {
-      const props = info.event.extendedProps;
-      if (props.isPlantaoDiario) {
-        openModalSubstituicao(props.id);
-      } else {
-        showToast(`Escala: ${info.event.title}`, 'info');
-      }
+      openModalSubstituicao(info.event.id);
     },
     select: (info) => {
       document.getElementById('escInicio').value = info.startStr.substring(0,16);
@@ -1871,6 +1867,7 @@ function renderEscalas(list) {
         <td>
           <div class="flex gap-1">
             <button class="btn btn-ghost btn-icon btn-sm" onclick="editEscala('${e.id}')" data-tooltip="Editar"><i data-lucide="edit-2"></i></button>
+            <button class="btn btn-ghost btn-icon btn-sm" style="color:var(--primary)" onclick="openModalSubstituicao('${e.id}')" data-tooltip="Substituir Cuidadora"><i data-lucide="user-check"></i></button>
             <button class="btn btn-ghost btn-icon btn-sm" style="color:var(--warning)" onclick="cancelarEscala('${e.id}')" data-tooltip="Cancelar"><i data-lucide="x"></i></button>
             <button class="btn btn-ghost btn-icon btn-sm" style="color:var(--danger)" onclick="deleteEscala('${e.id}')" data-tooltip="Excluir"><i data-lucide="trash-2"></i></button>
           </div>
@@ -2150,22 +2147,35 @@ function gerarPlantoesRecorrentes(escalaPaiId, idosoId, idosoNome, cuidId, cuidN
   return plantoes;
 }
 
-window.openModalSubstituicao = (plantaoId) => {
-  const p = allPlantoesDiarios.find(x => x.id === plantaoId);
-  if (!p) return;
+window.openModalSubstituicao = (id) => {
+  let p = (allPlantoesDiarios || []).find(x => x.id === id);
+  let isOriginal = false;
+  if (!p) {
+    p = (allEscalas || []).find(x => x.id === id);
+    isOriginal = true;
+  }
+  if (!p) {
+    showToast('Escala ou plantão não encontrado.', 'warning');
+    return;
+  }
+
   document.getElementById('subPlantaoId').value = p.id;
+  document.getElementById('subIsEscalaOriginal').value = isOriginal ? 'true' : 'false';
   document.getElementById('subAssistidoNome').value = p.idosos?.nome || '—';
   
   const dIni = new Date(p.data_inicio).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
-  const dFim = new Date(p.data_fim).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+  const dFim = new Date(p.data_termino || p.data_fim).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
   document.getElementById('subDataHorario').value = `${dIni} até ${dFim}`;
-  document.getElementById('subCuidadorTitular').value = p.cuidadores?.usuarios?.nome || '—';
+
+  const titularNome = p.cuidadores?.usuarios?.nome || '—';
+  const titularId = p.id_cuidador || p.cuidador_id;
+  document.getElementById('subCuidadorTitular').value = titularNome;
 
   const selSub = document.getElementById('subCuidadorNova');
   if (selSub) {
     selSub.innerHTML = '<option value="">Selecione a substituta...</option>';
     allCuidadores.forEach(c => {
-      if (c.id !== p.cuidador_id) {
+      if (c.id !== titularId) {
         selSub.add(new Option(c.usuarios?.nome || '—', c.id));
       }
     });
@@ -2177,21 +2187,37 @@ window.openModalSubstituicao = (plantaoId) => {
 window.submitSubstituicao = async (e) => {
   e.preventDefault();
   const pId = document.getElementById('subPlantaoId').value;
+  const isOriginal = document.getElementById('subIsEscalaOriginal').value === 'true';
   const subId = document.getElementById('subCuidadorNova').value;
   const obs = document.getElementById('subObservacoes').value;
   const subObj = allCuidadores.find(c => c.id === subId);
 
-  const p = allPlantoesDiarios.find(x => x.id === pId);
-  if (p) {
-    p.e_substituicao = true;
-    p.cuidador_substituta_id = subId;
-    p.cuidador_substituta = subObj;
-    p.status = 'substituido';
-    p.observacoes = obs;
+  if (!subId) {
+    showToast('Por favor, selecione a cuidadora substituta.', 'warning');
+    return;
+  }
+
+  if (isOriginal) {
+    const esc = allEscalas.find(x => x.id === pId);
+    if (esc) {
+      esc.id_cuidador = subId;
+      esc.cuidadores = subObj;
+      esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Substituição por ${subObj?.usuarios?.nome}]: ${obs}`;
+    }
+  } else {
+    const p = allPlantoesDiarios.find(x => x.id === pId);
+    if (p) {
+      p.e_substituicao = true;
+      p.cuidador_substituta_id = subId;
+      p.cuidador_substituta = subObj;
+      p.status = 'substituido';
+      p.observacoes = obs;
+    }
   }
 
   showToast('Substituição realizada com sucesso!', 'success');
   closeModal('modalSubstituicao');
+  renderEscalas(allEscalas);
   initCalendar(allEscalas);
 };
 
