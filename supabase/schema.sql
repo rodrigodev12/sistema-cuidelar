@@ -387,8 +387,8 @@ ADD COLUMN IF NOT EXISTS frequencia_escala TEXT DEFAULT '12x36';
 CREATE TABLE IF NOT EXISTS public.plantoes_diarios (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     escala_pai_id UUID REFERENCES public.escalas_servicos(id) ON DELETE CASCADE,
-    assistido_id UUID REFERENCES public.assistidos(id) ON DELETE CASCADE,
-    cuidador_id UUID REFERENCES public.cuidadores(id) ON DELETE CASCADE,
+    id_idoso UUID REFERENCES public.idosos(id) ON DELETE CASCADE,
+    id_cuidador UUID REFERENCES public.cuidadores(id) ON DELETE CASCADE,
     data_inicio TIMESTAMP WITH TIME ZONE NOT NULL,
     data_fim TIMESTAMP WITH TIME ZONE NOT NULL,
     status TEXT CHECK (status IN ('agendado', 'concluido', 'substituido', 'cancelado')) DEFAULT 'agendado',
