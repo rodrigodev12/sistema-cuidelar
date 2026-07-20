@@ -660,7 +660,7 @@
       <div class="mb-4" style="padding: var(--space-4); background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius-md);">
         <div class="form-grid-3 mb-3" style="align-items: start;">
           <div class="form-group">
-            <label class="form-label" for="escTipoCobranca" id="labelTipoCobranca" style="min-height: 48px; display: flex; align-items: flex-end; margin-bottom: 4px;">Tipo de Cobrança *</label>
+            <label class="form-label" for="escTipoCobranca" id="labelTipoCobranca" style="margin-bottom: 6px; font-weight: 600; white-space: nowrap; font-size: 0.82rem;">Tipo de Cobrança *</label>
             <select class="form-select" id="escTipoCobranca" required>
               <option value="Por Hora">Por Hora</option>
               <option value="Por Plantão (12h)">Por Plantão (12h)</option>
@@ -669,12 +669,12 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="escValorCliente" id="labelValorCliente" style="min-height: 48px; display: flex; align-items: flex-end; margin-bottom: 4px;">Valor Cliente (R$) *</label>
+            <label class="form-label" for="escValorCliente" id="labelValorCliente" style="margin-bottom: 6px; font-weight: 600; white-space: nowrap; font-size: 0.82rem;">Valor Cliente (R$) *</label>
             <input type="number" class="form-input" id="escValorCliente" step="0.01" placeholder="0,00" required />
             <span id="escValorClienteHelper" style="display:none; font-size:0.75rem; color:var(--primary); margin-top:6px; padding: 6px var(--space-3); background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius-sm); text-align: center; font-weight: 500; box-sizing: border-box;"></span>
           </div>
           <div class="form-group">
-            <label class="form-label" for="escValorRepasse" id="labelValorRepasse" style="min-height: 48px; display: flex; align-items: flex-end; margin-bottom: 4px;">Repasse Cuidador (R$) *</label>
+            <label class="form-label" for="escValorRepasse" id="labelValorRepasse" style="margin-bottom: 6px; font-weight: 600; white-space: nowrap; font-size: 0.82rem;">Repasse Cuidador (R$) *</label>
             <input type="number" class="form-input" id="escValorRepasse" step="0.01" placeholder="0,00" required />
             <span id="escValorRepasseHelper" style="display:none; font-size:0.75rem; color:rgb(219, 39, 119); margin-top:6px; padding: 6px var(--space-3); background: rgba(219,39,119,0.08); border: 1px solid rgba(219,39,119,0.15); border-radius: var(--radius-sm); text-align: center; font-weight: 500; box-sizing: border-box;"></span>
           </div>
@@ -2931,8 +2931,8 @@ function calcularFinanceiro() {
   }
   
   if (tipo === 'Por Hora') {
-    if (labelCliente) labelCliente.textContent = 'Valor por Hora (R$) *';
-    if (labelRepasse) labelRepasse.textContent = 'Repasse por Hora (R$) *';
+    if (labelCliente) labelCliente.textContent = 'Valor / Hora (R$) *';
+    if (labelRepasse) labelRepasse.textContent = 'Repasse / Hora (R$) *';
     if (inputCliente) inputCliente.placeholder = '0,00';
     if (inputRepasse) inputRepasse.placeholder = '0,00';
     
@@ -2957,7 +2957,7 @@ function calcularFinanceiro() {
     updateKPIs(res);
   } else if (tipo === 'Por Plantão (24h)') {
     if (labelCliente) labelCliente.textContent = 'Valor Plantão 24h (R$) *';
-    if (labelRepasse) labelRepasse.textContent = 'Repasse Plantão 24h (R$) *';
+    if (labelRepasse) labelRepasse.textContent = 'Repasse 24h (R$) *';
     if (inputCliente) inputCliente.placeholder = '0,00';
     if (inputRepasse) inputRepasse.placeholder = '0,00';
     
@@ -2981,8 +2981,8 @@ function calcularFinanceiro() {
     
     updateKPIs(res);
   } else if (tipo === 'Por Plantão' || tipo === 'Por Plantão (12h)') {
-    if (labelCliente) labelCliente.textContent = 'Valor Plantão (R$) *';
-    if (labelRepasse) labelRepasse.textContent = 'Repasse Plantão (R$) *';
+    if (labelCliente) labelCliente.textContent = 'Valor Plantão 12h (R$) *';
+    if (labelRepasse) labelRepasse.textContent = 'Repasse 12h (R$) *';
     if (inputCliente) inputCliente.placeholder = '0,00';
     if (inputRepasse) inputRepasse.placeholder = '0,00';
     
