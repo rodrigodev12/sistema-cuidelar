@@ -1108,13 +1108,35 @@ function updateEscalaUI(escala) {
     checkinActive = true;
     updateCheckinUI(true);
     startTimer(new Date(escala.checkin_hora || Date.now()));
+  } else {
+    checkinActive = false;
+    updateCheckinUI(false);
   }
+}
+
+function isShiftTimeValid(escala) {
+  if (DEMO_MODE || !escala || escala.id === 'demo' || (escala.id && escala.id.toString().startsWith('demo'))) return true;
+  if (!escala.data_inicio) return false;
+  
+  const agora = new Date();
+  const inicio = new Date(escala.data_inicio);
+  const fim = new Date(escala.data_termino || escala.data_fim);
+  
+  // Janela permitida: de 2 horas antes do início até 2 horas após o término
+  const limiteInicio = new Date(inicio.getTime() - 2 * 60 * 60 * 1000);
+  const limiteFim = new Date(fim.getTime() + 2 * 60 * 60 * 1000);
+  
+  return (agora >= limiteInicio && agora <= limiteFim);
 }
 
 // ============================================================
 // CHECKIN
 // ============================================================
 async function handleCheckin() {
+  if (!isShiftTimeValid(currentEscala)) {
+    showToast('⚠️ Fora do horário permitido para este plantão.', 'warning');
+    return;
+  }
   if (!checkinActive) {
     // CHECK-IN
     let lat = userCoords.lat;
@@ -1196,14 +1218,31 @@ function updateCheckinUI(isActive, isDone = false) {
     txt.textContent = 'Check-out Concluído ✓';
   } else if (isActive) {
     btn.className = 'btn-checkin check-out';
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.disabled = false;
     dot.className = 'status-dot active';
     lbl.textContent = 'Plantão em andamento';
     txt.textContent = 'Encerrar Plantão (Check-out)';
   } else {
-    btn.className = 'btn-checkin check-in';
-    dot.className = 'status-dot inactive';
-    lbl.textContent = 'Fora do plantão';
-    txt.textContent = 'Iniciar Plantão (Check-in)';
+    const isValid = isShiftTimeValid(currentEscala);
+    if (!isValid && !checkinActive) {
+      btn.className = 'btn-checkin check-in';
+      btn.style.background = 'var(--bg-hover)';
+      btn.style.color = 'var(--text-secondary)';
+      btn.disabled = true;
+      dot.className = 'status-dot inactive';
+      lbl.textContent = 'Fora do horário do plantão';
+      txt.textContent = 'Iniciar Plantão (Check-in)';
+    } else {
+      btn.className = 'btn-checkin check-in';
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.disabled = false;
+      dot.className = 'status-dot inactive';
+      lbl.textContent = 'Fora do plantão';
+      txt.textContent = 'Iniciar Plantão (Check-in)';
+    }
   }
 }
 
