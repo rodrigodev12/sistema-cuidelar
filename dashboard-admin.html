@@ -2062,13 +2062,19 @@ window.submitEscala = async (e) => {
     }
 
     if (!DEMO_MODE) {
+      // Normaliza o tipo_cobranca para compatibilidade universal com a check constraint do Supabase
+      let dbTipoCobranca = tipoCobranca;
+      if (tipoCobranca && tipoCobranca.startsWith('Por Plantão')) {
+        dbTipoCobranca = 'Por Plantão';
+      }
+
       const dbData = {
         id_idoso: idosoId,
         id_cuidador: cuidId,
         data_inicio: startIso,
         data_termino: endIso,
         valor_total: totalCliente,
-        tipo_cobranca: tipoCobranca,
+        tipo_cobranca: dbTipoCobranca,
         valor_cliente: totalCliente,
         valor_repasse_cuidador: totalRepasse,
         status: status,
