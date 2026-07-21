@@ -473,14 +473,18 @@ const registrarCheckin = async (id, lat, lng) => {
           .eq('id', id);
       }
 
+      const updateData = {
+        checkin_hora: estado.hora,
+        checkin_lat: lat,
+        checkin_lng: lng
+      };
+      if (!isPlantaoDiario) {
+        updateData.status = 'em_andamento';
+      }
+
       const { error } = await supabase
         .from('escalas_servicos')
-        .update({
-          checkin_hora: estado.hora,
-          checkin_lat: lat,
-          checkin_lng: lng,
-          status: 'em_andamento'
-        })
+        .update(updateData)
         .eq('id', targetEscalaId);
       if (error) throw error;
     } catch(err) {
@@ -510,14 +514,18 @@ const registrarCheckout = async (id, lat, lng) => {
           .eq('id', id);
       }
 
+      const updateData = {
+        checkout_hora: estado.horaOut,
+        checkout_lat: lat,
+        checkout_lng: lng
+      };
+      if (!isPlantaoDiario) {
+        updateData.status = 'concluido';
+      }
+
       const { error } = await supabase
         .from('escalas_servicos')
-        .update({
-          checkout_hora: estado.horaOut,
-          checkout_lat: lat,
-          checkout_lng: lng,
-          status: 'concluido'
-        })
+        .update(updateData)
         .eq('id', targetEscalaId);
       if (error) throw error;
     } catch(err) {
