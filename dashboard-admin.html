@@ -1382,6 +1382,7 @@ async function loadAllData() {
       .order('data_inicio', { ascending: true })
       .limit(200);
     allEscalas = escalas || [];
+    autoGerarPlantoesRodizioSeNecessario();
     renderEscalas(allEscalas);
     renderEscalasHoje(allEscalas);
     updateAgendaBadge();
@@ -1517,6 +1518,7 @@ function loadDemoData() {
   renderCuidadores(allCuidadores);
   renderIdosos(allIdosos);
   renderFamilias(allFamilias);
+  autoGerarPlantoesRodizioSeNecessario();
   renderEscalas(allEscalas);
   renderEscalasHoje(allEscalas);
   populateSelects();
@@ -1525,6 +1527,59 @@ function loadDemoData() {
   // Atualiza KPIs com dados reais do demo
   loadDashboard();
   renderDynamicAlerts();
+}
+
+function autoGerarPlantoesRodizioSeNecessario() {
+  if (!allEscalas || !allEscalas.length) return;
+
+  (allEscalas || []).forEach(esc => {
+    const jaTemPlantoes = (allPlantoesDiarios || []).some(p => p.escala_pai_id === esc.id || p.id_escala === esc.id);
+    if (!jaTemPlantoes && (esc.tipo_cobranca === 'Mensal Fixado' || (esc.data_termino && new Date(esc.data_termino) - new Date(esc.data_inicio) > 20*24*3600000))) {
+      const startDt = new Date(esc.data_inicio);
+      const endDt = new Date(esc.data_termino || esc.data_fim || new Date(startDt.getTime() + 30*24*3600000));
+      const curr = new Date(startDt);
+      let diaIndex = 0;
+
+      const c1Id = esc.id_cuidador || (esc.cuidadores && esc.cuidadores.id) || (allCuidadores[0] && allCuidadores[0].id);
+      const c2Id = (allCuidadores.find(c => c.id !== c1Id) || allCuidadores[1] || allCuidadores[0])?.id;
+
+      const repassePorPlantao = (esc.valor_repasse_cuidador && esc.tipo_cobranca === 'Mensal Fixado') 
+        ? parseFloat((esc.valor_repasse_cuidador / 15).toFixed(2))
+        : (esc.valor_repasse_cuidador || 170);
+
+      while (curr <= endDt) {
+        const cuidadorDaVezId = (diaIndex % 2 === 0) ? c1Id : c2Id;
+        const cuidadorDaVezObj = allCuidadores.find(c => c.id === cuidadorDaVezId);
+
+        const pIni = new Date(curr);
+        pIni.setHours(8, 0, 0, 0);
+        const pFim = new Date(pIni);
+        pFim.setHours(20, 0, 0, 0);
+
+        if (cuidadorDaVezObj) {
+          allPlantoesDiarios.push({
+            id: 'p_auto_' + (esc.id || 'e') + '_' + diaIndex,
+            escala_pai_id: esc.id,
+            id_escala: esc.id,
+            assistido_id: esc.id_idoso,
+            idosos: esc.idosos || { nome: 'Raimundo Nonato' },
+            cuidador_id: cuidadorDaVezId,
+            id_cuidador: cuidadorDaVezId,
+            cuidadores: cuidadorDaVezObj,
+            data_inicio: pIni.toISOString(),
+            data_termino: pFim.toISOString(),
+            data_fim: pFim.toISOString(),
+            tipo_cobranca: 'Por Plantão (12h)',
+            valor_repasse_cuidador: repassePorPlantao,
+            status: 'agendado'
+          });
+        }
+
+        curr.setDate(curr.getDate() + 1);
+        diaIndex++;
+      }
+    }
+  });
 }
 
 function renderDynamicAlerts() {
@@ -1906,12 +1961,12 @@ window.verAgendaCuidador = (cuidadorId) => {
   const escalasCuidador = [
     ...(allEscalas || []).filter(e => {
       const dbCuidId = e.id_cuidador || (e.cuidadores && e.cuidadores.id);
-      return dbCuidId === cuidadorId || e.cuidador_substituta_id === cuidadorId;
+      return (dbCuidId === cuidadorId || e.cuidador_substituta_id === cuidadorId) && e.tipo_cobranca !== 'Mensal Fixado';
     }),
     ...(allPlantoesDiarios || []).filter(p => {
       const pCuidId = p.cuidador_id || p.id_cuidador || (p.cuidadores && p.cuidadores.id);
       const pSubId = p.cuidador_substituta_id;
-      return pCuidId === cuidadorId || pSubId === cuidadorId;
+      return (pCuidId === cuidadorId || pSubId === cuidadorId);
     })
   ].filter((item, index, self) => index === self.findIndex(t => t.id === item.id))
    .sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
