@@ -2654,6 +2654,8 @@ window.submitSubstituicao = async (e) => {
     return;
   }
 
+  const parentId = esc.escala_pai_id || esc.id_escala || esc.id;
+
   if (modo === 'dia_especifico') {
     const subId = document.getElementById('subCuidadorNova').value;
     const dataEsp = document.getElementById('subDataEspecifica').value;
@@ -2722,7 +2724,7 @@ window.submitSubstituicao = async (e) => {
       esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Dia ${dataFmt}]: Substituição por ${subObj?.usuarios?.nome}. Motivo: ${obs}`;
     }
 
-    let plantaoDia = (allPlantoesDiarios || []).find(p => p.escala_pai_id === pId && p.data_inicio.startsWith(dataEsp));
+    let plantaoDia = (allPlantoesDiarios || []).find(p => (p.escala_pai_id === parentId || p.id_escala === parentId) && p.data_inicio.startsWith(dataEsp));
     if (plantaoDia) {
       plantaoDia.cuidador_substituta_id = subId;
       plantaoDia.cuidador_substituta = subObj;
@@ -2737,8 +2739,8 @@ window.submitSubstituicao = async (e) => {
     } else {
       (allPlantoesDiarios = allPlantoesDiarios || []).push({
         id: 'p_sub_' + Date.now(),
-        escala_pai_id: pId,
-        assistido_id: esc.id_idoso || esc.idosos?.id,
+        escala_pai_id: parentId,
+        assistido_id: esc.id_idoso || esc.assistido_id || esc.idosos?.id,
         idosos: esc.idosos,
         cuidador_id: esc.id_cuidador || esc.cuidador_id || (esc.cuidadores && esc.cuidadores.id),
         cuidadores: esc.cuidadores,
@@ -2758,7 +2760,6 @@ window.submitSubstituicao = async (e) => {
     // Persist to Supabase if not in DEMO_MODE
     if (!DEMO_MODE) {
       try {
-        const parentId = esc.escala_pai_id || esc.id_escala || esc.id;
         const { error: errEsc } = await supabase.from('escalas_servicos')
           .update({ observacoes: esc.observacoes })
           .eq('id', parentId);
