@@ -724,39 +724,112 @@
 <!-- =============================================
      MODAL DE SUBSTITUIÇÃO DE CUIDADORA
      ============================================= -->
+<!-- =============================================
+     MODAL DE SUBSTITUIÇÃO E ESCALA DE CUIDADORAS
+     ============================================= -->
 <div class="modal-overlay" id="modalSubstituicao" role="dialog" aria-modal="true">
-  <div class="modal">
+  <div class="modal modal-lg" style="max-width: 650px;">
     <div class="modal-header">
-      <h3 class="modal-title">Substituir Cuidador(a) no Plantão</h3>
+      <h3 class="modal-title">Substituir / Escalar Cuidadoras (Mensal ou Diário)</h3>
       <button class="modal-close" onclick="closeModal('modalSubstituicao')">&times;</button>
     </div>
     <form id="formSubstituicao" onsubmit="submitSubstituicao(event)">
       <input type="hidden" id="subPlantaoId" />
       <input type="hidden" id="subIsEscalaOriginal" value="false" />
-      <div class="form-group mb-3">
-        <label class="form-label" style="font-weight:600; font-size:0.82rem;">Assistido</label>
-        <input type="text" class="form-input" id="subAssistidoNome" readonly style="opacity:0.8; background:rgba(255,255,255,0.05);" />
+      
+      <div class="form-grid-2 mb-3">
+        <div class="form-group">
+          <label class="form-label" style="font-weight:600; font-size:0.82rem;">Assistido</label>
+          <input type="text" class="form-input" id="subAssistidoNome" readonly style="opacity:0.8; background:rgba(255,255,255,0.05);" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:600; font-size:0.82rem;">Período da Escala</label>
+          <input type="text" class="form-input" id="subDataHorario" readonly style="opacity:0.8; background:rgba(255,255,255,0.05);" />
+        </div>
       </div>
+
       <div class="form-group mb-3">
-        <label class="form-label" style="font-weight:600; font-size:0.82rem;">Data e Horário do Plantão</label>
-        <input type="text" class="form-input" id="subDataHorario" readonly style="opacity:0.8; background:rgba(255,255,255,0.05);" />
-      </div>
-      <div class="form-group mb-3">
-        <label class="form-label" style="font-weight:600; font-size:0.82rem;">Cuidador(a) Titular</label>
+        <label class="form-label" style="font-weight:600; font-size:0.82rem;">Cuidador(a) Titular Atual</label>
         <input type="text" class="form-input" id="subCuidadorTitular" readonly style="opacity:0.8; background:rgba(255,255,255,0.05);" />
       </div>
+
       <div class="form-group mb-3">
-        <label class="form-label" for="subCuidadorNova" style="font-weight:600; font-size:0.82rem; color:var(--primary);">Nova Cuidadora (Substituta) *</label>
-        <select class="form-select" id="subCuidadorNova" required></select>
+        <label class="form-label" for="subModo" style="font-weight:600; font-size:0.85rem; color:var(--primary);">Qual alteração você deseja realizar? *</label>
+        <select class="form-select" id="subModo" onchange="toggleSubModoFields(this.value)">
+          <option value="dia_especifico">🗓️ Substituir Cuidadora em um Dia Específico do Mês</option>
+          <option value="equipe_rodizio">👥 Escala Mensal: Alternar Equipe de 4 Cuidadoras (12x36 / 24x36)</option>
+          <option value="toda_escala">🔄 Alterar Cuidadora Principal de Toda a Escala</option>
+        </select>
       </div>
+
+      <!-- BLOCO: Dia Específico -->
+      <div id="blocSubDiaEspecifico" class="mb-3" style="padding: 14px; background: rgba(99,102,241,0.06); border-radius: var(--radius-md); border: 1px solid rgba(99,102,241,0.18);">
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label" for="subDataEspecifica" style="font-weight:600; font-size:0.82rem;">Data do Plantão a Alterar *</label>
+            <input type="date" class="form-input" id="subDataEspecifica" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="subCuidadorNova" style="font-weight:600; font-size:0.82rem; color:var(--primary);">Cuidadora Substituta para esta Data *</label>
+            <select class="form-select" id="subCuidadorNova"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- BLOCO: Equipe de Rodízio (4 Cuidadoras) -->
+      <div id="blocSubEquipeRodizio" class="mb-3" style="display:none; padding: 14px; background: rgba(16,185,129,0.06); border-radius: var(--radius-md); border: 1px solid rgba(16,185,129,0.18);">
+        <div class="form-group mb-3">
+          <label class="form-label" style="font-weight:600; font-size:0.85rem; color:var(--success);">
+            👥 Equipe de 4 Cuidadoras para o Mês (Alternância por Plantão)
+          </label>
+          <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:-2px;">
+            Selecione as 4 cuidadoras que se revezarão durante o mês para este assistido:
+          </span>
+        </div>
+        <div class="form-grid-2 gap-3 mb-3">
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.78rem; font-weight:600;">Cuidadora 1 (Dia Sim / Turno A)</label>
+            <select class="form-select" id="subEquipeC1"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.78rem; font-weight:600;">Cuidadora 2 (Dia Não / Turno B)</label>
+            <select class="form-select" id="subEquipeC2"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.78rem; font-weight:600;">Cuidadora 3 (Noite A / Rodízio C)</label>
+            <select class="form-select" id="subEquipeC3"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.78rem; font-weight:600;">Cuidadora 4 (Noite B / Rodízio D)</label>
+            <select class="form-select" id="subEquipeC4"></select>
+          </div>
+        </div>
+        <div class="form-group mb-1">
+          <label class="form-label" style="font-size:0.78rem; font-weight:600;">Padrão de Alternância *</label>
+          <select class="form-select" id="subEsquemaRodizio">
+            <option value="12x36_quatro">Escala 12x36 com 4 Cuidadoras (Revezamento Diário/Noturno)</option>
+            <option value="24x36_quatro">Escala 24x36 com 4 Cuidadoras (Plantões 24h alternados)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- BLOCO: Toda a Escala -->
+      <div id="blocSubTodaEscala" class="mb-3" style="display:none; padding: 14px; background: rgba(239,68,68,0.06); border-radius: var(--radius-md); border: 1px solid rgba(239,68,68,0.18);">
+        <div class="form-group">
+          <label class="form-label" for="subCuidadorToda" style="font-weight:600; font-size:0.82rem;">Nova Cuidadora Titular (Todos os dias) *</label>
+          <select class="form-select" id="subCuidadorToda"></select>
+        </div>
+      </div>
+
       <div class="form-group mb-4">
         <label class="form-label" for="subObservacoes" style="font-weight:600; font-size:0.82rem;">Motivo / Observações</label>
-        <textarea class="form-input" id="subObservacoes" rows="2" placeholder="Ex: Substituição por motivo de saúde..."></textarea>
+        <textarea class="form-input" id="subObservacoes" rows="2" placeholder="Ex: Substituição por motivo de saúde / Escala mensal em equipe de 4 cuidadoras..."></textarea>
       </div>
+
       <div class="flex gap-3 justify-end">
         <button type="button" class="btn btn-secondary" onclick="closeModal('modalSubstituicao')">Cancelar</button>
         <button type="submit" class="btn btn-primary">
-          <i data-lucide="user-check"></i> Confirmar Substituição
+          <i data-lucide="user-check"></i> Salvar / Confirmar Escala
         </button>
       </div>
     </form>
@@ -2212,6 +2285,16 @@ function gerarPlantoesRecorrentes(escalaPaiId, idosoId, idosoNome, cuidId, cuidN
   return plantoes;
 }
 
+window.toggleSubModoFields = (modo) => {
+  const bDia = document.getElementById('blocSubDiaEspecifico');
+  const bEquipe = document.getElementById('blocSubEquipeRodizio');
+  const bToda = document.getElementById('blocSubTodaEscala');
+
+  if (bDia) bDia.style.display = modo === 'dia_especifico' ? 'block' : 'none';
+  if (bEquipe) bEquipe.style.display = modo === 'equipe_rodizio' ? 'block' : 'none';
+  if (bToda) bToda.style.display = modo === 'toda_escala' ? 'block' : 'none';
+};
+
 window.openModalSubstituicao = (id) => {
   let p = (allPlantoesDiarios || []).find(x => x.id === id);
   let isOriginal = false;
@@ -2228,6 +2311,9 @@ window.openModalSubstituicao = (id) => {
   document.getElementById('subIsEscalaOriginal').value = isOriginal ? 'true' : 'false';
   document.getElementById('subAssistidoNome').value = p.idosos?.nome || '—';
   
+  const dIniStr = p.data_inicio ? p.data_inicio.substring(0, 10) : '';
+  const dFimStr = (p.data_termino || p.data_fim) ? (p.data_termino || p.data_fim).substring(0, 10) : '';
+
   const dIni = new Date(p.data_inicio).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
   const dFim = new Date(p.data_termino || p.data_fim).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
   document.getElementById('subDataHorario').value = `${dIni} até ${dFim}`;
@@ -2236,14 +2322,38 @@ window.openModalSubstituicao = (id) => {
   const titularId = p.id_cuidador || p.cuidador_id;
   document.getElementById('subCuidadorTitular').value = titularNome;
 
-  const selSub = document.getElementById('subCuidadorNova');
-  if (selSub) {
-    selSub.innerHTML = '<option value="">Selecione a substituta...</option>';
+  // Configura campo de data específica
+  const inputData = document.getElementById('subDataEspecifica');
+  if (inputData) {
+    if (dIniStr) inputData.min = dIniStr;
+    if (dFimStr) inputData.max = dFimStr;
+    const hojeStr = new Date().toISOString().substring(0, 10);
+    if (hojeStr >= dIniStr && hojeStr <= dFimStr) {
+      inputData.value = hojeStr;
+    } else {
+      inputData.value = dIniStr || hojeStr;
+    }
+  }
+
+  // Popula todos os selects de cuidadoras
+  ['subCuidadorNova', 'subEquipeC1', 'subEquipeC2', 'subEquipeC3', 'subEquipeC4', 'subCuidadorToda'].forEach(selectId => {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Selecione a cuidadora...</option>';
     allCuidadores.forEach(c => {
-      if (c.id !== titularId) {
-        selSub.add(new Option(c.usuarios?.nome || '—', c.id));
-      }
+      sel.add(new Option(c.usuarios?.nome || '—', c.id));
     });
+  });
+
+  // Preenche valores se houver equipe definida
+  const selModo = document.getElementById('subModo');
+  if (selModo) {
+    if (p.tipo_cobranca === 'Mensal Fixado' || (p.data_termino && new Date(p.data_termino) - new Date(p.data_inicio) > 20*24*3600000)) {
+      selModo.value = 'equipe_rodizio';
+    } else {
+      selModo.value = 'dia_especifico';
+    }
+    toggleSubModoFields(selModo.value);
   }
 
   openModal('modalSubstituicao');
@@ -2253,34 +2363,97 @@ window.submitSubstituicao = async (e) => {
   e.preventDefault();
   const pId = document.getElementById('subPlantaoId').value;
   const isOriginal = document.getElementById('subIsEscalaOriginal').value === 'true';
-  const subId = document.getElementById('subCuidadorNova').value;
+  const modo = document.getElementById('subModo').value;
   const obs = document.getElementById('subObservacoes').value;
-  const subObj = allCuidadores.find(c => c.id === subId);
 
-  if (!subId) {
-    showToast('Por favor, selecione a cuidadora substituta.', 'warning');
+  const esc = allEscalas.find(x => x.id === pId) || (allPlantoesDiarios || []).find(x => x.id === pId);
+  if (!esc) {
+    showToast('Escala não encontrada.', 'error');
     return;
   }
 
-  if (isOriginal) {
-    const esc = allEscalas.find(x => x.id === pId);
-    if (esc) {
-      esc.id_cuidador = subId;
-      esc.cuidadores = subObj;
-      esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Substituição por ${subObj?.usuarios?.nome}]: ${obs}`;
+  if (modo === 'dia_especifico') {
+    const subId = document.getElementById('subCuidadorNova').value;
+    const dataEsp = document.getElementById('subDataEspecifica').value;
+
+    if (!subId) {
+      showToast('Por favor, selecione a cuidadora substituta.', 'warning');
+      return;
     }
-  } else {
-    const p = allPlantoesDiarios.find(x => x.id === pId);
-    if (p) {
-      p.e_substituicao = true;
-      p.cuidador_substituta_id = subId;
-      p.cuidador_substituta = subObj;
-      p.status = 'substituido';
-      p.observacoes = obs;
+    if (!dataEsp) {
+      showToast('Por favor, selecione a data do plantão.', 'warning');
+      return;
     }
+
+    const subObj = allCuidadores.find(c => c.id === subId);
+    const dataFmt = new Date(dataEsp + 'T12:00:00').toLocaleDateString('pt-BR');
+
+    if (isOriginal) {
+      esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Dia ${dataFmt}]: Substituição por ${subObj?.usuarios?.nome}. Motivo: ${obs}`;
+    }
+
+    let plantaoDia = (allPlantoesDiarios || []).find(p => p.escala_pai_id === pId && p.data_inicio.startsWith(dataEsp));
+    if (plantaoDia) {
+      plantaoDia.cuidador_substituta_id = subId;
+      plantaoDia.cuidador_substituta = subObj;
+      plantaoDia.e_substituicao = true;
+      plantaoDia.status = 'substituido';
+    } else {
+      (allPlantoesDiarios = allPlantoesDiarios || []).push({
+        id: 'p_sub_' + Date.now(),
+        escala_pai_id: pId,
+        assistido_id: esc.id_idoso,
+        idosos: esc.idosos,
+        cuidador_id: subId,
+        cuidadores: subObj,
+        data_inicio: dataEsp + 'T07:00:00',
+        data_fim: dataEsp + 'T19:00:00',
+        status: 'agendado',
+        e_substituicao: true
+      });
+    }
+
+    showToast(`Substituição salva com sucesso para o dia ${dataFmt}!`, 'success');
+
+  } else if (modo === 'equipe_rodizio') {
+    const c1 = document.getElementById('subEquipeC1').value;
+    const c2 = document.getElementById('subEquipeC2').value;
+    const c3 = document.getElementById('subEquipeC3').value;
+    const c4 = document.getElementById('subEquipeC4').value;
+    const esquema = document.getElementById('subEsquemaRodizio').value;
+
+    const equipeIds = [c1, c2, c3, c4].filter(Boolean);
+    if (!equipeIds.length) {
+      showToast('Por favor, selecione ao menos uma cuidadora para a equipe.', 'warning');
+      return;
+    }
+
+    const equipeObjs = equipeIds.map(id => allCuidadores.find(c => c.id === id));
+    const nomesEquipe = equipeObjs.map(c => c?.usuarios?.nome || 'Cuidadora').join(', ');
+
+    esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Equipe 4 Cuidadoras (${esquema.replace('_',' ')})]: ${nomesEquipe}. Motivo: ${obs}`;
+    
+    if (c1 && allCuidadores.find(c => c.id === c1)) {
+      esc.id_cuidador = c1;
+      esc.cuidadores = allCuidadores.find(c => c.id === c1);
+    }
+
+    showToast(`Equipe mensal de rodízio com ${equipeIds.length} cuidadora(s) salva com sucesso!`, 'success');
+
+  } else if (modo === 'toda_escala') {
+    const subId = document.getElementById('subCuidadorToda').value;
+    if (!subId) {
+      showToast('Por favor, selecione a cuidadora principal.', 'warning');
+      return;
+    }
+    const subObj = allCuidadores.find(c => c.id === subId);
+    esc.id_cuidador = subId;
+    esc.cuidadores = subObj;
+    esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Alteração Geral]: Cuidadora titular alterada para ${subObj?.usuarios?.nome}. Motivo: ${obs}`;
+    
+    showToast('Cuidadora titular atualizada para toda a escala!', 'success');
   }
 
-  showToast('Substituição realizada com sucesso!', 'success');
   closeModal('modalSubstituicao');
   renderEscalas(allEscalas);
   initCalendar(allEscalas);
