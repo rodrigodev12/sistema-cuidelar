@@ -384,6 +384,11 @@
           <input type="search" class="form-input" id="searchEscalas" placeholder="Buscar escala..." oninput="filterEscalas()" />
         </div>
         <div class="table-actions">
+          <select class="form-select" id="sortEscalaOrder" style="width:190px" onchange="changeEscalaSort(this.value)">
+            <option value="proximas">Mais Próximas Primeiro</option>
+            <option value="distantes">Mais Distantes Primeiro</option>
+            <option value="antigas">Ordem Cronológica</option>
+          </select>
           <select class="form-select" id="filterEscalaStatus" style="width:160px" onchange="filterEscalas()">
             <option value="">Todos status</option>
             <option value="agendado">Agendado</option>
@@ -403,7 +408,9 @@
             <tr>
               <th>Assistido</th>
               <th>Cuidador(a)</th>
-              <th>Período</th>
+              <th onclick="toggleSortEscalas()" style="cursor:pointer; user-select:none;" title="Clique para alternar a ordenação">
+                Período <i data-lucide="arrow-up-down" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-left:4px;"></i>
+              </th>
               <th>Cobrança</th>
               <th>Valor Cliente</th>
               <th>Repasse</th>
@@ -1833,14 +1840,65 @@ function renderFamilias(list) {
   lucide.createIcons();
 }
 
+let sortEscalasMode = 'proximas';
+
+window.changeEscalaSort = (val) => {
+  sortEscalasMode = val;
+  renderEscalas(window._lastEscalasList || allEscalas);
+};
+
+window.toggleSortEscalas = () => {
+  sortEscalasMode = sortEscalasMode === 'proximas' ? 'distantes' : 'proximas';
+  const sel = document.getElementById('sortEscalaOrder');
+  if (sel) sel.value = sortEscalasMode;
+  renderEscalas(window._lastEscalasList || allEscalas);
+};
+
+function sortEscalasList(list, mode = sortEscalasMode) {
+  const now = Date.now();
+  const gracePeriod = 2 * 60 * 60 * 1000;
+
+  return [...list].sort((a, b) => {
+    const timeA = new Date(a.data_inicio).getTime();
+    const timeB = new Date(b.data_inicio).getTime();
+    const endA = new Date(a.data_termino || a.data_inicio).getTime();
+    const endB = new Date(b.data_termino || b.data_inicio).getTime();
+
+    const isUpcomingA = endA >= (now - gracePeriod);
+    const isUpcomingB = endB >= (now - gracePeriod);
+
+    if (mode === 'proximas') {
+      if (isUpcomingA && !isUpcomingB) return -1;
+      if (!isUpcomingA && isUpcomingB) return 1;
+      if (isUpcomingA && isUpcomingB) {
+        return timeA - timeB;
+      } else {
+        return timeB - timeA;
+      }
+    } else if (mode === 'distantes') {
+      if (isUpcomingA && !isUpcomingB) return 1;
+      if (!isUpcomingA && isUpcomingB) return -1;
+      if (isUpcomingA && isUpcomingB) {
+        return timeB - timeA;
+      } else {
+        return timeA - timeB;
+      }
+    } else if (mode === 'antigas') {
+      return timeA - timeB;
+    }
+    return 0;
+  });
+}
+
 function renderEscalas(list) {
+  window._lastEscalasList = list;
   const tbody = document.getElementById('tabelaEscalasBody');
   if (!tbody) return;
   if (!list.length) {
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhuma escala encontrada</td></tr>';
     return;
   }
-  const sortedList = [...list].sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
+  const sortedList = sortEscalasList(list, sortEscalasMode);
   const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
   tbody.innerHTML = sortedList.map(e => {
     const vc = e.valor_cliente || e.valor_total || 0;
