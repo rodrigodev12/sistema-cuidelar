@@ -463,6 +463,16 @@ const registrarCheckin = async (id, lat, lng) => {
 
   if (!DEMO_MODE) {
     try {
+      const isPlantaoDiario = currentEscala && currentEscala.escala_pai_id;
+      const targetEscalaId = isPlantaoDiario ? currentEscala.escala_pai_id : id;
+
+      if (isPlantaoDiario) {
+        await supabase
+          .from('plantoes_diarios')
+          .update({ status: 'em_andamento' })
+          .eq('id', id);
+      }
+
       const { error } = await supabase
         .from('escalas_servicos')
         .update({
@@ -471,7 +481,7 @@ const registrarCheckin = async (id, lat, lng) => {
           checkin_lng: lng,
           status: 'em_andamento'
         })
-        .eq('id', id);
+        .eq('id', targetEscalaId);
       if (error) throw error;
     } catch(err) {
       console.error('Erro ao salvar checkin no Supabase:', err);
@@ -490,6 +500,16 @@ const registrarCheckout = async (id, lat, lng) => {
 
   if (!DEMO_MODE) {
     try {
+      const isPlantaoDiario = currentEscala && currentEscala.escala_pai_id;
+      const targetEscalaId = isPlantaoDiario ? currentEscala.escala_pai_id : id;
+
+      if (isPlantaoDiario) {
+        await supabase
+          .from('plantoes_diarios')
+          .update({ status: 'concluido' })
+          .eq('id', id);
+      }
+
       const { error } = await supabase
         .from('escalas_servicos')
         .update({
@@ -498,7 +518,7 @@ const registrarCheckout = async (id, lat, lng) => {
           checkout_lng: lng,
           status: 'concluido'
         })
-        .eq('id', id);
+        .eq('id', targetEscalaId);
       if (error) throw error;
     } catch(err) {
       console.error('Erro ao salvar checkout no Supabase:', err);
@@ -514,10 +534,13 @@ const insertDiario = async (d) => {
   if (!DEMO_MODE) {
     try {
       // Cria registro no banco de dados real
+      const isPlantaoDiario = currentEscala && currentEscala.escala_pai_id;
+      const targetEscalaId = isPlantaoDiario ? currentEscala.escala_pai_id : d.id_escala;
+
       const { data, error } = await supabase
         .from('diario_cuidados')
         .insert({
-          id_escala: d.id_escala,
+          id_escala: targetEscalaId,
           batimento_cardiaco: d.batimento_cardiaco,
           pressao_arterial: d.pressao_arterial,
           temperatura: d.temperatura,
@@ -806,10 +829,69 @@ async function loadEscalaCuidador() {
     }
 
     const agora = new Date().toISOString();
+    
+    // 1. Busca plantão diário primeiro (incluindo escalas normais/desmembradas e substituições)
+    let plantaoEncontrado = null;
+    try {
+      const { data: plantoes, error: pltErr } = await supabase
+        .from('plantoes_diarios')
+        .select('*, idosos(*), escalas_servicos(*)')
+        .or(`id_cuidador.eq.${cuidador.id},cuidador_substituta_id.eq.${cuidador.id}`)
+        .in('status', ['agendado', 'em_andamento'])
+        .gte('data_fim', agora)
+        .order('data_inicio')
+        .limit(1);
+
+      if (!pltErr && plantoes && plantoes.length > 0) {
+        plantaoEncontrado = plantoes[0];
+      }
+    } catch(errPlt) {
+      console.warn('Erro ao consultar plantoes_diarios:', errPlt);
+    }
+
+    if (plantaoEncontrado) {
+      const plantao = plantaoEncontrado;
+      const parent = plantao.escalas_servicos || {};
+      
+      let repasse = 0;
+      if (plantao.cuidador_substituta_id === cuidador.id) {
+        if (parent.tipo_cobranca === 'Mensal Fixado') {
+          repasse = parent.valor_repasse_cuidador ? parseFloat((parent.valor_repasse_cuidador / 15).toFixed(2)) : 170;
+        } else {
+          repasse = parent.valor_repasse_cuidador || 0;
+        }
+      } else {
+        if (plantao.e_substituicao) {
+          repasse = 0;
+        } else {
+          if (parent.tipo_cobranca === 'Mensal Fixado') {
+            repasse = parent.valor_repasse_cuidador ? parseFloat((parent.valor_repasse_cuidador / 15).toFixed(2)) : 170;
+          } else {
+            repasse = parent.valor_repasse_cuidador || 0;
+          }
+        }
+      }
+
+      currentEscala = {
+        id: plantao.id,
+        escala_pai_id: plantao.escala_pai_id,
+        data_inicio: plantao.data_inicio,
+        data_termino: plantao.data_fim,
+        valor_repasse_cuidador: repasse,
+        status: plantao.status,
+        idosos: plantao.idosos
+      };
+      escalaPendingId = currentEscala.id;
+      updateEscalaUI(currentEscala);
+      await loadHistorico();
+      return;
+    }
+
+    // 2. Fallback para escalas_servicos direto
     const { data: escalas, error: escErr } = await supabase
       .from('escalas_servicos')
       .select('*, idosos(*, clientes_familia(*))')
-      .or(`id_cuidador.eq.${cuidador.id},cuidador_substituta_id.eq.${cuidador.id}`)
+      .eq('id_cuidador', cuidador.id)
       .in('status', ['agendado', 'em_andamento'])
       .gte('data_termino', agora)
       .order('data_inicio')
