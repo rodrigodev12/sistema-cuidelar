@@ -1239,7 +1239,7 @@ async function loadAllData() {
     // Escalas
     const { data: escalas } = await supabase.from('escalas_servicos')
       .select('*, idosos(nome), cuidadores(*, usuarios(nome))')
-      .order('data_inicio', { ascending: false })
+      .order('data_inicio', { ascending: true })
       .limit(200);
     allEscalas = escalas || [];
     renderEscalas(allEscalas);
@@ -1840,8 +1840,9 @@ function renderEscalas(list) {
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhuma escala encontrada</td></tr>';
     return;
   }
+  const sortedList = [...list].sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
   const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
-  tbody.innerHTML = list.map(e => {
+  tbody.innerHTML = sortedList.map(e => {
     const vc = e.valor_cliente || e.valor_total || 0;
     const vr = e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0);
     const lucro = vc - vr;

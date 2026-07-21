@@ -104,7 +104,7 @@ export async function getIdososByCliente(clienteId) {
 
 export async function getEscalas(filters = {}) {
   if (DEMO_MODE) return [];
-  let query = supabase.from('escalas_servicos').select(`*, idosos(id,nome,foto_url), cuidadores(id,valor_hora,usuarios(id,nome,avatar_url))`).order('data_inicio', { ascending: false });
+  let query = supabase.from('escalas_servicos').select(`*, idosos(id,nome,foto_url), cuidadores(id,valor_hora,usuarios(id,nome,avatar_url))`).order('data_inicio', { ascending: true });
   if (filters.status)      query = query.eq('status', filters.status);
   if (filters.id_cuidador) query = query.eq('id_cuidador', filters.id_cuidador);
   if (filters.id_idoso)    query = query.eq('id_idoso', filters.id_idoso);
