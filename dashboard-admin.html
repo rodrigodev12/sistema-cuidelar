@@ -1547,6 +1547,10 @@ function autoGerarPlantoesRodizioSeNecessario() {
         ? parseFloat((esc.valor_repasse_cuidador / 15).toFixed(2))
         : (esc.valor_repasse_cuidador || 170);
 
+      const clientePorPlantao = (esc.valor_cliente && esc.tipo_cobranca === 'Mensal Fixado') 
+        ? parseFloat((esc.valor_cliente / 15).toFixed(2))
+        : (esc.valor_cliente || esc.valor_total || 250);
+
       while (curr <= endDt) {
         const cuidadorDaVezId = (diaIndex % 2 === 0) ? c1Id : c2Id;
         const cuidadorDaVezObj = allCuidadores.find(c => c.id === cuidadorDaVezId);
@@ -1571,6 +1575,8 @@ function autoGerarPlantoesRodizioSeNecessario() {
             data_fim: pFim.toISOString(),
             tipo_cobranca: 'Por Plantão (12h)',
             valor_repasse_cuidador: repassePorPlantao,
+            valor_cliente: clientePorPlantao,
+            valor_total: clientePorPlantao,
             status: 'agendado'
           });
         }
@@ -1996,13 +2002,32 @@ window.verAgendaCuidador = (cuidadorId) => {
   } else {
     const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
     tbody.innerHTML = escalasCuidador.map(e => {
-      const vr = e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0);
+      let vr = e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0);
+      if (e.e_substituicao && e.cuidador_substituta_id && e.cuidador_substituta_id !== cuidadorId) {
+        vr = 0;
+      }
+      
       const dIni = formatDate(e.data_inicio);
       const dFim = formatDate(e.data_termino || e.data_fim);
 
+      let assistidoHtml = `<div style="font-weight:600;">${e.idosos?.nome || '—'}</div>`;
+      if (e.e_substituicao) {
+        if (e.cuidador_substituta_id === cuidadorId) {
+          assistidoHtml = `
+            <div style="font-weight:600;">${e.idosos?.nome || '—'}</div>
+            <div style="font-size:0.7rem; color:var(--primary); font-weight:500; margin-top:2px;">🔄 Substituta de ${e.cuidadores?.usuarios?.nome || 'titular'}</div>
+          `;
+        } else {
+          assistidoHtml = `
+            <div style="font-weight:600; text-decoration: line-through; color: var(--text-muted);">${e.idosos?.nome || '—'}</div>
+            <div style="font-size:0.7rem; color:var(--text-secondary); font-weight:normal; margin-top:2px;">🔄 Substituída por ${e.cuidador_substituta?.usuarios?.nome || 'substituta'}</div>
+          `;
+        }
+      }
+
       return `
         <tr style="border-bottom: 1px solid var(--border);">
-          <td style="padding: 10px 14px; font-weight:600;">${e.idosos?.nome || '—'}</td>
+          <td style="padding: 10px 14px;">${assistidoHtml}</td>
           <td style="padding: 10px 14px;">
             <div>${dIni}</div>
             <div style="font-size:0.75rem; color:var(--text-muted)">até ${dFim}</div>
@@ -2418,7 +2443,19 @@ window.submitEscala = async (e) => {
 
       if (tipoCobranca === 'Mensal Fixado') {
         const freq = document.getElementById('escFrequencia')?.value || '12x36';
-        const novosPlantoes = gerarPlantoesRecorrentes(newEsc.id, idosoId, idosoObj?.nome, cuidId, cuidObj?.usuarios?.nome, startDt, endDt, freq);
+        const novosPlantoes = gerarPlantoesRecorrentes(
+          newEsc.id, 
+          idosoId, 
+          idosoObj?.nome, 
+          cuidId, 
+          cuidObj?.usuarios?.nome, 
+          startDt, 
+          endDt, 
+          freq,
+          tipoCobranca,
+          totalCliente,
+          totalRepasse
+        );
         allPlantoesDiarios.push(...novosPlantoes);
       }
 
@@ -2435,7 +2472,7 @@ window.submitEscala = async (e) => {
   }
 };
 
-function gerarPlantoesRecorrentes(escalaPaiId, idosoId, idosoNome, cuidId, cuidNome, startDt, endDt, frequencia) {
+function gerarPlantoesRecorrentes(escalaPaiId, idosoId, idosoNome, cuidId, cuidNome, startDt, endDt, frequencia, tipoCobranca, valorCliente, valorRepasse) {
   const plantoes = [];
   const curr = new Date(startDt);
   const end = new Date(endDt);
@@ -2443,6 +2480,20 @@ function gerarPlantoesRecorrentes(escalaPaiId, idosoId, idosoNome, cuidId, cuidN
 
   const startHour = startDt.getHours() || 8;
   const startMin = startDt.getMinutes() || 0;
+
+  // Calcula valores unitários por plantão
+  let pTipoCobranca = tipoCobranca || 'Por Plantão (12h)';
+  let pValorRepasse = 170;
+  let pValorCliente = 250;
+
+  if (tipoCobranca === 'Mensal Fixado') {
+    pValorRepasse = valorRepasse ? parseFloat((valorRepasse / 15).toFixed(2)) : 170;
+    pValorCliente = valorCliente ? parseFloat((valorCliente / 15).toFixed(2)) : 250;
+    pTipoCobranca = 'Por Plantão (12h)';
+  } else {
+    pValorRepasse = valorRepasse || 170;
+    pValorCliente = valorCliente || 250;
+  }
 
   while (curr <= end) {
     const dayOfWeek = curr.getDay(); // 0 = Dom, 1 = Seg, ..., 6 = Sáb
@@ -2478,7 +2529,11 @@ function gerarPlantoesRecorrentes(escalaPaiId, idosoId, idosoNome, cuidId, cuidN
         data_fim: pFim.toISOString(),
         status: 'agendado',
         e_substituicao: false,
-        cuidador_substituta_id: null
+        cuidador_substituta_id: null,
+        tipo_cobranca: pTipoCobranca,
+        valor_repasse_cuidador: pValorRepasse,
+        valor_cliente: pValorCliente,
+        valor_total: pValorCliente
       });
     }
 
@@ -2592,6 +2647,54 @@ window.submitSubstituicao = async (e) => {
     const subObj = allCuidadores.find(c => c.id === subId);
     const dataFmt = new Date(dataEsp + 'T12:00:00').toLocaleDateString('pt-BR');
 
+    // 1. Get correct timing from parent scale to construct ISO dates
+    const parentStart = new Date(esc.data_inicio);
+    const startHours = String(parentStart.getHours()).padStart(2, '0');
+    const startMinutes = String(parentStart.getMinutes()).padStart(2, '0');
+    const startSeconds = String(parentStart.getSeconds()).padStart(2, '0');
+
+    const localStartStr = `${dataEsp}T${startHours}:${startMinutes}:${startSeconds}`;
+    const newStart = new Date(localStartStr);
+    const newStartIso = newStart.toISOString();
+
+    let shiftDurationMs = 12 * 60 * 60 * 1000; // default 12 hours
+    if (esc.tipo_cobranca === 'Mensal Fixado') {
+      const freq = esc.frequencia_escala || '12x36';
+      shiftDurationMs = (freq === '24x48' || freq === '24x36') ? 24 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
+    } else {
+      const parentEnd = new Date(esc.data_termino || esc.data_fim || esc.data_inicio);
+      if (parentEnd > parentStart) {
+        shiftDurationMs = parentEnd.getTime() - parentStart.getTime();
+      }
+    }
+
+    const newEnd = new Date(newStart.getTime() + shiftDurationMs);
+    const newEndIso = newEnd.toISOString();
+
+    // 2. Get financial values from parent scale
+    let tipoCobranca = esc.tipo_cobranca || 'Por Hora';
+    let valorRepasse = esc.valor_repasse_cuidador || 0;
+    let valorCliente = esc.valor_cliente || esc.valor_total || 0;
+
+    if (tipoCobranca === 'Mensal Fixado') {
+      valorRepasse = esc.valor_repasse_cuidador ? parseFloat((esc.valor_repasse_cuidador / 15).toFixed(2)) : 170;
+      valorCliente = esc.valor_cliente ? parseFloat((esc.valor_cliente / 15).toFixed(2)) : 250;
+      tipoCobranca = 'Por Plantão (12h)';
+    } else if (tipoCobranca === 'Por Hora') {
+      const parentHours = (new Date(esc.data_termino || esc.data_fim || esc.data_inicio) - parentStart) / 3600000;
+      const hourlyRepasse = parentHours > 0 ? (esc.valor_repasse_cuidador / parentHours) : 0;
+      const hourlyCliente = parentHours > 0 ? ((esc.valor_cliente || esc.valor_total) / parentHours) : 0;
+      const newShiftHours = shiftDurationMs / 3600000;
+      valorRepasse = parseFloat((hourlyRepasse * newShiftHours).toFixed(2));
+      valorCliente = parseFloat((hourlyCliente * newShiftHours).toFixed(2));
+    } else if (tipoCobranca === 'Por Plantão' || tipoCobranca === 'Por Plantão (12h)' || tipoCobranca === 'Por Plantão (24h)') {
+      const parentHours = (new Date(esc.data_termino || esc.data_fim || esc.data_inicio) - parentStart) / 3600000;
+      const shiftSize = tipoCobranca === 'Por Plantão (24h)' ? 24 : 12;
+      const qtdPlantoes = Math.ceil(parentHours / shiftSize) || 1;
+      valorRepasse = parseFloat((esc.valor_repasse_cuidador / qtdPlantoes).toFixed(2));
+      valorCliente = parseFloat(((esc.valor_cliente || esc.valor_total) / qtdPlantoes).toFixed(2));
+    }
+
     if (isOriginal) {
       esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Dia ${dataFmt}]: Substituição por ${subObj?.usuarios?.nome}. Motivo: ${obs}`;
     }
@@ -2601,20 +2704,73 @@ window.submitSubstituicao = async (e) => {
       plantaoDia.cuidador_substituta_id = subId;
       plantaoDia.cuidador_substituta = subObj;
       plantaoDia.e_substituicao = true;
-      plantaoDia.status = 'substituido';
+      if (plantaoDia.status === 'substituido' || !plantaoDia.status) {
+        plantaoDia.status = 'agendado';
+      }
+      plantaoDia.tipo_cobranca = tipoCobranca;
+      plantaoDia.valor_repasse_cuidador = valorRepasse;
+      plantaoDia.valor_cliente = valorCliente;
+      plantaoDia.valor_total = valorCliente;
     } else {
       (allPlantoesDiarios = allPlantoesDiarios || []).push({
         id: 'p_sub_' + Date.now(),
         escala_pai_id: pId,
-        assistido_id: esc.id_idoso,
+        assistido_id: esc.id_idoso || esc.idosos?.id,
         idosos: esc.idosos,
-        cuidador_id: subId,
-        cuidadores: subObj,
-        data_inicio: dataEsp + 'T07:00:00',
-        data_fim: dataEsp + 'T19:00:00',
+        cuidador_id: esc.id_cuidador || esc.cuidador_id || (esc.cuidadores && esc.cuidadores.id),
+        cuidadores: esc.cuidadores,
+        cuidador_substituta_id: subId,
+        cuidador_substituta: subObj,
+        data_inicio: newStartIso,
+        data_fim: newEndIso,
         status: 'agendado',
-        e_substituicao: true
+        e_substituicao: true,
+        tipo_cobranca: tipoCobranca,
+        valor_repasse_cuidador: valorRepasse,
+        valor_cliente: valorCliente,
+        valor_total: valorCliente
       });
+    }
+
+    // Persist to Supabase if not in DEMO_MODE
+    if (!DEMO_MODE) {
+      try {
+        const { error: errEsc } = await supabase.from('escalas_servicos')
+          .update({ observacoes: esc.observacoes })
+          .eq('id', pId);
+        if (errEsc) throw errEsc;
+
+        const { data: dbExist, error: errExist } = await supabase.from('plantoes_diarios')
+          .select('id')
+          .eq('escala_pai_id', pId)
+          .eq('data_inicio', newStartIso);
+        
+        const dbPlantao = {
+          escala_pai_id: pId,
+          id_idoso: esc.id_idoso || esc.idosos?.id,
+          id_cuidador: esc.id_cuidador || esc.cuidador_id || (esc.cuidadores && esc.cuidadores.id),
+          data_inicio: newStartIso,
+          data_fim: newEndIso,
+          status: 'agendado',
+          e_substituicao: true,
+          cuidador_substituta_id: subId,
+          observacoes: obs || null
+        };
+
+        if (dbExist && dbExist.length > 0) {
+          const { error: errUpd } = await supabase.from('plantoes_diarios')
+            .update(dbPlantao)
+            .eq('id', dbExist[0].id);
+          if (errUpd) throw errUpd;
+        } else {
+          const { error: errIns } = await supabase.from('plantoes_diarios')
+            .insert(dbPlantao);
+          if (errIns) throw errIns;
+        }
+      } catch (dbErr) {
+        console.error('Erro ao persistir substituição no banco:', dbErr);
+        showToast('Substituição salva localmente, mas houve erro ao salvar no banco.', 'warning');
+      }
     }
 
     showToast(`Substituição salva com sucesso para o dia ${dataFmt}!`, 'success');
@@ -2642,6 +2798,21 @@ window.submitSubstituicao = async (e) => {
       esc.cuidadores = allCuidadores.find(c => c.id === c1);
     }
 
+    if (!DEMO_MODE) {
+      try {
+        const { error: errEsc } = await supabase.from('escalas_servicos')
+          .update({ 
+            id_cuidador: c1 || esc.id_cuidador, 
+            observacoes: esc.observacoes 
+          })
+          .eq('id', pId);
+        if (errEsc) throw errEsc;
+      } catch (dbErr) {
+        console.error('Erro ao salvar rodízio no banco:', dbErr);
+        showToast('Erro ao atualizar escala no banco de dados.', 'error');
+      }
+    }
+
     // Limpa plantões diários antigos desta escala pai
     allPlantoesDiarios = (allPlantoesDiarios || []).filter(p => p.escala_pai_id !== pId);
 
@@ -2654,6 +2825,10 @@ window.submitSubstituicao = async (e) => {
     const repassePorPlantao = (esc.valor_repasse_cuidador && esc.tipo_cobranca === 'Mensal Fixado') 
       ? parseFloat((esc.valor_repasse_cuidador / 15).toFixed(2))
       : (esc.valor_repasse_cuidador || 170);
+
+    const clientePorPlantao = (esc.valor_cliente && esc.tipo_cobranca === 'Mensal Fixado') 
+      ? parseFloat((esc.valor_cliente / 15).toFixed(2))
+      : (esc.valor_cliente || esc.valor_total || 250);
 
     while (curr <= endDt) {
       // Alterna entre C1 (Dia Sim) e C2 (Dia Não), C3/C4 se fornecidas
@@ -2680,6 +2855,8 @@ window.submitSubstituicao = async (e) => {
           data_fim: pFim.toISOString(),
           tipo_cobranca: 'Por Plantão (12h)',
           valor_repasse_cuidador: repassePorPlantao,
+          valor_cliente: clientePorPlantao,
+          valor_total: clientePorPlantao,
           status: 'agendado'
         });
       }
@@ -2701,6 +2878,21 @@ window.submitSubstituicao = async (e) => {
     esc.cuidadores = subObj;
     esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Alteração Geral]: Cuidadora titular alterada para ${subObj?.usuarios?.nome}. Motivo: ${obs}`;
     
+    if (!DEMO_MODE) {
+      try {
+        const { error: errEsc } = await supabase.from('escalas_servicos')
+          .update({ 
+            id_cuidador: subId, 
+            observacoes: esc.observacoes 
+          })
+          .eq('id', pId);
+        if (errEsc) throw errEsc;
+      } catch (dbErr) {
+        console.error('Erro ao salvar alteração no banco:', dbErr);
+        showToast('Erro ao atualizar titular no banco de dados.', 'error');
+      }
+    }
+
     showToast('Cuidadora titular atualizada para toda a escala!', 'success');
   }
 
