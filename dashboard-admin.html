@@ -1902,11 +1902,19 @@ window.verAgendaCuidador = (cuidadorId) => {
   document.getElementById('agendaCuidadorAvatar').textContent = nome[0]?.toUpperCase() || 'C';
   document.getElementById('agendaCuidadorEspecialidade').textContent = c.formacao || 'Plantões alocados e disponibilidade no mês';
 
-  // Filtra escalas e plantões desta cuidadora
-  const escalasCuidador = (allEscalas || []).filter(e => {
-    const dbCuidId = e.id_cuidador || (e.cuidadores && e.cuidadores.id);
-    return dbCuidId === cuidadorId || e.cuidador_substituta_id === cuidadorId;
-  }).sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
+  // Filtra escalas e plantões desta cuidadora (incluindo escalas pai e plantões de rodízio)
+  const escalasCuidador = [
+    ...(allEscalas || []).filter(e => {
+      const dbCuidId = e.id_cuidador || (e.cuidadores && e.cuidadores.id);
+      return dbCuidId === cuidadorId || e.cuidador_substituta_id === cuidadorId;
+    }),
+    ...(allPlantoesDiarios || []).filter(p => {
+      const pCuidId = p.cuidador_id || p.id_cuidador || (p.cuidadores && p.cuidadores.id);
+      const pSubId = p.cuidador_substituta_id;
+      return pCuidId === cuidadorId || pSubId === cuidadorId;
+    })
+  ].filter((item, index, self) => index === self.findIndex(t => t.id === item.id))
+   .sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
 
   // Calcula KPIs
   const totalPlantoes = escalasCuidador.length;
@@ -2572,14 +2580,60 @@ window.submitSubstituicao = async (e) => {
     const equipeObjs = equipeIds.map(id => allCuidadores.find(c => c.id === id));
     const nomesEquipe = equipeObjs.map(c => c?.usuarios?.nome || 'Cuidadora').join(', ');
 
-    esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Equipe 4 Cuidadoras (${esquema.replace('_',' ')})]: ${nomesEquipe}. Motivo: ${obs}`;
+    esc.observacoes = (esc.observacoes ? esc.observacoes + '\n' : '') + `[Equipe Rodízio (${esquema.replace('_',' ')})]: ${nomesEquipe}. Motivo: ${obs}`;
     
     if (c1 && allCuidadores.find(c => c.id === c1)) {
       esc.id_cuidador = c1;
       esc.cuidadores = allCuidadores.find(c => c.id === c1);
     }
 
-    showToast(`Equipe mensal de rodízio com ${equipeIds.length} cuidadora(s) salva com sucesso!`, 'success');
+    // Limpa plantões diários antigos desta escala pai
+    allPlantoesDiarios = (allPlantoesDiarios || []).filter(p => p.escala_pai_id !== pId);
+
+    // Gera os plantões individuais de 12x36 / 24x36 alternando entre a equipe no mês
+    const startDt = new Date(esc.data_inicio);
+    const endDt = new Date(esc.data_termino || esc.data_fim || new Date(startDt.getTime() + 30*24*3600000));
+    const curr = new Date(startDt);
+    let diaIndex = 0;
+
+    const repassePorPlantao = (esc.valor_repasse_cuidador && esc.tipo_cobranca === 'Mensal Fixado') 
+      ? parseFloat((esc.valor_repasse_cuidador / 15).toFixed(2))
+      : (esc.valor_repasse_cuidador || 170);
+
+    while (curr <= endDt) {
+      // Alterna entre C1 (Dia Sim) e C2 (Dia Não), C3/C4 se fornecidas
+      const cuidadorDaVezId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
+      const cuidadorDaVezObj = allCuidadores.find(c => c.id === cuidadorDaVezId);
+
+      const pIni = new Date(curr);
+      pIni.setHours(7, 0, 0, 0);
+      const pFim = new Date(pIni);
+      pFim.setHours(19, 0, 0, 0);
+
+      if (cuidadorDaVezObj) {
+        allPlantoesDiarios.push({
+          id: 'p_rod_' + Date.now() + '_' + diaIndex,
+          escala_pai_id: pId,
+          id_escala: pId,
+          assistido_id: esc.id_idoso,
+          idosos: esc.idosos,
+          cuidador_id: cuidadorDaVezId,
+          id_cuidador: cuidadorDaVezId,
+          cuidadores: cuidadorDaVezObj,
+          data_inicio: pIni.toISOString(),
+          data_termino: pFim.toISOString(),
+          data_fim: pFim.toISOString(),
+          tipo_cobranca: 'Por Plantão (12h)',
+          valor_repasse_cuidador: repassePorPlantao,
+          status: 'agendado'
+        });
+      }
+
+      curr.setDate(curr.getDate() + 1);
+      diaIndex++;
+    }
+
+    showToast(`Escala de rodízio gerada! ${diaIndex} plantões alocados alternadamente entre a equipe!`, 'success');
 
   } else if (modo === 'toda_escala') {
     const subId = document.getElementById('subCuidadorToda').value;
