@@ -1964,16 +1964,29 @@ window.verAgendaCuidador = (cuidadorId) => {
   document.getElementById('agendaCuidadorEspecialidade').textContent = c.formacao || 'Plantões alocados e disponibilidade no mês';
 
   // Filtra escalas e plantões desta cuidadora (incluindo escalas pai e plantões de rodízio)
+  let escalasFiltradas = (allEscalas || []).filter(e => {
+    const dbCuidId = e.id_cuidador || (e.cuidadores && e.cuidadores.id);
+    return (dbCuidId === cuidadorId || e.cuidador_substituta_id === cuidadorId) && e.tipo_cobranca !== 'Mensal Fixado';
+  });
+
+  const plantoesFiltrados = (allPlantoesDiarios || []).filter(p => {
+    const pCuidId = p.cuidador_id || p.id_cuidador || (p.cuidadores && p.cuidadores.id);
+    const pSubId = p.cuidador_substituta_id;
+    return (pCuidId === cuidadorId || pSubId === cuidadorId);
+  });
+
+  // Filtra as escalas originais se elas já tiverem um plantão diário correspondente (desmembrado/substituído)
+  escalasFiltradas = escalasFiltradas.filter(e => {
+    const temPlantaoCorrespondente = plantoesFiltrados.some(p => 
+      (p.escala_pai_id === e.id || p.id_escala === e.id) &&
+      p.data_inicio.substring(0, 10) === e.data_inicio.substring(0, 10)
+    );
+    return !temPlantaoCorrespondente;
+  });
+
   const escalasCuidador = [
-    ...(allEscalas || []).filter(e => {
-      const dbCuidId = e.id_cuidador || (e.cuidadores && e.cuidadores.id);
-      return (dbCuidId === cuidadorId || e.cuidador_substituta_id === cuidadorId) && e.tipo_cobranca !== 'Mensal Fixado';
-    }),
-    ...(allPlantoesDiarios || []).filter(p => {
-      const pCuidId = p.cuidador_id || p.id_cuidador || (p.cuidadores && p.cuidadores.id);
-      const pSubId = p.cuidador_substituta_id;
-      return (pCuidId === cuidadorId || pSubId === cuidadorId);
-    })
+    ...escalasFiltradas,
+    ...plantoesFiltrados
   ].filter((item, index, self) => index === self.findIndex(t => t.id === item.id))
    .sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
 
