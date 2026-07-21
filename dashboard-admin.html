@@ -2735,19 +2735,21 @@ window.submitSubstituicao = async (e) => {
     // Persist to Supabase if not in DEMO_MODE
     if (!DEMO_MODE) {
       try {
+        const parentId = esc.escala_pai_id || esc.id_escala || esc.id;
         const { error: errEsc } = await supabase.from('escalas_servicos')
           .update({ observacoes: esc.observacoes })
-          .eq('id', pId);
+          .eq('id', parentId);
         if (errEsc) throw errEsc;
 
         const { data: dbExist, error: errExist } = await supabase.from('plantoes_diarios')
           .select('id')
-          .eq('escala_pai_id', pId)
+          .eq('escala_pai_id', parentId)
           .eq('data_inicio', newStartIso);
+        if (errExist) throw errExist;
         
         const dbPlantao = {
-          escala_pai_id: pId,
-          id_idoso: esc.id_idoso || esc.idosos?.id,
+          escala_pai_id: parentId,
+          id_idoso: esc.id_idoso || esc.assistido_id || esc.idosos?.id,
           id_cuidador: esc.id_cuidador || esc.cuidador_id || (esc.cuidadores && esc.cuidadores.id),
           data_inicio: newStartIso,
           data_fim: newEndIso,
@@ -2769,7 +2771,7 @@ window.submitSubstituicao = async (e) => {
         }
       } catch (dbErr) {
         console.error('Erro ao persistir substituição no banco:', dbErr);
-        showToast('Substituição salva localmente, mas houve erro ao salvar no banco.', 'warning');
+        showToast('Substituição salva localmente, mas houve erro ao salvar no banco: ' + (dbErr.message || dbErr), 'warning');
       }
     }
 
