@@ -561,16 +561,62 @@ async function loadFamiliaData() {
       return;
     }
 
-    // Buscar escalas futuras
-    const { data: escalas } = await supabase
-      .from('escalas_servicos')
-      .select('*, cuidadores(*, usuarios(nome))')
-      .eq('id_idoso', idosoData?.id)
-      .gte('data_inicio', new Date().toISOString())
-      .order('data_inicio')
-      .limit(10);
+    // Buscar escalas futuras (incluindo plantões diários e substituições)
+    let escalasExibicao = [];
+    try {
+      const { data: plantoesDiarios } = await supabase
+        .from('plantoes_diarios')
+        .select('*, idosos(*), cuidadores(*, usuarios(nome)), cuidador_substituta:cuidador_substituta_id(*, usuarios(nome))')
+        .eq('id_idoso', idosoData?.id)
+        .gte('data_fim', new Date().toISOString())
+        .order('data_inicio')
+        .limit(15);
+      
+      if (plantoesDiarios && plantoesDiarios.length > 0) {
+        escalasExibicao = plantoesDiarios.map(p => {
+          // Se for substituição, exibe a substituta como cuidadora do dia
+          const cuidObj = p.cuidador_substituta_id ? p.cuidador_substituta : p.cuidadores;
+          return {
+            id: p.id,
+            escala_pai_id: p.escala_pai_id,
+            data_inicio: p.data_inicio,
+            data_termino: p.data_fim,
+            status: p.status,
+            cuidadores: cuidObj
+          };
+        });
+      }
+    } catch(errPlt) {
+      console.warn('Erro ao consultar plantoes_diarios para familia:', errPlt);
+    }
 
-    escalasData = escalas || [];
+    try {
+      const { data: escalasNormais } = await supabase
+        .from('escalas_servicos')
+        .select('*, cuidadores(*, usuarios(nome))')
+        .eq('id_idoso', idosoData?.id)
+        .neq('tipo_cobranca', 'Mensal Fixado')
+        .gte('data_termino', new Date().toISOString())
+        .order('data_inicio')
+        .limit(10);
+      
+      if (escalasNormais && escalasNormais.length > 0) {
+        const complementares = escalasNormais.filter(e => {
+          const jaTemDiario = escalasExibicao.some(p => 
+            (p.escala_pai_id === e.id || p.id === e.id) &&
+            new Date(p.data_inicio).toDateString() === new Date(e.data_inicio).toDateString()
+          );
+          return !jaTemDiario;
+        });
+        escalasExibicao = [...escalasExibicao, ...complementares];
+      }
+    } catch(errEsc) {
+      console.warn('Erro ao buscar escalas complementares:', errEsc);
+    }
+
+    escalasExibicao.sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
+
+    escalasData = escalasExibicao;
     renderPlantoes(escalasData);
     renderFaturamento(escalasData);
     populateAvaliacaoSelect(escalasData);
@@ -739,14 +785,15 @@ window.loadFeed = async () => {
     if (!escalaHoje) {
       feedEntries = [];
     } else {
+      const targetEscalaId = escalaHoje.escala_pai_id || escalaHoje.id;
       const { data } = await supabase
         .from('diario_cuidados')
         .select('*')
-        .eq('id_escala', escalaHoje.id)
+        .eq('id_escala', targetEscalaId)
         .eq('visivel_familia', true)
         .order('horario', { ascending: false })
         .limit(20);
-      const isDemo = escalaHoje.id.toString().startsWith('demo');
+      const isDemo = targetEscalaId.toString().startsWith('demo');
       feedEntries = data?.length ? data : (isDemo ? getDemoFeedEntries() : []);
     }
     renderFeed(feedEntries);
@@ -867,6 +914,19 @@ function setupRealtime() {
           handleRemoteUpdate('checkin', { id: scale.id, lat: scale.checkin_lat, lng: scale.checkin_lng, hora: scale.checkin_hora });
         } else if (scale.status === 'concluido') {
           handleRemoteUpdate('checkout', { id: scale.id, lat: scale.checkout_lat, lng: scale.checkout_lng, horaOut: scale.checkout_hora });
+        }
+      }
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'plantoes_diarios'
+    }, (payload) => {
+      const plt = payload.new;
+      const hoje = new Date().toISOString().split('T')[0];
+      if (plt.data_inicio?.startsWith(hoje)) {
+        if (plt.status === 'em_andamento') {
+          handleRemoteUpdate('checkin', { id: plt.id, hora: new Date().toISOString() });
+        } else if (plt.status === 'concluido') {
+          handleRemoteUpdate('checkout', { id: plt.id, horaOut: new Date().toISOString() });
         }
       }
     })
