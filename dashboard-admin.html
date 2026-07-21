@@ -1551,14 +1551,24 @@ function autoGerarPlantoesRodizioSeNecessario() {
         ? parseFloat((esc.valor_cliente / 15).toFixed(2))
         : (esc.valor_cliente || esc.valor_total || 250);
 
+      const parentStart = new Date(esc.data_inicio);
+      const startHour = parentStart.getHours();
+      const startMin = parentStart.getMinutes();
+
+      let shiftSize = 12; // padrão
+      const freq = esc.frequencia_escala || '12x36';
+      if (freq === '24x48' || freq === '24x36') {
+        shiftSize = 24;
+      }
+
       while (curr <= endDt) {
         const cuidadorDaVezId = (diaIndex % 2 === 0) ? c1Id : c2Id;
         const cuidadorDaVezObj = allCuidadores.find(c => c.id === cuidadorDaVezId);
 
         const pIni = new Date(curr);
-        pIni.setHours(8, 0, 0, 0);
+        pIni.setHours(startHour, startMin, 0, 0);
         const pFim = new Date(pIni);
-        pFim.setHours(20, 0, 0, 0);
+        pFim.setHours(pIni.getHours() + shiftSize);
 
         if (cuidadorDaVezObj) {
           allPlantoesDiarios.push({
@@ -2845,15 +2855,25 @@ window.submitSubstituicao = async (e) => {
       ? parseFloat((esc.valor_cliente / 15).toFixed(2))
       : (esc.valor_cliente || esc.valor_total || 250);
 
+    const parentStart = new Date(esc.data_inicio);
+    const startHour = parentStart.getHours();
+    const startMin = parentStart.getMinutes();
+
+    let shiftSize = 12; // padrão
+    const freq = esc.frequencia_escala || '12x36';
+    if (freq === '24x48' || freq === '24x36') {
+      shiftSize = 24;
+    }
+
     while (curr <= endDt) {
       // Alterna entre C1 (Dia Sim) e C2 (Dia Não), C3/C4 se fornecidas
       const cuidadorDaVezId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
       const cuidadorDaVezObj = allCuidadores.find(c => c.id === cuidadorDaVezId);
 
       const pIni = new Date(curr);
-      pIni.setHours(7, 0, 0, 0);
+      pIni.setHours(startHour, startMin, 0, 0);
       const pFim = new Date(pIni);
-      pFim.setHours(19, 0, 0, 0);
+      pFim.setHours(pIni.getHours() + shiftSize);
 
       if (cuidadorDaVezObj) {
         allPlantoesDiarios.push({
