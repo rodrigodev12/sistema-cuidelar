@@ -2947,31 +2947,11 @@ window.submitEscala = async (e) => {
   } catch(err) {
     showToast('Erro ao salvar escala: ' + err.message, 'error');
   }
-};, 
-          cuidId, 
-          cuidObj?.usuarios?.nome, 
-          startDt, 
-          endDt, 
-          freq,
-          tipoCobranca,
-          totalCliente,
-          totalRepasse
-        );
-        allPlantoesDiarios.push(...novosPlantoes);
-      }
-
-      showToast('Escala criada com sucesso!', 'success');
-    }
-
-    closeModal('modalEscala');
-    renderEscalas(allEscalas);
-    renderEscalasHoje(allEscalas);
-    initCalendar(allEscalas);
-    loadDashboard();
-  } catch(err) {
-    showToast('Erro ao salvar escala: ' + err.message, 'error');
-  }
 };
+
+
+
+
 
 function gerarPlantoesRecorrentes(escalaPaiId, idosoId, idosoNome, cuidId, cuidNome, startDt, endDt, frequencia, tipoCobranca, valorCliente, valorRepasse) {
   const plantoes = [];
