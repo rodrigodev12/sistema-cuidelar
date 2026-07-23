@@ -674,55 +674,67 @@ async function loadFamiliaData() {
               const c4 = equipeIds[3] || c2;
               const teamActive = [c1, c2, c3, c4].filter(Boolean);
 
-              const curr = new Date(agora);
-              curr.setHours(startDt.getHours(), startDt.getMinutes(), 0, 0);
-              let diaIndex = Math.floor((agora - startDt) / 86400000);
-              if (diaIndex < 0) diaIndex = 0;
+              const curr = new Date(startDt);
+              curr.setHours(0, 0, 0, 0);
+              let diaIndex = 0;
               let count = 0;
 
               while (curr <= endDt && count < 15) {
-                if (curr >= agora) {
-                  if (is24h) {
-                    const cuidVezId = teamActive.length > 0 ? teamActive[diaIndex % teamActive.length] : esc.id_cuidador;
-                    const cuidObj = cuidadoresMap[cuidVezId] || esc.cuidadores;
-                    const pFim = new Date(curr);
-                    pFim.setHours(pFim.getHours() + 24);
+                if (is24h) {
+                  const cuidVezId = teamActive.length > 0 ? teamActive[diaIndex % teamActive.length] : esc.id_cuidador;
+                  const cuidObj = cuidadoresMap[cuidVezId] || esc.cuidadores;
+                  const pInicio = new Date(curr);
+                  pInicio.setHours(startDt.getHours() || 7, startDt.getMinutes() || 0, 0, 0);
+                  const pFim = new Date(pInicio);
+                  pFim.setDate(pFim.getDate() + 1);
+
+                  if (pFim >= agora) {
                     escalasExibicao.push({
                       id: `mem_${esc.id}_${diaIndex}`,
                       escala_pai_id: esc.id,
-                      data_inicio: curr.toISOString(),
+                      data_inicio: pInicio.toISOString(),
                       data_termino: pFim.toISOString(),
                       status: 'agendado',
                       cuidadores: cuidObj
                     });
                     count++;
-                  } else {
-                    // Dia
-                    const diaCuidId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
-                    const diaCuidObj = cuidadoresMap[diaCuidId] || esc.cuidadores;
-                    const dFim = new Date(curr);
-                    dFim.setHours(dFim.getHours() + 12);
+                  }
+                } else {
+                  // Dia (07:00 às 19:00)
+                  const diaCuidId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
+                  const diaCuidObj = cuidadoresMap[diaCuidId] || esc.cuidadores;
+                  const pInicioDia = new Date(curr);
+                  pInicioDia.setHours(7, 0, 0, 0);
+                  const pFimDia = new Date(curr);
+                  pFimDia.setHours(19, 0, 0, 0);
+
+                  if (pFimDia >= agora) {
                     escalasExibicao.push({
                       id: `mem_d_${esc.id}_${diaIndex}`,
                       escala_pai_id: esc.id,
-                      data_inicio: curr.toISOString(),
-                      data_termino: dFim.toISOString(),
+                      data_inicio: pInicioDia.toISOString(),
+                      data_termino: pFimDia.toISOString(),
                       status: 'agendado',
                       cuidadores: diaCuidObj
                     });
                     count++;
+                  }
 
-                    // Noite
-                    const noiteCuidId = (diaIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
-                    const noiteCuidObj = cuidadoresMap[noiteCuidId] || esc.cuidadores;
-                    const nInicio = new Date(dFim);
-                    const nFim = new Date(nInicio);
-                    nFim.setHours(nFim.getHours() + 12);
+                  // Noite (19:00 às 07:00 do dia seguinte)
+                  const noiteCuidId = (diaIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
+                  const noiteCuidObj = cuidadoresMap[noiteCuidId] || esc.cuidadores;
+                  const pInicioNoite = new Date(curr);
+                  pInicioNoite.setHours(19, 0, 0, 0);
+                  const pFimNoite = new Date(curr);
+                  pFimNoite.setDate(pFimNoite.getDate() + 1);
+                  pFimNoite.setHours(7, 0, 0, 0);
+
+                  if (pFimNoite >= agora) {
                     escalasExibicao.push({
                       id: `mem_n_${esc.id}_${diaIndex}`,
                       escala_pai_id: esc.id,
-                      data_inicio: nInicio.toISOString(),
-                      data_termino: nFim.toISOString(),
+                      data_inicio: pInicioNoite.toISOString(),
+                      data_termino: pFimNoite.toISOString(),
                       status: 'agendado',
                       cuidadores: noiteCuidObj
                     });

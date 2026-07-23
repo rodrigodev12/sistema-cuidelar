@@ -2605,9 +2605,9 @@ window.submitEscala = async (e) => {
             if (equipeIds.length > 0) {
               const cuidDaVezId = equipeIds[diaIndex % equipeIds.length];
               const pInicio = new Date(curr);
-              pInicio.setHours(startHour, startMin, 0, 0);
+              pInicio.setHours(startHour || 7, startMin || 0, 0, 0);
               const pFim = new Date(pInicio);
-              pFim.setHours(pInicio.getHours() + 24);
+              pFim.setDate(pFim.getDate() + 1);
 
               plantoes.push({
                 escala_pai_id: escalaId,
@@ -2620,13 +2620,13 @@ window.submitEscala = async (e) => {
               });
             }
           } else {
-            // Dia
+            // Dia (07:00 às 19:00)
             const diaCuidId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
             if (diaCuidId) {
               const pInicio = new Date(curr);
-              pInicio.setHours(startHour, startMin, 0, 0);
-              const pFim = new Date(pInicio);
-              pFim.setHours(pInicio.getHours() + 12);
+              pInicio.setHours(7, 0, 0, 0);
+              const pFim = new Date(curr);
+              pFim.setHours(19, 0, 0, 0);
 
               plantoes.push({
                 escala_pai_id: escalaId,
@@ -2639,13 +2639,14 @@ window.submitEscala = async (e) => {
               });
             }
 
-            // Noite
+            // Noite (19:00 às 07:00 do dia seguinte)
             const noiteCuidId = (diaIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
             if (noiteCuidId) {
               const pInicio = new Date(curr);
-              pInicio.setHours(startHour + 12, startMin, 0, 0);
-              const pFim = new Date(pInicio);
-              pFim.setHours(pInicio.getHours() + 12);
+              pInicio.setHours(19, 0, 0, 0);
+              const pFim = new Date(curr);
+              pFim.setDate(pFim.getDate() + 1);
+              pFim.setHours(7, 0, 0, 0);
 
               plantoes.push({
                 escala_pai_id: escalaId,
@@ -2710,8 +2711,6 @@ window.submitEscala = async (e) => {
         let diaIndex = 0;
         const is24h = freq === '24x48' || freq === '24x36' || freq.includes('24');
         const rate = is24h ? 240 : 120;
-        const startHour = startDt.getHours();
-        const startMin = startDt.getMinutes();
 
         while (curr <= end) {
           if (is24h) {
@@ -2720,9 +2719,9 @@ window.submitEscala = async (e) => {
               const cuidDaVezId = equipeIds[diaIndex % equipeIds.length];
               const cuidDaVezObj = allCuidadores.find(c => c.id === cuidDaVezId);
               const pInicio = new Date(curr);
-              pInicio.setHours(startHour, startMin, 0, 0);
+              pInicio.setHours(startHour || 7, startMin || 0, 0, 0);
               const pFim = new Date(pInicio);
-              pFim.setHours(pInicio.getHours() + 24);
+              pFim.setDate(pFim.getDate() + 1);
 
               novosPlantoes.push({
                 id: 'p_auto_' + window._editingEscalaId + '_' + diaIndex,
@@ -2744,14 +2743,14 @@ window.submitEscala = async (e) => {
               });
             }
           } else {
-            // Dia
+            // Dia (07:00 às 19:00)
             const diaCuidId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
             if (diaCuidId) {
               const cuidDaVezObj = allCuidadores.find(c => c.id === diaCuidId);
               const pInicio = new Date(curr);
-              pInicio.setHours(startHour, startMin, 0, 0);
-              const pFim = new Date(pInicio);
-              pFim.setHours(pInicio.getHours() + 12);
+              pInicio.setHours(7, 0, 0, 0);
+              const pFim = new Date(curr);
+              pFim.setHours(19, 0, 0, 0);
 
               novosPlantoes.push({
                 id: 'p_auto_d_' + window._editingEscalaId + '_' + diaIndex,
@@ -2773,14 +2772,15 @@ window.submitEscala = async (e) => {
               });
             }
 
-            // Noite
+            // Noite (19:00 às 07:00 do dia seguinte)
             const noiteCuidId = (diaIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
             if (noiteCuidId) {
               const cuidDaVezObj = allCuidadores.find(c => c.id === noiteCuidId);
               const pInicio = new Date(curr);
-              pInicio.setHours(startHour + 12, startMin, 0, 0);
-              const pFim = new Date(pInicio);
-              pFim.setHours(pInicio.getHours() + 12);
+              pInicio.setHours(19, 0, 0, 0);
+              const pFim = new Date(curr);
+              pFim.setDate(pFim.getDate() + 1);
+              pFim.setHours(7, 0, 0, 0);
 
               novosPlantoes.push({
                 id: 'p_auto_n_' + window._editingEscalaId + '_' + diaIndex,
