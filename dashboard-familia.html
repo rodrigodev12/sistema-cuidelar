@@ -561,16 +561,27 @@ async function loadFamiliaData() {
       return;
     }
 
+    // Buscar lista completa de cuidadoras para resolução de nomes em equipes
+    const cuidadoresMap = {};
+    try {
+      const { data: dbCuidadores } = await supabase
+        .from('cuidadores')
+        .select('*, usuarios(nome)');
+      (dbCuidadores || []).forEach(c => { cuidadoresMap[c.id] = c; });
+    } catch(eCuid) {
+      console.warn('[CuideLar] Família - Erro ao carregar mapa de cuidadoras:', eCuid);
+    }
+
     console.log('[CuideLar] Família - Idoso carregado:', idosoData.id, idosoData.nome);
 
     // Buscar escalas futuras (incluindo plantões diários e substituições)
     let escalasExibicao = [];
 
-    // 1. Tenta buscar plantões diários diretamente (sem filtro de status para ser mais abrangente)
+    // 1. Tenta buscar plantões diários diretamente
     try {
       const { data: plantoesDiarios, error: pltErr } = await supabase
         .from('plantoes_diarios')
-        .select('*, cuidadores(*, usuarios(nome)), cuidador_substituta:cuidador_substituta_id(*, usuarios(nome))')
+        .select('*, escalas_servicos(status), cuidadores(*, usuarios(nome)), cuidador_substituta:cuidador_substituta_id(*, usuarios(nome))')
         .eq('id_idoso', idosoData.id)
         .gte('data_fim', new Date().toISOString())
         .order('data_inicio')
@@ -580,7 +591,7 @@ async function loadFamiliaData() {
 
       if (!pltErr && plantoesDiarios && plantoesDiarios.length > 0) {
         escalasExibicao = plantoesDiarios
-          .filter(p => ['agendado', 'em_andamento'].includes(p.status))
+          .filter(p => ['agendado', 'em_andamento'].includes(p.status) && p.escalas_servicos?.status !== 'cancelado')
           .map(p => {
             const cuidObj = p.cuidador_substituta_id ? p.cuidador_substituta : p.cuidadores;
             return {
@@ -616,7 +627,7 @@ async function loadFamiliaData() {
           const escalaIds = escalasMensais.map(e => e.id);
           const { data: plantoesPorPai, error: paiErr } = await supabase
             .from('plantoes_diarios')
-            .select('*, cuidadores(*, usuarios(nome)), cuidador_substituta:cuidador_substituta_id(*, usuarios(nome))')
+            .select('*, escalas_servicos(status), cuidadores(*, usuarios(nome)), cuidador_substituta:cuidador_substituta_id(*, usuarios(nome))')
             .in('escala_pai_id', escalaIds)
             .gte('data_fim', new Date().toISOString())
             .order('data_inicio')
@@ -626,7 +637,7 @@ async function loadFamiliaData() {
 
           if (!paiErr && plantoesPorPai && plantoesPorPai.length > 0) {
             escalasExibicao = plantoesPorPai
-              .filter(p => ['agendado', 'em_andamento'].includes(p.status))
+              .filter(p => ['agendado', 'em_andamento'].includes(p.status) && p.escalas_servicos?.status !== 'cancelado')
               .map(p => {
                 const cuidObj = p.cuidador_substituta_id ? p.cuidador_substituta : p.cuidadores;
                 return {
@@ -639,8 +650,8 @@ async function loadFamiliaData() {
                 };
               });
           } else {
-            // 3. Último fallback: gera plantões em memória a partir dos metadados da escala mensal
-            console.log('[CuideLar] Família - Gerando plantões em memória a partir das escalas mensais...');
+            // 3. Fallback: gera plantões em memória a partir da equipe das escalas mensais ativas
+            console.log('[CuideLar] Família - Gerando plantões em memória a partir da equipe...');
             const agora = new Date();
             for (const esc of escalasMensais) {
               const startDt = new Date(esc.data_inicio);
@@ -648,26 +659,32 @@ async function loadFamiliaData() {
               const freq = esc.frequencia_escala || '12x36';
               const is24h = freq.startsWith('24');
 
-              // Extrai equipe dos metadados das observações
+              // Extrai equipe de 4 cuidadoras das observações
               let equipeIds = [];
               if (esc.observacoes && esc.observacoes.includes('__equipe__:')) {
                 try {
                   const teamPart = esc.observacoes.split('__equipe__:')[1];
                   const parsed = JSON.parse(teamPart.trim());
-                  if (Array.isArray(parsed)) equipeIds = parsed.filter(Boolean);
+                  if (Array.isArray(parsed)) equipeIds = parsed;
                 } catch(e) {}
               }
-              if (equipeIds.length === 0 && esc.id_cuidador) equipeIds = [esc.id_cuidador];
+              const c1 = equipeIds[0] || esc.id_cuidador;
+              const c2 = equipeIds[1] || c1;
+              const c3 = equipeIds[2] || c1;
+              const c4 = equipeIds[3] || c2;
+              const teamActive = [c1, c2, c3, c4].filter(Boolean);
 
               const curr = new Date(agora);
               curr.setHours(startDt.getHours(), startDt.getMinutes(), 0, 0);
               let diaIndex = Math.floor((agora - startDt) / 86400000);
+              if (diaIndex < 0) diaIndex = 0;
               let count = 0;
 
               while (curr <= endDt && count < 15) {
                 if (curr >= agora) {
                   if (is24h) {
-                    const cidx = diaIndex % equipeIds.length;
+                    const cuidVezId = teamActive.length > 0 ? teamActive[diaIndex % teamActive.length] : esc.id_cuidador;
+                    const cuidObj = cuidadoresMap[cuidVezId] || esc.cuidadores;
                     const pFim = new Date(curr);
                     pFim.setHours(pFim.getHours() + 24);
                     escalasExibicao.push({
@@ -676,11 +693,13 @@ async function loadFamiliaData() {
                       data_inicio: curr.toISOString(),
                       data_termino: pFim.toISOString(),
                       status: 'agendado',
-                      cuidadores: esc.cuidadores
+                      cuidadores: cuidObj
                     });
                     count++;
                   } else {
                     // Dia
+                    const diaCuidId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
+                    const diaCuidObj = cuidadoresMap[diaCuidId] || esc.cuidadores;
                     const dFim = new Date(curr);
                     dFim.setHours(dFim.getHours() + 12);
                     escalasExibicao.push({
@@ -689,10 +708,13 @@ async function loadFamiliaData() {
                       data_inicio: curr.toISOString(),
                       data_termino: dFim.toISOString(),
                       status: 'agendado',
-                      cuidadores: esc.cuidadores
+                      cuidadores: diaCuidObj
                     });
                     count++;
+
                     // Noite
+                    const noiteCuidId = (diaIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
+                    const noiteCuidObj = cuidadoresMap[noiteCuidId] || esc.cuidadores;
                     const nInicio = new Date(dFim);
                     const nFim = new Date(nInicio);
                     nFim.setHours(nFim.getHours() + 12);
@@ -702,7 +724,7 @@ async function loadFamiliaData() {
                       data_inicio: nInicio.toISOString(),
                       data_termino: nFim.toISOString(),
                       status: 'agendado',
-                      cuidadores: esc.cuidadores
+                      cuidadores: noiteCuidObj
                     });
                     count++;
                   }
