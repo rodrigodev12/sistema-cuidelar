@@ -2467,7 +2467,20 @@ window.filterIdosos = () => {
 };
 
 window.filterCuidadores = () => {
-  const q = document.getElementById('swindow.submitEscala = async (e) => {
+  const q = document.getElementById('searchCuidadores')?.value.toLowerCase() || '';
+  renderCuidadores(allCuidadores.filter(c => (c.usuarios?.nome||'').toLowerCase().includes(q)));
+};
+
+window.filterCuidadorStatus = (status, el) => {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderCuidadores(status ? allCuidadores.filter(c => c.status === status) : allCuidadores);
+};
+
+// ============================================================
+// SUBMIT FORMS
+// ============================================================
+window.submitEscala = async (e) => {
   e.preventDefault();
   try {
     const inicio  = document.getElementById('escInicio').value;
