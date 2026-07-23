@@ -585,7 +585,7 @@ async function loadFamiliaData() {
         .eq('id_idoso', idosoData.id)
         .gte('data_fim', new Date().toISOString())
         .order('data_inicio')
-        .limit(30);
+        .limit(100);
 
       console.log('[CuideLar] Família - plantoes_diarios (por id_idoso):', plantoesDiarios?.length ?? 0, pltErr);
 
@@ -631,7 +631,7 @@ async function loadFamiliaData() {
             .in('escala_pai_id', escalaIds)
             .gte('data_fim', new Date().toISOString())
             .order('data_inicio')
-            .limit(30);
+            .limit(100);
 
           console.log('[CuideLar] Família - plantões por escala_pai_id:', plantoesPorPai?.length ?? 0, paiErr);
 
@@ -677,9 +677,8 @@ async function loadFamiliaData() {
               const curr = new Date(startDt);
               curr.setHours(0, 0, 0, 0);
               let diaIndex = 0;
-              let count = 0;
 
-              while (curr <= endDt && count < 15) {
+              while (curr <= endDt) {
                 if (is24h) {
                   const cuidVezId = teamActive.length > 0 ? teamActive[diaIndex % teamActive.length] : esc.id_cuidador;
                   const cuidObj = cuidadoresMap[cuidVezId] || esc.cuidadores;
@@ -697,7 +696,6 @@ async function loadFamiliaData() {
                       status: 'agendado',
                       cuidadores: cuidObj
                     });
-                    count++;
                   }
                 } else {
                   // Dia (07:00 às 19:00)
@@ -717,7 +715,6 @@ async function loadFamiliaData() {
                       status: 'agendado',
                       cuidadores: diaCuidObj
                     });
-                    count++;
                   }
 
                   // Noite (19:00 às 07:00 do dia seguinte)
@@ -738,7 +735,6 @@ async function loadFamiliaData() {
                       status: 'agendado',
                       cuidadores: noiteCuidObj
                     });
-                    count++;
                   }
                 }
                 curr.setDate(curr.getDate() + 1);
