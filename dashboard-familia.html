@@ -564,14 +564,17 @@ async function loadFamiliaData() {
     // Buscar escalas futuras (incluindo plantões diários e substituições)
     let escalasExibicao = [];
     try {
-      const { data: plantoesDiarios } = await supabase
+      const { data: plantoesDiarios, error: pltErr } = await supabase
         .from('plantoes_diarios')
         .select('*, idosos(*), cuidadores(*, usuarios(nome)), cuidador_substituta:cuidador_substituta_id(*, usuarios(nome))')
         .eq('id_idoso', idosoData?.id)
+        .in('status', ['agendado', 'em_andamento'])
         .gte('data_fim', new Date().toISOString())
         .order('data_inicio')
-        .limit(15);
-      
+        .limit(20);
+
+      if (pltErr) console.warn('Erro ao buscar plantoes_diarios (id_idoso):', pltErr);
+
       if (plantoesDiarios && plantoesDiarios.length > 0) {
         escalasExibicao = plantoesDiarios.map(p => {
           // Se for substituição, exibe a substituta como cuidadora do dia
@@ -586,6 +589,43 @@ async function loadFamiliaData() {
           };
         });
       }
+
+      // Se não encontrou plantões via id_idoso, tenta via escala_pai_id das escalas do idoso
+      if (escalasExibicao.length === 0) {
+        const { data: escalasMensais } = await supabase
+          .from('escalas_servicos')
+          .select('id')
+          .eq('id_idoso', idosoData?.id)
+          .eq('tipo_cobranca', 'Mensal Fixado')
+          .eq('status', 'agendado')
+          .limit(5);
+
+        if (escalasMensais && escalasMensais.length > 0) {
+          const escalaIds = escalasMensais.map(e => e.id);
+          const { data: plantoesPorEscalaPai } = await supabase
+            .from('plantoes_diarios')
+            .select('*, idosos(*), cuidadores(*, usuarios(nome)), cuidador_substituta:cuidador_substituta_id(*, usuarios(nome))')
+            .in('escala_pai_id', escalaIds)
+            .in('status', ['agendado', 'em_andamento'])
+            .gte('data_fim', new Date().toISOString())
+            .order('data_inicio')
+            .limit(20);
+
+          if (plantoesPorEscalaPai && plantoesPorEscalaPai.length > 0) {
+            escalasExibicao = plantoesPorEscalaPai.map(p => {
+              const cuidObj = p.cuidador_substituta_id ? p.cuidador_substituta : p.cuidadores;
+              return {
+                id: p.id,
+                escala_pai_id: p.escala_pai_id,
+                data_inicio: p.data_inicio,
+                data_termino: p.data_fim,
+                status: p.status,
+                cuidadores: cuidObj
+              };
+            });
+          }
+        }
+      }
     } catch(errPlt) {
       console.warn('Erro ao consultar plantoes_diarios para familia:', errPlt);
     }
@@ -597,12 +637,13 @@ async function loadFamiliaData() {
         .eq('id_idoso', idosoData?.id)
         .neq('tipo_cobranca', 'Mensal Fixado')
         .gte('data_termino', new Date().toISOString())
+        .in('status', ['agendado', 'em_andamento'])
         .order('data_inicio')
         .limit(10);
-      
+
       if (escalasNormais && escalasNormais.length > 0) {
         const complementares = escalasNormais.filter(e => {
-          const jaTemDiario = escalasExibicao.some(p => 
+          const jaTemDiario = escalasExibicao.some(p =>
             (p.escala_pai_id === e.id || p.id === e.id) &&
             new Date(p.data_inicio).toDateString() === new Date(e.data_inicio).toDateString()
           );
@@ -626,6 +667,7 @@ async function loadFamiliaData() {
     if (DEMO_MODE) showDemoData(); else showEmptyState();
   }
 }
+
 
 let currentDemoProfile = 'idoso';
 
