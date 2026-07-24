@@ -1426,6 +1426,19 @@ async function loadAllData() {
       .order('data_inicio', { ascending: true })
       .limit(200);
     allEscalas = escalas || [];
+
+    // Plantões Diários (Substituições / Rodízios)
+    try {
+      const { data: plantoesDb, error: pltErr } = await supabase.from('plantoes_diarios')
+        .select('*, idosos(nome), cuidadores:cuidadores!plantoes_diarios_id_cuidador_fkey(*, usuarios(nome)), cuidador_substituta:cuidadores!plantoes_diarios_cuidador_substituta_id_fkey(*, usuarios(nome))')
+        .order('data_inicio', { ascending: true });
+      if (pltErr) throw pltErr;
+      allPlantoesDiarios = plantoesDb || [];
+    } catch (ePlt) {
+      console.warn('[CuideLar] Admin - Erro ao carregar plantões diários do banco:', ePlt);
+      allPlantoesDiarios = [];
+    }
+
     autoGerarPlantoesRodizioSeNecessario();
     renderEscalas(allEscalas);
     renderEscalasHoje(allEscalas);

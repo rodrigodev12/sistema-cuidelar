@@ -581,7 +581,7 @@ async function loadFamiliaData() {
     try {
       const { data: plantoesDiarios, error: pltErr } = await supabase
         .from('plantoes_diarios')
-        .select('*, escalas_servicos(status), cuidadores(*, usuarios(nome)), cuidador_substituta:cuidador_substituta_id(*, usuarios(nome))')
+        .select('*, escalas_servicos(status), cuidadores:cuidadores!plantoes_diarios_id_cuidador_fkey(*, usuarios(nome)), cuidador_substituta:cuidadores!plantoes_diarios_cuidador_substituta_id_fkey(*, usuarios(nome))')
         .eq('id_idoso', idosoData.id)
         .gte('data_fim', new Date().toISOString())
         .order('data_inicio')
@@ -627,7 +627,7 @@ async function loadFamiliaData() {
           const escalaIds = escalasMensais.map(e => e.id);
           const { data: plantoesPorPai, error: paiErr } = await supabase
             .from('plantoes_diarios')
-            .select('*, escalas_servicos(status), cuidadores(*, usuarios(nome)), cuidador_substituta:cuidador_substituta_id(*, usuarios(nome))')
+            .select('*, escalas_servicos(status), cuidadores:cuidadores!plantoes_diarios_id_cuidador_fkey(*, usuarios(nome)), cuidador_substituta:cuidadores!plantoes_diarios_cuidador_substituta_id_fkey(*, usuarios(nome))')
             .in('escala_pai_id', escalaIds)
             .gte('data_fim', new Date().toISOString())
             .order('data_inicio')
