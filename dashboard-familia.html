@@ -600,7 +600,9 @@ async function loadFamiliaData() {
               data_inicio: p.data_inicio,
               data_termino: p.data_fim,
               status: p.status,
-              cuidadores: cuidObj
+              cuidadores: cuidObj,
+              e_substituicao: !!p.cuidador_substituta_id,
+              nome_original: p.cuidador_substituta_id ? (p.cuidadores?.usuarios?.nome || 'titular') : null
             };
           });
       }
@@ -639,15 +641,17 @@ async function loadFamiliaData() {
             escalasExibicao = plantoesPorPai
               .filter(p => ['agendado', 'em_andamento'].includes(p.status) && p.escalas_servicos?.status !== 'cancelado')
               .map(p => {
-                const cuidObj = p.cuidador_substituta_id ? p.cuidador_substituta : p.cuidadores;
-                return {
-                  id: p.id,
-                  escala_pai_id: p.escala_pai_id,
-                  data_inicio: p.data_inicio,
-                  data_termino: p.data_fim,
-                  status: p.status,
-                  cuidadores: cuidObj
-                };
+                 const cuidObj = p.cuidador_substituta_id ? p.cuidador_substituta : p.cuidadores;
+                 return {
+                   id: p.id,
+                   escala_pai_id: p.escala_pai_id,
+                   data_inicio: p.data_inicio,
+                   data_termino: p.data_fim,
+                   status: p.status,
+                   cuidadores: cuidObj,
+                   e_substituicao: !!p.cuidador_substituta_id,
+                   nome_original: p.cuidador_substituta_id ? (p.cuidadores?.usuarios?.nome || 'titular') : null
+                 };
               });
           } else {
             // 3. Fallback: gera plantões em memória a partir da equipe das escalas mensais ativas
@@ -1115,6 +1119,7 @@ function renderPlantoes(escalas) {
       </div>
       <div class="plantao-info">
         <div class="plantao-name">👨‍⚕️ ${e.cuidadores?.usuarios?.nome || 'Cuidador(a)'}</div>
+        ${e.e_substituicao ? `<div style="font-size:0.75rem; color:var(--primary); font-weight:500; margin-top:2px;">🔄 Substituta de ${e.nome_original || 'titular'}</div>` : ''}
         <div class="plantao-time">
           ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} – 
           ${fim.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
