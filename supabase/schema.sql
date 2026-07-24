@@ -391,7 +391,7 @@ CREATE TABLE IF NOT EXISTS public.plantoes_diarios (
     id_cuidador UUID REFERENCES public.cuidadores(id) ON DELETE CASCADE,
     data_inicio TIMESTAMP WITH TIME ZONE NOT NULL,
     data_fim TIMESTAMP WITH TIME ZONE NOT NULL,
-    status TEXT CHECK (status IN ('agendado', 'concluido', 'substituido', 'cancelado')) DEFAULT 'agendado',
+    status TEXT CHECK (status IN ('agendado', 'em_andamento', 'concluido', 'substituido', 'cancelado')) DEFAULT 'agendado',
     e_substituicao BOOLEAN DEFAULT false,
     cuidador_substituta_id UUID REFERENCES public.cuidadores(id) ON DELETE SET NULL,
     observacoes TEXT,
