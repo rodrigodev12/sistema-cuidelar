@@ -843,7 +843,7 @@
     /* ── MOBILE RESPONSIVENESS ───────────────── */
     @media (max-width: 820px) {
       .slide {
-        padding: 40px 16px 125px 16px !important;
+        padding: 30px 16px 140px 16px !important;
         justify-content: flex-start;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -854,7 +854,7 @@
         min-height: 100%;
         justify-content: flex-start;
         padding-top: 5px;
-        padding-bottom: 30px;
+        padding-bottom: 70px !important;
       }
 
       .two,
@@ -925,10 +925,30 @@
       }
 
       .nav {
-        bottom: 12px;
-        padding: 7px 14px;
-        gap: 6px;
-        max-width: 92vw;
+        bottom: 8px !important;
+        padding: 4px 12px !important;
+        gap: 8px !important;
+        background: rgba(15, 23, 42, 0.92) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(16px);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+      }
+
+      .dots {
+        display: none !important;
+      }
+
+      .nbtn {
+        width: 28px !important;
+        height: 28px !important;
+        background: rgba(255, 255, 255, 0.18) !important;
+        color: #FFFFFF !important;
+      }
+
+      .ctr {
+        color: #FFFFFF !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
       }
 
       .hint, .fsBtn {
@@ -938,7 +958,7 @@
 
     @media (max-width: 480px) {
       .slide {
-        padding: 35px 12px 115px 12px !important;
+        padding: 25px 12px 140px 12px !important;
       }
 
       .phone-mockup {
@@ -951,19 +971,6 @@
 
       .u0 img {
         height: 145px !important;
-      }
-
-      .dots {
-        gap: 3px;
-      }
-
-      .dot {
-        width: 6px;
-        height: 6px;
-      }
-
-      .dot.on {
-        width: 18px;
       }
     }
   </style>
