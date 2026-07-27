@@ -236,7 +236,25 @@
 
     </div>
 
-
+    <!-- NAVEGAÇÃO INFERIOR FIXA DA FAMÍLIA -->
+    <nav class="familia-bottom-nav" aria-label="Navegação inferior família">
+      <button class="bottom-nav-item active" id="bnav-feed" onclick="showFamiliaSection('feed')">
+        <i data-lucide="activity" aria-hidden="true"></i>
+        <span>Feed</span>
+      </button>
+      <button class="bottom-nav-item" id="bnav-perfil" onclick="showFamiliaSection('perfil')">
+        <i data-lucide="heart" aria-hidden="true"></i>
+        <span>Perfil</span>
+      </button>
+      <button class="bottom-nav-item" id="bnav-plantoes" onclick="showFamiliaSection('plantoes')">
+        <i data-lucide="calendar" aria-hidden="true"></i>
+        <span>Plantões</span>
+      </button>
+      <button class="bottom-nav-item" id="bnav-avaliacao" onclick="showFamiliaSection('avaliacao')">
+        <i data-lucide="star" aria-hidden="true"></i>
+        <span>Avaliar</span>
+      </button>
+    </nav>
 
     <!-- ==============================
          SEÇÃO: AVALIAR CUIDADOR
@@ -1260,8 +1278,18 @@ window.showFamiliaSection = (name, el) => {
   localStorage.setItem('familia_active_section', name);
   document.querySelectorAll('.familia-section').forEach(s => s.style.display = 'none');
   document.querySelectorAll('.familia-nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById(`section-${name}`).style.display = '';
-  if (el) el.classList.add('active');
+  document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
+  
+  const targetSection = document.getElementById(`section-${name}`);
+  if (targetSection) targetSection.style.display = '';
+  
+  const sideEl = document.getElementById(`nav-${name}`);
+  if (sideEl) sideEl.classList.add('active');
+  
+  const bottomEl = document.getElementById(`bnav-${name}`);
+  if (bottomEl) bottomEl.classList.add('active');
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   lucide.createIcons();
 };
 
