@@ -231,13 +231,21 @@
 
     .hero-tags-container {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       justify-content: center;
-      margin-top: 24px;
+      align-items: center;
+      margin-top: 18px;
       width: 100%;
       position: relative;
       z-index: 2;
+    }
+
+    .badge-glass-green {
+      background: rgba(34, 197, 94, 0.22);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      backdrop-filter: blur(8px);
     }
 
     .badge-glass {
@@ -1088,8 +1096,29 @@
       }
 
       .hero-tags-container {
-        margin-top: 18px !important;
-        gap: 8px !important;
+        margin-top: 14px !important;
+        gap: 6px !important;
+        justify-content: center !important;
+      }
+
+      .hero-tags-container .badge {
+        font-size: 0.72rem !important;
+        padding: 4px 10px !important;
+        white-space: nowrap !important;
+      }
+
+      .scroll-cue {
+        bottom: 58px !important;
+        padding: 6px 14px !important;
+        font-size: 0.72rem !important;
+      }
+
+      .chip {
+        bottom: -8px !important;
+        right: 50% !important;
+        transform: translateX(50%) !important;
+        padding: 6px 10px !important;
+        white-space: nowrap !important;
       }
 
       .phone-mockup {
@@ -1252,7 +1281,8 @@
         </div>
 
         <!-- RIGHT: celular + tags posicionadas por baixo -->
-        <div class="screen-right r1" style="position:relative; display:flex; flex-direction:column; align-items:center;">
+        <div class="screen-right r1"
+          style="position:relative; display:flex; flex-direction:column; align-items:center;">
           <div class="phone-mockup float">
             <img src="assets/screenshots/tela 1.png" alt="Tela de Login CuideLar no iPhone" />
             <!-- chip -->
@@ -1265,9 +1295,9 @@
             </div>
           </div>
 
-          <!-- Tags posicionadas por baixo do celular -->
+          <!-- Tags posicionadas por baixo do celular em linha limpa -->
           <div class="u4 hero-tags-container">
-            <span class="badge bg">✅ Fácil de usar</span>
+            <span class="badge badge-glass-green">✅ Fácil de usar</span>
             <span class="badge badge-glass">📱 Funciona no celular</span>
             <span class="badge badge-glass">🔒 100% seguro</span>
           </div>
@@ -1720,7 +1750,7 @@
           </h2>
           <p
             style="font-size:clamp(.88rem,1.5vw,1.1rem);line-height:1.7;color:rgba(255,255,255,.65);max-width:580px;margin:0 auto;">
-            Com o Cuidelar, você tem visibilidade total sobre o cuidado do seu familiar,
+            Com o Sistema do Cliente, você tem visibilidade total sobre o cuidado do seu familiar,
             de qualquer lugar, em qualquer dispositivo, 24 horas por dia.
           </p>
         </div>
