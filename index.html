@@ -254,7 +254,7 @@
     lucide.createIcons();
 
     let supabase = null;
-    let DEMO_MODE = true;
+    let DEMO_MODE = false;
 
     // Credenciais demo
     const DEMO_USERS = {
@@ -272,7 +272,7 @@
     async function initDatabase() {
       try {
         const clientModule = await import('./js/supabase-client.js?v=6');
-        DEMO_MODE = clientModule.DEMO_MODE;
+        DEMO_MODE = false;
         supabase = clientModule.supabase;
       } catch (e) {
         console.warn('Erro ao carregar cliente Supabase, usando stubs locais.', e);
