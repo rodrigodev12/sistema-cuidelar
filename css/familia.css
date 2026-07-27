@@ -574,18 +574,24 @@
 }
 
 /* ============================================================
-   NAVEGAÇÃO INFERIOR (ESTÁTICA)
+   NAVEGAÇÃO INFERIOR FIXA (FAMÍLIA)
    ============================================================ */
 .familia-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(250, 244, 242, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-around;
-  width: 100%;
-  height: 60px;
-  background: transparent;
-  border-top: 1px solid var(--border);
   padding: 0 0.5rem;
-  z-index: 10;
+  z-index: 1000;
+  box-shadow: 0 -4px 20px rgba(92, 60, 103, 0.12);
 }
 
 .bottom-nav-item {
@@ -603,7 +609,7 @@
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
   padding: 4px 0;
 }
 
@@ -614,7 +620,7 @@
 }
 
 .bottom-nav-item:hover {
-  color: var(--primary);
+  color: var(--brand-purple);
 }
 
 .bottom-nav-item.active {
@@ -627,7 +633,11 @@
   filter: drop-shadow(0 0 6px rgba(224, 122, 138, 0.5));
 }
 
+.familia-page {
+  padding-bottom: 84px !important;
+}
+
 @media (max-width: 480px) {
   .fat-summary { grid-template-columns: 1fr; }
-  .familia-page { padding: 1rem; }
+  .familia-page { padding: 1rem 1rem 84px 1rem !important; }
 }

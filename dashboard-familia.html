@@ -55,11 +55,60 @@
 
   <!-- MAIN CONTENT -->
   <main class="familia-content">
+    <div class="familia-page">
 
-    <!-- ==============================
-         SEÇÃO: FEED
-         ============================== -->
-    <div class="familia-page familia-section" id="section-feed">
+      <!-- TOP COMPACT HERO BANNER (Assistido, Status & ÚLTIMO REGISTRO) -->
+      <div class="familia-top-hero animate-fade-in" style="margin-bottom:1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.25rem;box-shadow:var(--shadow-sm);">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div class="idoso-hero-photo" id="sideIdosoPhoto" style="width:58px;height:58px;font-size:1.8rem;border:2px solid var(--brand-rose);">👴</div>
+            <div>
+              <h2 id="sideIdosoNome" style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--text-primary);margin:0;">Maria das Graças</h2>
+              <div class="idoso-hero-age" id="sideIdosoAge" style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">83 anos · Tipo A+</div>
+            </div>
+          </div>
+          <div id="cuidadorStatus">
+            <div class="cuidador-online">
+              <div class="status-dot active" aria-hidden="true"></div>
+              Cuidadora presente
+            </div>
+          </div>
+        </div>
+
+        <!-- ÚLTIMO REGISTRO (SINAIS VITAIS) -->
+        <div>
+          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:0.6rem;">
+            ⚡ Último Registro de Hoje
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:0.6rem;">
+            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
+              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">💓 Batimentos</div>
+              <div style="font-size:0.88rem;font-weight:800;color:var(--text-primary);" id="lastBat">72 bpm</div>
+            </div>
+            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
+              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">🩺 Pressão</div>
+              <div style="font-size:0.88rem;font-weight:800;color:var(--text-primary);" id="lastPA">118/78</div>
+            </div>
+            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
+              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">🌡️ Temp.</div>
+              <div style="font-size:0.88rem;font-weight:800;color:var(--text-primary);" id="lastTemp">36.4°C</div>
+            </div>
+            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
+              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">🍽️ Alimentação</div>
+              <div style="font-size:0.88rem;font-weight:800;color:var(--success);" id="lastAlim">Aceitou</div>
+            </div>
+            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
+              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">💊 Medicamento</div>
+              <div style="font-size:0.88rem;font-weight:800;color:var(--success);" id="lastMed">✅ OK</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==============================
+           SEÇÃO: FEED
+           ============================== -->
+      <div class="familia-section" id="section-feed">
 
       <div class="feed-toolbar">
         <div>
@@ -92,10 +141,10 @@
 
     </div>
 
-    <!-- ==============================
-         SEÇÃO: PERFIL DE SAÚDE
-         ============================== -->
-    <div class="familia-page familia-section" id="section-perfil" style="display:none">
+      <!-- ==============================
+           SEÇÃO: PERFIL DE SAÚDE
+           ============================== -->
+      <div class="familia-section" id="section-perfil" style="display:none">
       <h1 style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;">❤️ Perfil de Saúde</h1>
 
       <div class="saude-section animate-fade-in">
@@ -163,10 +212,10 @@
 
     </div>
 
-    <!-- ==============================
-         SEÇÃO: PRÓXIMOS PLANTÕES
-         ============================== -->
-    <div class="familia-page familia-section" id="section-plantoes" style="display:none">
+      <!-- ==============================
+           SEÇÃO: PRÓXIMOS PLANTÕES
+           ============================== -->
+      <div class="familia-section" id="section-plantoes" style="display:none">
       <h1 style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;">📅 Próximos Plantões</h1>
 
       <div class="plantoes-card animate-fade-in" id="plantoesCard">
@@ -195,10 +244,10 @@
       </button>
     </nav>
 
-    <!-- ==============================
-         SEÇÃO: AVALIAR CUIDADOR
-         ============================== -->
-    <div class="familia-page familia-section" id="section-avaliacao" style="display:none">
+      <!-- ==============================
+           SEÇÃO: AVALIAR CUIDADOR
+           ============================== -->
+      <div class="familia-section" id="section-avaliacao" style="display:none">
       <h1 style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;">⭐ Avaliar Cuidador(a)</h1>
 
       <div class="saude-section animate-fade-in">
@@ -226,13 +275,14 @@
         </button>
       </div>
 
-    </div>
+    </div><!-- /.familia-section -->
 
+    </div><!-- /.familia-page -->
   </main>
 
 </div>
 
-<!-- NAVEGAÇÃO INFERIOR ESTÁTICA (FAMÍLIA) -->
+<!-- NAVEGAÇÃO INFERIOR FIXA DA FAMÍLIA -->
 <nav class="familia-bottom-nav" aria-label="Navegação inferior família">
   <button class="bottom-nav-item active" id="bnav-feed" onclick="showFamiliaSection('feed')">
     <i data-lucide="activity" aria-hidden="true"></i>
