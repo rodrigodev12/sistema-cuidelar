@@ -173,8 +173,15 @@
 
     /* ── SCROLL PROMPT CUE (SOCIAL REEL STYLE) ── */
     @keyframes bounceY {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(8px); }
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(8px);
+      }
     }
 
     .scroll-cue {
@@ -197,7 +204,7 @@
       cursor: pointer;
       z-index: 10;
       animation: bounceY 2s infinite ease-in-out;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
       transition: background .2s, transform .2s;
     }
 
@@ -205,7 +212,7 @@
       background: rgba(255, 255, 255, 0.22);
     }
 
-    /* ── HERO LOGO ─────────────────────────── */
+    /* ── HERO LOGO & TAGS ───────────────────── */
     .logo-hero-box {
       display: flex;
       justify-content: flex-start;
@@ -219,7 +226,25 @@
       display: block;
       /* mix-blend-mode: screen remove o fundo branco do PNG no fundo escuro */
       mix-blend-mode: screen;
-      filter: brightness(1.1) drop-shadow(0 0 16px rgba(255,255,255,0.2));
+      filter: brightness(1.1) drop-shadow(0 0 16px rgba(255, 255, 255, 0.2));
+    }
+
+    .hero-tags-container {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 24px;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .badge-glass {
+      background: rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(8px);
     }
 
     /* ── ARROW NAV BUTTONS ───────────────────── */
@@ -980,8 +1005,9 @@
     .slide {
       opacity: 0;
       transform: translateY(40px);
-      transition: opacity .6s cubic-bezier(.4,0,.2,1), transform .6s cubic-bezier(.4,0,.2,1);
+      transition: opacity .6s cubic-bezier(.4, 0, .2, 1), transform .6s cubic-bezier(.4, 0, .2, 1);
     }
+
     .slide.in-view {
       opacity: 1;
       transform: translateY(0);
@@ -1054,11 +1080,25 @@
 
       .logo-hero-box {
         justify-content: center !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 8px !important;
       }
 
       .hero-logo-img {
-        height: 170px !important;
+        height: 110px !important;
+      }
+
+      .hero-tags-container {
+        margin-top: 14px !important;
+        gap: 6px !important;
+      }
+
+      .phone-mockup {
+        max-width: 190px !important;
+        margin: 0 auto !important;
+      }
+
+      .phone-mockup img {
+        max-height: 270px !important;
       }
 
       .u4 {
@@ -1071,7 +1111,9 @@
         margin: 0 auto;
       }
 
-      .irow, .card, .gc-card {
+      .irow,
+      .card,
+      .gc-card {
         text-align: left;
       }
 
@@ -1125,19 +1167,23 @@
 
     @media (max-width: 480px) {
       .slide {
-        padding: 45px 12px 85px 12px !important;
+        padding: 40px 12px 80px 12px !important;
       }
 
       .phone-mockup {
-        max-width: 185px !important;
+        max-width: 170px !important;
       }
 
       .phone-mockup img {
-        max-height: 320px !important;
+        max-height: 235px !important;
       }
 
       .hero-logo-img {
-        height: 145px !important;
+        height: 85px !important;
+      }
+
+      .hero-tags-container {
+        margin-top: 10px !important;
       }
     }
   </style>
@@ -1173,13 +1219,18 @@
         <div>
           <!-- Logo completa com fundo transparente via mix-blend-mode -->
           <div class="u0 logo-hero-box">
-            <img src="assets/logo-cuidelar.png" alt="CuideLar — Assistência Domiciliar e Hospitalar" class="hero-logo-img"
-              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+            <img src="assets/logo-cuidelar.png" alt="CuideLar — Assistência Domiciliar e Hospitalar"
+              class="hero-logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
             <div style="display:none;align-items:center;gap:10px;">
-              <div style="width:48px;height:48px;background:rgba(255,255,255,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🏠</div>
+              <div
+                style="width:48px;height:48px;background:rgba(255,255,255,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">
+                🏠</div>
               <div>
-                <div style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:var(--white);">CuideLar</div>
-                <div style="font-family:'Outfit',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.2em;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:2px;">Assistência Domiciliar e Hospitalar</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:var(--white);">CuideLar
+                </div>
+                <div
+                  style="font-family:'Outfit',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.2em;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:2px;">
+                  Assistência Domiciliar e Hospitalar</div>
               </div>
             </div>
           </div>
@@ -1193,35 +1244,32 @@
             Seu familiar<br />em boas mãos <br /><span class="g">você sempre atualizado.</span>
           </h1>
 
-          <p class="lead-dark u3" style="margin-bottom:26px;max-width:500px;">
-            Neste guia rápido, você vai ver <strong style="color:rgba(255,255,255,.9);">todas as telas do
+          <p class="lead-dark u3" style="margin-bottom:20px;max-width:500px;">
+            Neste guia rápido, você vai ver <strong style="color:rgba(255,255,255,.95);">todas as telas do
               sistema</strong>
             e entender exatamente como acompanhar o cuidado do seu familiar, com transparência e segurança.
           </p>
-
-          <div class="u4" style="display:flex;gap:10px;flex-wrap:wrap;">
-            <span class="badge bg">✅ Fácil de usar</span>
-            <span class="badge"
-              style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.2);">📱
-              Funciona no celular</span>
-            <span class="badge"
-              style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.2);">🔒
-              100% seguro</span>
-          </div>
         </div>
 
-        <!-- RIGHT: login real no celular -->
-        <div class="screen-right r1" style="position:relative;">
+        <!-- RIGHT: celular + tags posicionadas por baixo -->
+        <div class="screen-right r1" style="position:relative; display:flex; flex-direction:column; align-items:center;">
           <div class="phone-mockup float">
             <img src="assets/screenshots/tela 1.png" alt="Tela de Login CuideLar no iPhone" />
-          </div>
-          <!-- chip -->
-          <div class="chip" style="bottom:-10px;right:-10px;">
-            <div class="chip-icon">🔒</div>
-            <div>
-              <div class="chip-label">Acesso</div>
-              <div class="chip-value">Exclusivo da família</div>
+            <!-- chip -->
+            <div class="chip" style="bottom:-10px;right:-10px;">
+              <div class="chip-icon">🔒</div>
+              <div>
+                <div class="chip-label">Acesso</div>
+                <div class="chip-value">Exclusivo da família</div>
+              </div>
             </div>
+          </div>
+
+          <!-- Tags posicionadas por baixo do celular -->
+          <div class="u4 hero-tags-container">
+            <span class="badge bg">✅ Fácil de usar</span>
+            <span class="badge badge-glass">📱 Funciona no celular</span>
+            <span class="badge badge-glass">🔒 100% seguro</span>
           </div>
         </div>
       </div>
@@ -1242,7 +1290,7 @@
           <div class="eyebrow u0">Passo 1 de 5 — Primeiro Acesso</div>
           <h2 class="stitle u1">Como entrar no sistema</h2>
           <p class="lead-light u2" style="max-width:560px;margin:10px auto 0;text-align:center;">
-            Acesso simples em qualquer dispositivo — sem precisar instalar nenhum aplicativo.
+            Acesso simples em qualquer dispositivo, sem precisar instalar nenhum aplicativo.
           </p>
         </div>
 
@@ -1343,7 +1391,7 @@
               <div class="irow-icon" style="background:rgba(192,82,122,.1);">🍽️</div>
               <div>
                 <div class="irow-title">Alimentação documentada</div>
-                <div class="irow-desc">Café da manhã, almoço, lanche e jantar — com nível de aceitação do seu familiar
+                <div class="irow-desc">Café da manhã, almoço, lanche e jantar, com nível de aceitação do seu familiar
                 </div>
               </div>
             </div>
@@ -1561,7 +1609,7 @@
                 <div class="tl-dot" style="background:rgba(155,89,182,.15);color:var(--purple-mid);">4️⃣</div>
                 <div>
                   <div class="tl-title">Deixe um comentário (opcional)</div>
-                  <div class="tl-desc">Descreva o atendimento com palavras — pontos positivos, observações ou sugestões.
+                  <div class="tl-desc">Descreva o atendimento com palavras, pontos positivos, observações ou sugestões.
                   </div>
                 </div>
               </div>
@@ -1672,26 +1720,39 @@
           </h2>
           <p
             style="font-size:clamp(.88rem,1.5vw,1.1rem);line-height:1.7;color:rgba(255,255,255,.65);max-width:580px;margin:0 auto;">
-            Com o Cuidelar, você tem visibilidade total sobre o cuidado do seu familiar —
+            Com o Cuidelar, você tem visibilidade total sobre o cuidado do seu familiar,
             de qualquer lugar, em qualquer dispositivo, 24 horas por dia.
           </p>
         </div>
 
         <!-- QUICK RECAP CARDS -->
-        <div class="u2" style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;width:100%;max-width:680px;margin:0 auto;">
-          <div style="flex:1;min-width:130px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(16px);border-radius:16px;padding:16px 10px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
-            <div style="font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:900;color:#FFFFFF;line-height:1;margin-bottom:6px;text-shadow:0 2px 10px rgba(0,0,0,0.5);">5</div>
-            <div style="font-size:.8rem;font-weight:600;color:rgba(255,255,255,0.9);line-height:1.25;">Telas para você</div>
+        <div class="u2"
+          style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;width:100%;max-width:680px;margin:0 auto;">
+          <div
+            style="flex:1;min-width:130px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(16px);border-radius:16px;padding:16px 10px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+            <div
+              style="font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:900;color:#FFFFFF;line-height:1;margin-bottom:6px;text-shadow:0 2px 10px rgba(0,0,0,0.5);">
+              5</div>
+            <div style="font-size:.8rem;font-weight:600;color:rgba(255,255,255,0.9);line-height:1.25;">Telas para você
+            </div>
           </div>
 
-          <div style="flex:1;min-width:130px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(16px);border-radius:16px;padding:16px 10px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
-            <div style="font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:900;color:#FF61D2;line-height:1;margin-bottom:6px;text-shadow:0 0 20px rgba(255,97,210,0.6), 0 2px 8px rgba(0,0,0,0.5);">Live</div>
-            <div style="font-size:.8rem;font-weight:600;color:rgba(255,255,255,0.9);line-height:1.25;">Atualizações ao vivo</div>
+          <div
+            style="flex:1;min-width:130px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(16px);border-radius:16px;padding:16px 10px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+            <div
+              style="font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:900;color:#FF61D2;line-height:1;margin-bottom:6px;text-shadow:0 0 20px rgba(255,97,210,0.6), 0 2px 8px rgba(0,0,0,0.5);">
+              Live</div>
+            <div style="font-size:.8rem;font-weight:600;color:rgba(255,255,255,0.9);line-height:1.25;">Atualizações ao
+              vivo</div>
           </div>
 
-          <div style="flex:1;min-width:130px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(16px);border-radius:16px;padding:16px 10px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
-            <div style="font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:900;color:#FFFFFF;line-height:1;margin-bottom:6px;text-shadow:0 2px 10px rgba(0,0,0,0.5);">100%</div>
-            <div style="font-size:.8rem;font-weight:600;color:rgba(255,255,255,0.9);line-height:1.25;">Digital e seguro</div>
+          <div
+            style="flex:1;min-width:130px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(16px);border-radius:16px;padding:16px 10px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+            <div
+              style="font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:900;color:#FFFFFF;line-height:1;margin-bottom:6px;text-shadow:0 2px 10px rgba(0,0,0,0.5);">
+              100%</div>
+            <div style="font-size:.8rem;font-weight:600;color:rgba(255,255,255,0.9);line-height:1.25;">Digital e seguro
+            </div>
           </div>
         </div>
 
@@ -1751,7 +1812,7 @@
       const btn = document.createElement('button');
       btn.className = 'dot-item' + (i === 0 ? ' on' : '');
       btn.setAttribute('aria-label', `Ir para ${titles[i]}`);
-      
+
       const label = document.createElement('span');
       label.className = 'dot-label';
       label.textContent = `${String(i + 1).padStart(2, '0')}. ${titles[i]}`;
