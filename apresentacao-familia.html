@@ -113,7 +113,25 @@
     }
     .k { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:4px; padding:1px 7px; font-family:monospace; }
 
-    /* ── BROWSER FRAME ───────────────────────── */
+    /* ── BROWSER & PHONE FRAMES ──────────────── */
+    .phone-mockup {
+      max-width: 250px;
+      margin: auto;
+      filter: drop-shadow(0 20px 45px rgba(0,0,0,0.4));
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+    }
+    .phone-mockup:hover {
+      transform: translateY(-6px) scale(1.02);
+      filter: drop-shadow(0 28px 55px rgba(155,89,182,0.4));
+    }
+    .phone-mockup img {
+      width: 100%;
+      height: auto;
+      max-height: 480px;
+      object-fit: contain;
+      display: block;
+    }
+
     .bframe {
       border-radius:var(--r16); overflow:hidden;
       box-shadow:0 24px 60px rgba(74,29,110,0.35), 0 0 0 1px rgba(155,89,182,0.15);
@@ -374,24 +392,13 @@
         </div>
       </div>
 
-      <!-- RIGHT: login real -->
+      <!-- RIGHT: login real no celular -->
       <div class="screen-right r1" style="position:relative;">
-        <div class="bframe float" style="max-width:440px;margin:auto;">
-          <div class="bbar">
-            <div class="bdots">
-              <div class="bd" style="background:#f43f5e;"></div>
-              <div class="bd" style="background:#f59e0b;"></div>
-              <div class="bd" style="background:#10b981;"></div>
-            </div>
-            <div class="burl">cuidelar.vercel.app</div>
-          </div>
-          <img src="assets/screenshots/Captura de tela 2026-07-27 092720.png"
-               style="height:340px;object-fit:cover;object-position:top;"
-               alt="Tela de login CuideLar"
-               onerror="this.parentElement.style.minHeight='280px';this.style.display='none';" />
+        <div class="phone-mockup float">
+          <img src="assets/screenshots/tela 1.png" alt="Tela de Login CuideLar no iPhone" />
         </div>
         <!-- chip -->
-        <div class="chip" style="bottom:-16px;right:8px;">
+        <div class="chip" style="bottom:-10px;right:-10px;">
           <div class="chip-icon">🔒</div>
           <div><div class="chip-label">Acesso</div><div class="chip-value">Exclusivo da família</div></div>
         </div>
@@ -415,15 +422,8 @@
       <div class="two60">
         <!-- SCREEN -->
         <div class="l1 screen-right" style="position:relative;">
-          <div class="bframe" style="max-width:400px;margin:auto;">
-            <div class="bbar">
-              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
-              <div class="burl">cuidelar.vercel.app — Login</div>
-            </div>
-            <img src="assets/screenshots/Captura de tela 2026-07-27 092720.png"
-                 style="height:340px;object-fit:cover;object-position:top;"
-                 alt="Tela de login"
-                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
+          <div class="phone-mockup">
+            <img src="assets/screenshots/tela 1.png" alt="Tela de Login" />
           </div>
         </div>
 
@@ -484,17 +484,10 @@
       <div class="two" style="align-items:start;">
         <!-- SCREEN -->
         <div class="l1 screen-right" style="position:relative;">
-          <div class="bframe" style="box-shadow:0 24px 60px rgba(0,0,0,.5);">
-            <div class="bbar">
-              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
-              <div class="burl">cuidelar.vercel.app/familia — Linha do Tempo</div>
-            </div>
-            <img src="assets/screenshots/Captura de tela 2026-07-27 092818.png"
-                 style="height:340px;object-fit:cover;"
-                 alt="Feed em tempo real da família"
-                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
+          <div class="phone-mockup">
+            <img src="assets/screenshots/tela 2.png" alt="Linha do Tempo em tempo real" />
           </div>
-          <div class="chip" style="top:-14px;right:8px;background:rgba(255,255,255,.97);">
+          <div class="chip" style="top:-10px;right:-10px;background:rgba(255,255,255,.97);">
             <span class="ldot"></span>
             <div><div class="chip-value" style="color:#16a34a;font-size:.82rem;">AO VIVO</div></div>
           </div>
@@ -554,15 +547,8 @@
       <div class="two60">
         <!-- SCREEN -->
         <div class="l1 screen-right" style="position:relative;">
-          <div class="bframe" style="max-width:420px;margin:auto;">
-            <div class="bbar">
-              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
-              <div class="burl">cuidelar.vercel.app/familia — Perfil de Saúde</div>
-            </div>
-            <img src="assets/screenshots/Captura de tela 2026-07-27 092854.png"
-                 style="height:360px;object-fit:cover;"
-                 alt="Perfil de saúde"
-                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
+          <div class="phone-mockup">
+            <img src="assets/screenshots/tela 3.png" alt="Perfil de Saúde do assistido" />
           </div>
         </div>
 
@@ -610,15 +596,8 @@
       <div class="two">
         <!-- SCREEN -->
         <div class="l1 screen-right" style="position:relative;">
-          <div class="bframe" style="max-width:440px;margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.5);">
-            <div class="bbar">
-              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
-              <div class="burl">cuidelar.vercel.app/familia — Próximos Plantões</div>
-            </div>
-            <img src="assets/screenshots/Captura de tela 2026-07-27 092915.png"
-                 style="height:360px;object-fit:cover;"
-                 alt="Próximos plantões"
-                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
+          <div class="phone-mockup">
+            <img src="assets/screenshots/tela 4.png" alt="Próximos plantões do idoso" />
           </div>
         </div>
 
@@ -728,15 +707,8 @@
 
         <!-- SCREEN -->
         <div class="r1 screen-right" style="position:relative;">
-          <div class="bframe" style="max-width:420px;margin:auto;">
-            <div class="bbar">
-              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
-              <div class="burl">cuidelar.vercel.app/familia — Avaliar Cuidador(a)</div>
-            </div>
-            <img src="assets/screenshots/Captura de tela 2026-07-27 092936.png"
-                 style="height:360px;object-fit:cover;"
-                 alt="Tela de avaliação do cuidador"
-                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
+          <div class="phone-mockup">
+            <img src="assets/screenshots/tela 5.png" alt="Avaliação do cuidador" />
           </div>
         </div>
       </div>
