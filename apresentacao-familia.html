@@ -1107,17 +1107,17 @@
         white-space: nowrap !important;
       }
 
-      .scroll-cue {
-        bottom: 58px !important;
-        padding: 6px 14px !important;
-        font-size: 0.72rem !important;
+      .hint, .fsBtn {
+        display: none !important;
+      }
+
+      .to-top-btn {
+        display: none !important;
       }
 
       .chip {
-        bottom: -8px !important;
-        right: 50% !important;
-        transform: translateX(50%) !important;
-        padding: 6px 10px !important;
+        right: 10px !important;
+        transform: none !important;
         white-space: nowrap !important;
       }
 
@@ -1286,12 +1286,9 @@
           <div class="phone-mockup float">
             <img src="assets/screenshots/tela 1.png" alt="Tela de Login CuideLar no iPhone" />
             <!-- chip -->
-            <div class="chip" style="bottom:-10px;right:-10px;">
-              <div class="chip-icon">🔒</div>
-              <div>
-                <div class="chip-label">Acesso</div>
-                <div class="chip-value">Exclusivo da família</div>
-              </div>
+            <div class="chip" style="bottom:-10px; right:10px; background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(12px); border-radius:999px; padding:5px 12px; display:inline-flex; align-items:center; gap:6px;">
+              <span style="font-size:0.75rem;">🔒</span>
+              <span style="color:#FFFFFF; font-family:'Outfit',sans-serif; font-weight:700; font-size:0.72rem;">Exclusivo da família</span>
             </div>
           </div>
 
@@ -1398,11 +1395,9 @@
             <div class="phone-mockup">
               <img src="assets/screenshots/tela 2.png" alt="Linha do Tempo em tempo real" />
             </div>
-            <div class="chip" style="top:-10px;right:-10px;background:rgba(255,255,255,.97);">
+            <div class="chip" style="top:-10px; right:10px; background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(12px); border-radius:999px; padding:5px 12px; display:inline-flex; align-items:center; gap:6px;">
               <span class="ldot"></span>
-              <div>
-                <div class="chip-value" style="color:#16a34a;font-size:.82rem;">AO VIVO</div>
-              </div>
+              <span style="color:#4ade80; font-family:'Outfit',sans-serif; font-weight:800; font-size:0.75rem; letter-spacing:0.04em;">AO VIVO</span>
             </div>
           </div>
 
@@ -1806,11 +1801,12 @@
     <span>Topo</span>
   </button>
 
-  <!-- Bottom nav (prev/next + counter) -->
+  <!-- Bottom nav (topo + prev/next + counter) -->
   <nav class="nav">
-    <button class="nbtn" id="prevBtn"><i data-lucide="chevron-up"></i></button>
+    <button class="nbtn" onclick="goTo(0)" id="topNavBtn" title="Voltar ao topo"><i data-lucide="arrow-up"></i></button>
+    <button class="nbtn" id="prevBtn" title="Anterior"><i data-lucide="chevron-up"></i></button>
     <span class="ctr" id="ctr">1 / 8</span>
-    <button class="nbtn" id="nextBtn"><i data-lucide="chevron-down"></i></button>
+    <button class="nbtn" id="nextBtn" title="Próximo"><i data-lucide="chevron-down"></i></button>
   </nav>
 
   <script>
