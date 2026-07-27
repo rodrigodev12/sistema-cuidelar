@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CuideLar — Como funciona para a Família</title>
+  <meta name="description" content="Entenda como funciona o CuideLar — plataforma de acompanhamento de cuidados especializados para famílias." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    :root {
+      --navy:    #0A0F1E;
+      --navy2:   #0F172A;
+      --navy3:   #1E293B;
+      --indigo:  #4F46E5;
+      --indigo2: #6366F1;
+      --cyan:    #06B6D4;
+      --cyan2:   #22D3EE;
+      --violet:  #7C3AED;
+      --green:   #10B981;
+      --amber:   #F59E0B;
+      --rose:    #F43F5E;
+      --white:   #FFFFFF;
+      --text:    #E2E8F0;
+      --muted:   #94A3B8;
+      --border:  rgba(255,255,255,0.08);
+      --gi: linear-gradient(135deg, #4F46E5, #7C3AED);
+      --gc: linear-gradient(135deg, #06B6D4, #4F46E5);
+      --gg: linear-gradient(135deg, #10B981, #06B6D4);
+      --glow-i: 0 0 40px rgba(79,70,229,0.4);
+      --glow-c: 0 0 40px rgba(6,182,212,0.35);
+      --r8: 8px; --r16: 16px; --r24: 24px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── SLIDESHOW ─────────────────────────────── */
+    .ss { width:100vw; height:100vh; position:relative; overflow:hidden; }
+
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: clamp(20px,4vw,64px);
+      opacity: 0; pointer-events: none;
+      transition: opacity .55s cubic-bezier(.4,0,.2,1), transform .55s cubic-bezier(.4,0,.2,1);
+      transform: translateX(60px) scale(.98);
+    }
+    .slide.active { opacity:1; pointer-events:all; transform:none; }
+    .slide.out    { opacity:0; transform:translateX(-60px) scale(.98); }
+
+    /* ── PROGRESS ──────────────────────────────── */
+    .progress { position:fixed; top:0; left:0; height:3px; background:var(--gc); border-radius:0 2px 2px 0; z-index:999; transition:width .4s; box-shadow:0 0 12px rgba(6,182,212,.5); }
+
+    /* ── NAV ────────────────────────────────────── */
+    .nav {
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+      display:flex; align-items:center; gap:10px;
+      background:rgba(15,23,42,.92); backdrop-filter:blur(20px);
+      border:1px solid var(--border); border-radius:999px;
+      padding:9px 18px; box-shadow:0 8px 32px rgba(0,0,0,.5);
+      z-index:998;
+    }
+    .nbtn {
+      width:38px; height:38px; border-radius:50%; border:none;
+      background:rgba(255,255,255,.05); color:var(--text);
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:all .2s;
+    }
+    .nbtn:hover { background:var(--indigo); transform:scale(1.1); }
+    .dots { display:flex; gap:5px; align-items:center; }
+    .dot {
+      width:7px; height:7px; border-radius:50%;
+      background:rgba(255,255,255,.2); cursor:pointer; border:none;
+      transition:all .3s;
+    }
+    .dot.on { width:26px; border-radius:4px; background:var(--indigo); box-shadow:var(--glow-i); }
+    .ctr { font-family:'Outfit',sans-serif; font-weight:700; font-size:.72rem; color:var(--muted); min-width:32px; text-align:center; }
+
+    /* ── HINT ───────────────────────────────────── */
+    .hint {
+      position:fixed; top:16px; left:50%; transform:translateX(-50%);
+      font-size:.68rem; color:rgba(148,163,184,.45);
+      display:flex; gap:6px; align-items:center; z-index:997;
+    }
+    .k { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:4px; padding:1px 7px; font-family:monospace; }
+
+    /* ── FULLSCREEN ─────────────────────────────── */
+    .fsBtn {
+      position:fixed; top:14px; right:16px; z-index:998;
+      width:36px; height:36px; border-radius:50%; border:1px solid var(--border);
+      background:rgba(15,23,42,.8); backdrop-filter:blur(10px);
+      color:var(--muted); cursor:pointer;
+      display:flex; align-items:center; justify-content:center; transition:all .2s;
+    }
+    .fsBtn:hover { color:var(--white); background:var(--indigo); }
+
+    /* ── ORB ─────────────────────────────────────── */
+    .orb { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; z-index:0; }
+
+    /* ── TYPOGRAPHY ─────────────────────────────── */
+    .eyebrow {
+      font-family:'Outfit',sans-serif; font-size:clamp(.68rem,1.1vw,.82rem);
+      font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+      color:var(--cyan); margin-bottom:12px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .eyebrow::before { content:''; width:20px; height:2px; background:var(--cyan); border-radius:2px; }
+
+    .htitle {
+      font-family:'Outfit',sans-serif;
+      font-size:clamp(2.2rem,5.5vw,5rem);
+      font-weight:800; line-height:1.08; letter-spacing:-.02em; color:var(--white);
+    }
+    .htitle .g { background:var(--gc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+    .stitle {
+      font-family:'Outfit',sans-serif;
+      font-size:clamp(1.8rem,4vw,3.4rem);
+      font-weight:800; line-height:1.1; letter-spacing:-.02em; color:var(--white);
+    }
+    .lead { font-size:clamp(.9rem,1.6vw,1.15rem); line-height:1.7; color:var(--muted); }
+
+    /* ── STEP NUMBER ─────────────────────────────── */
+    .step-num {
+      font-family:'Outfit',sans-serif; font-size:5rem; font-weight:900;
+      line-height:1; background:var(--gc);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      opacity:.18; position:absolute; top:-10px; right:16px; pointer-events:none;
+    }
+
+    /* ── GLASS CARD ─────────────────────────────── */
+    .gc-card {
+      background:rgba(255,255,255,.03); border:1px solid var(--border);
+      border-radius:var(--r24); padding:clamp(18px,2.5vw,32px);
+      position:relative; transition:all .3s;
+    }
+    .gc-card:hover { transform:translateY(-5px); box-shadow:0 20px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.07); }
+
+    /* ── SCREEN FRAME ─────────────────────────────── */
+    .screen-frame {
+      border-radius:var(--r16);
+      overflow:hidden;
+      box-shadow:0 24px 64px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.1);
+      background: var(--navy3);
+      position:relative;
+    }
+    .screen-frame img {
+      width:100%; height:100%;
+      object-fit:cover; display:block;
+    }
+    /* browser chrome bar */
+    .browser-bar {
+      background:rgba(15,23,42,.95); padding:8px 14px;
+      display:flex; align-items:center; gap:8px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .browser-dots { display:flex; gap:5px; }
+    .bdot { width:10px; height:10px; border-radius:50%; }
+    .browser-url {
+      flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+      border-radius:6px; padding:3px 10px; font-size:.72rem; color:var(--muted);
+      font-family:monospace;
+    }
+
+    /* ── BADGE ─────────────────────────────────────── */
+    .badge {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:5px 12px; border-radius:999px;
+      font-size:.78rem; font-weight:600; font-family:'Outfit',sans-serif;
+    }
+    .bi { background:rgba(79,70,229,.15); color:var(--indigo2); border:1px solid rgba(79,70,229,.3); }
+    .bc { background:rgba(6,182,212,.15);  color:var(--cyan);    border:1px solid rgba(6,182,212,.3); }
+    .bg { background:rgba(16,185,129,.15); color:var(--green);   border:1px solid rgba(16,185,129,.3); }
+    .ba { background:rgba(245,158,11,.15); color:var(--amber);   border:1px solid rgba(245,158,11,.3); }
+
+    /* ── STEP PILL ─────────────────────────────────── */
+    .step-pill {
+      display:inline-flex; align-items:center; gap:10px;
+      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+      border-radius:999px; padding:10px 20px;
+      font-family:'Outfit',sans-serif; font-size:.88rem; font-weight:600; color:var(--text);
+      margin-bottom:8px;
+    }
+    .sp-icon {
+      width:30px; height:30px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center; font-size:.9rem;
+    }
+
+    /* ── CHECK LIST ─────────────────────────────────── */
+    .check-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+    .check-list li {
+      display:flex; align-items:flex-start; gap:12px;
+      font-size:clamp(.85rem,1.4vw,.98rem); color:var(--muted); line-height:1.5;
+    }
+    .chk {
+      width:22px; height:22px; border-radius:50%; flex-shrink:0; margin-top:1px;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(16,185,129,.15); color:var(--green); font-size:.7rem; font-weight:900;
+    }
+
+    /* ── INFO ROW ─────────────────────────────────── */
+    .info-row {
+      display:flex; align-items:center; gap:14px; padding:14px;
+      background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07);
+      border-radius:var(--r16); transition:all .3s;
+    }
+    .info-row:hover { border-color:rgba(6,182,212,.3); background:rgba(6,182,212,.05); }
+    .ir-icon {
+      width:44px; height:44px; border-radius:12px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; font-size:1.2rem;
+    }
+    .ir-title { font-family:'Outfit',sans-serif; font-weight:700; color:var(--white); font-size:.92rem; }
+    .ir-desc  { font-size:.78rem; color:var(--muted); line-height:1.4; margin-top:2px; }
+
+    /* ── LIVE DOT ─────────────────────────────────── */
+    @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+    .live-dot {
+      width:8px; height:8px; border-radius:50%; background:#22c55e;
+      animation:livePulse 1.5s ease-in-out infinite; display:inline-block;
+    }
+
+    /* ── TIMELINE STEP ─────────────────────────────── */
+    .tl { display:flex; flex-direction:column; gap:0; position:relative; }
+    .tl::before {
+      content:''; position:absolute; left:19px; top:24px; bottom:24px;
+      width:2px; background:linear-gradient(to bottom, var(--indigo), var(--cyan), transparent);
+    }
+    .tl-item { display:flex; gap:20px; align-items:flex-start; padding:12px 0; }
+    .tl-dot {
+      width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-size:.85rem; flex-shrink:0; position:relative; z-index:1;
+    }
+    .tl-title { font-family:'Outfit',sans-serif; font-weight:700; color:var(--white); font-size:.92rem; }
+    .tl-desc  { font-size:.78rem; color:var(--muted); line-height:1.45; margin-top:3px; }
+
+    /* ── ANIMATIONS ─────────────────────────────────── */
+    @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    @keyframes pGlow  { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
+    @keyframes fUp    { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fLeft  { from{opacity:0;transform:translateX(-24px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes fRight { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes scaleIn{ from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
+
+    .float { animation:floatY 4s ease-in-out infinite; }
+    .pglow { animation:pGlow 2.5s ease-in-out infinite; }
+
+    .slide.active .u0  { animation:fUp    .5s .00s both; }
+    .slide.active .u1  { animation:fUp    .5s .08s both; }
+    .slide.active .u2  { animation:fUp    .5s .16s both; }
+    .slide.active .u3  { animation:fUp    .5s .24s both; }
+    .slide.active .u4  { animation:fUp    .5s .32s both; }
+    .slide.active .u5  { animation:fUp    .5s .40s both; }
+    .slide.active .l1  { animation:fLeft  .55s .1s both; }
+    .slide.active .r1  { animation:fRight .55s .1s both; }
+    .slide.active .r2  { animation:fRight .55s .2s both; }
+    .slide.active .sc1 { animation:scaleIn .4s .15s both; }
+    .slide.active .sc2 { animation:scaleIn .4s .25s both; }
+    .slide.active .sc3 { animation:scaleIn .4s .35s both; }
+
+    /* ── SLIDE SPECIFIC ─────────────────────────────── */
+    /* Slide 1 */
+    #s1 { background:linear-gradient(135deg,#0A0F1E 0%,#0F172A 45%,#120d30 100%); }
+    #s1 .o1 { width:500px;height:500px; background:radial-gradient(circle,rgba(79,70,229,.22) 0%,transparent 70%); top:-120px; left:-120px; }
+    #s1 .o2 { width:380px;height:380px; background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%); bottom:-80px; right:-80px; }
+
+    /* Slide 7 */
+    #s7 { background:linear-gradient(135deg,#0A0F1E 0%,#0F172A 45%,#120d30 100%); text-align:center; }
+    #s7 .o1 { width:560px;height:560px; background:radial-gradient(circle,rgba(79,70,229,.28) 0%,transparent 70%); top:50%;left:50%;transform:translate(-50%,-50%); }
+
+    /* layouts */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,56px); align-items:center; width:100%; max-width:1140px; }
+    .two-col-60 { display:grid; grid-template-columns:1fr 1.25fr; gap:clamp(24px,4vw,56px); align-items:center; width:100%; max-width:1140px; }
+    .content-z { position:relative; z-index:1; }
+    .slide-header { text-align:center; margin-bottom:clamp(20px,3.5vh,36px); }
+    .slide-wrap {
+      display:flex; flex-direction:column; align-items:center;
+      width:100%; height:100%; justify-content:center;
+      gap:clamp(12px,2.5vh,24px); position:relative; z-index:1;
+    }
+
+    /* 3-col grid */
+    .three-col { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; width:100%; max-width:1100px; }
+
+    /* CTA box */
+    .cta-box {
+      display:inline-flex; align-items:center; gap:10px;
+      padding:14px 36px; background:var(--gi);
+      border-radius:999px; font-family:'Outfit',sans-serif;
+      font-size:.95rem; font-weight:700; color:var(--white);
+      text-decoration:none; box-shadow:var(--glow-i); transition:all .3s;
+    }
+    .cta-box:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 0 50px rgba(79,70,229,.55); }
+
+    @media (max-width: 820px) {
+      .two-col, .two-col-60, .three-col { grid-template-columns:1fr; }
+      .screen-right { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress" id="prog" style="width:12.5%;"></div>
+<div class="hint"><span class="k">←</span><span class="k">→</span> navegar &nbsp;|&nbsp;<span class="k">F</span> tela cheia</div>
+<button class="fsBtn" id="fsBtn"><i data-lucide="maximize-2"></i></button>
+
+<div class="ss" id="ss">
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 1 — BOAS-VINDAS / HERO
+  ══════════════════════════════════════════════ -->
+  <section class="slide active" id="s1">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+
+    <div class="two-col content-z">
+      <!-- LEFT -->
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;" class="u0">
+          <div style="width:50px;height:50px;background:var(--gi);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:var(--glow-i);">🏠</div>
+          <span style="font-family:'Outfit',sans-serif;font-size:1.9rem;font-weight:800;color:var(--white);">CuideLar</span>
+        </div>
+
+        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:999px;padding:7px 16px;font-size:.8rem;font-weight:600;color:var(--green);margin-bottom:18px;" class="u1">
+          👨‍👩‍👧 Guia para Famílias
+        </div>
+
+        <h1 class="htitle u2" style="margin-bottom:18px;">
+          Seu familiar<br/>em boas mãos —<br/>
+          <span class="g">você sempre sabe.</span>
+        </h1>
+
+        <p class="lead u3" style="margin-bottom:26px; max-width:520px;">
+          O CuideLar conecta sua família ao cuidador de forma digital, 
+          transparente e em <strong style="color:var(--white);">tempo real</strong>. 
+          Neste guia, você vai entender tudo sobre como funciona.
+        </p>
+
+        <div class="u4" style="display:flex;gap:10px;flex-wrap:wrap;">
+          <span class="badge bg">✅ Simples de usar</span>
+          <span class="badge bc">📱 Funciona no celular</span>
+          <span class="badge bi">🔒 100% seguro</span>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="screen-right r1 float" style="position:relative;">
+        <div class="screen-frame" style="height:400px;">
+          <div class="browser-bar">
+            <div class="browser-dots">
+              <div class="bdot" style="background:#f43f5e;"></div>
+              <div class="bdot" style="background:#f59e0b;"></div>
+              <div class="bdot" style="background:#10b981;"></div>
+            </div>
+            <div class="browser-url">cuidelar.vercel.app</div>
+          </div>
+          <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_login_cuidelar_1785154526978.png"
+               alt="Tela de login do CuideLar"
+               onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+        </div>
+        <!-- floating chip -->
+        <div style="position:absolute;bottom:-18px;left:-18px;background:rgba(15,23,42,.95);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 12px 28px rgba(0,0,0,.4);">
+          <div style="font-size:1.2rem;">🔒</div>
+          <div>
+            <div style="font-size:.68rem;color:var(--muted);">Acesso</div>
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.88rem;">Exclusivo da família</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 2 — COMO ENTRAR NO SISTEMA
+  ══════════════════════════════════════════════ -->
+  <section class="slide" id="s2" style="background:linear-gradient(135deg,#0A0F1E,#0c1424);">
+    <div class="slide-wrap">
+      <div class="slide-header">
+        <div class="eyebrow u0">Passo 1 de 6 — Acesso</div>
+        <h2 class="stitle u1">Como entrar no sistema</h2>
+        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:580px;">
+          O acesso é simples: basta usar o e-mail e senha cadastrados pela empresa responsável.
+        </p>
+      </div>
+
+      <div class="two-col-60" style="max-width:1100px;">
+        <!-- SCREEN -->
+        <div class="l1 screen-right" style="position:relative;">
+          <div class="screen-frame" style="height:360px;">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <div class="bdot" style="background:#f43f5e;"></div>
+                <div class="bdot" style="background:#f59e0b;"></div>
+                <div class="bdot" style="background:#10b981;"></div>
+              </div>
+              <div class="browser-url">cuidelar.vercel.app — Login</div>
+            </div>
+            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_login_cuidelar_1785154526978.png"
+                 alt="Tela de login" style="height:310px; object-fit:cover; object-position:top;"
+                 onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+          </div>
+        </div>
+
+        <!-- STEPS -->
+        <div class="tl r1">
+          <div class="tl-item">
+            <div class="tl-dot" style="background:rgba(79,70,229,.2);color:var(--indigo2);">1️⃣</div>
+            <div>
+              <div class="tl-title">Abra o link no navegador ou celular</div>
+              <div class="tl-desc">Acesse <strong style="color:var(--cyan);">cuidelar.vercel.app</strong> em qualquer dispositivo — smartphone, tablet ou computador.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="background:rgba(6,182,212,.2);color:var(--cyan);">2️⃣</div>
+            <div>
+              <div class="tl-title">Selecione o perfil "Família"</div>
+              <div class="tl-desc">Na tela inicial, clique na opção <strong style="color:var(--white);">Família</strong> para acessar o portal correto.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="background:rgba(16,185,129,.2);color:var(--green);">3️⃣</div>
+            <div>
+              <div class="tl-title">Digite e-mail e senha</div>
+              <div class="tl-desc">Use as credenciais fornecidas pela empresa no momento do contrato. Em caso de dúvida, entre em contato com o suporte.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="background:rgba(245,158,11,.2);color:var(--amber);">4️⃣</div>
+            <div>
+              <div class="tl-title">Clique em "Entrar no sistema"</div>
+              <div class="tl-desc">Você será redirecionado automaticamente para o seu painel exclusivo da família.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 3 — FEED EM TEMPO REAL
+  ══════════════════════════════════════════════ -->
+  <section class="slide" id="s3" style="background:linear-gradient(135deg,#0A0F1E,#0f1629);">
+    <div class="slide-wrap">
+      <div class="slide-header">
+        <div class="eyebrow u0">Passo 2 de 6 — Feed ao Vivo</div>
+        <h2 class="stitle u1">
+          Acompanhe tudo <span class="live-dot"></span> ao vivo
+        </h2>
+        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:600px;">
+          Assim que o cuidador registra qualquer evento, você recebe a atualização 
+          <strong style="color:var(--white);">na mesma hora</strong> no seu feed.
+        </p>
+      </div>
+
+      <div class="two-col" style="max-width:1100px;">
+        <!-- LEFT INFO -->
+        <div class="l1" style="display:flex;flex-direction:column;gap:14px;">
+          <div class="info-row">
+            <div class="ir-icon" style="background:rgba(16,185,129,.15);">💓</div>
+            <div>
+              <div class="ir-title">Sinais vitais registrados</div>
+              <div class="ir-desc">Pressão arterial, frequência cardíaca, temperatura e saturação de oxigênio</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="ir-icon" style="background:rgba(6,182,212,.15);">🍽️</div>
+            <div>
+              <div class="ir-title">Alimentação documentada</div>
+              <div class="ir-desc">Café da manhã, almoço, lanche e jantar com nível de aceitação registrado</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="ir-icon" style="background:rgba(79,70,229,.15);">💊</div>
+            <div>
+              <div class="ir-title">Medicamentos administrados</div>
+              <div class="ir-desc">Lista de remédios ministrados com horários e confirmação do cuidador</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="ir-icon" style="background:rgba(245,158,11,.15);">📸</div>
+            <div>
+              <div class="ir-title">Fotos e observações</div>
+              <div class="ir-desc">Cuidador pode enviar fotos e notas do dia para manter a família informada</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN -->
+        <div class="r1 screen-right" style="position:relative;">
+          <div class="screen-frame" style="height:400px;">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <div class="bdot" style="background:#f43f5e;"></div>
+                <div class="bdot" style="background:#f59e0b;"></div>
+                <div class="bdot" style="background:#10b981;"></div>
+              </div>
+              <div class="browser-url">cuidelar.vercel.app/familia — Feed ao Vivo</div>
+            </div>
+            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_dashboard_familia_1785154541209.png"
+                 alt="Feed em tempo real da família"
+                 style="height:350px; object-fit:cover;"
+                 onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+          </div>
+          <div style="position:absolute;top:-16px;right:-16px;background:rgba(15,23,42,.95);backdrop-filter:blur(14px);border:1px solid rgba(22,163,74,.3);border-radius:14px;padding:10px 16px;display:flex;align-items:center;gap:8px;">
+            <span class="live-dot"></span>
+            <span style="font-family:'Outfit',sans-serif;font-weight:700;color:#22c55e;font-size:.82rem;">AO VIVO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 4 — PERFIL DO IDOSO
+  ══════════════════════════════════════════════ -->
+  <section class="slide" id="s4" style="background:linear-gradient(135deg,#0A0F1E,#0f1a2c);">
+    <div class="slide-wrap">
+      <div class="slide-header">
+        <div class="eyebrow u0">Passo 3 de 6 — Perfil de Saúde</div>
+        <h2 class="stitle u1">Tudo sobre seu familiar em um só lugar</h2>
+        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:600px;">
+          O perfil do assistido reúne histórico de saúde, informações pessoais, 
+          alergias, contatos de emergência e gráficos de evolução.
+        </p>
+      </div>
+
+      <div class="two-col-60" style="max-width:1100px;">
+        <!-- SCREEN -->
+        <div class="l1 screen-right" style="position:relative;">
+          <div class="screen-frame" style="height:380px;">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <div class="bdot" style="background:#f43f5e;"></div>
+                <div class="bdot" style="background:#f59e0b;"></div>
+                <div class="bdot" style="background:#10b981;"></div>
+              </div>
+              <div class="browser-url">cuidelar.vercel.app/familia — Perfil do Assistido</div>
+            </div>
+            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_perfil_idoso_1785154587598.png"
+                 alt="Perfil de saúde do idoso"
+                 style="height:330px; object-fit:cover;"
+                 onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="r1" style="display:flex;flex-direction:column;gap:16px;">
+          <div class="gc-card" style="position:relative;">
+            <div class="step-num">1</div>
+            <div style="font-size:1.6rem;margin-bottom:10px;">👴</div>
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);margin-bottom:6px;">Dados pessoais completos</div>
+            <div style="font-size:.83rem;color:var(--muted);line-height:1.55;">Nome, data de nascimento, tipo sanguíneo, alergias e contatos de emergência acessíveis a qualquer momento.</div>
+          </div>
+          <div class="gc-card" style="position:relative;">
+            <div class="step-num">2</div>
+            <div style="font-size:1.6rem;margin-bottom:10px;">📊</div>
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);margin-bottom:6px;">Gráficos de evolução de saúde</div>
+            <div style="font-size:.83rem;color:var(--muted);line-height:1.55;">Acompanhe a tendência da pressão arterial, peso e frequência cardíaca ao longo dos últimos 7, 15 ou 30 dias.</div>
+          </div>
+          <div class="gc-card" style="position:relative;">
+            <div class="step-num">3</div>
+            <div style="font-size:1.6rem;margin-bottom:10px;">🏥</div>
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);margin-bottom:6px;">Condições de saúde e diagnósticos</div>
+            <div style="font-size:.83rem;color:var(--muted);line-height:1.55;">Diagnósticos, condições crônicas e restrições ficam registrados para orientar o cuidador em cada plantão.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 5 — DIÁRIO DE CUIDADOS
+  ══════════════════════════════════════════════ -->
+  <section class="slide" id="s5" style="background:linear-gradient(135deg,#0A0F1E,#0d1022);">
+    <div class="slide-wrap">
+      <div class="slide-header">
+        <div class="eyebrow u0">Passo 4 de 6 — Diário de Cuidados</div>
+        <h2 class="stitle u1">O que o cuidador registra a cada plantão</h2>
+        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:620px;">
+          Em cada turno, o cuidador preenche o diário digital. 
+          Você acessa todos os registros no feed — com horário exato de cada entrada.
+        </p>
+      </div>
+
+      <div class="two-col" style="max-width:1100px;">
+        <!-- LEFT -->
+        <div class="l1" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+            <span class="badge bg"><span class="live-dot" style="width:6px;height:6px;"></span> Tempo real</span>
+            <span class="badge bc">📱 Mobile</span>
+          </div>
+          <ul class="check-list">
+            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Pressão Arterial</strong> — medida e registrada com horário</span></li>
+            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Temperatura e saturação</strong> de oxigênio</span></li>
+            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Refeições</strong> — tipo e nível de aceitação do idoso</span></li>
+            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Medicamentos</strong> — nome, dosagem e horário de administração</span></li>
+            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Humor e estado geral</strong> do assistido no dia</span></li>
+            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Observações livres</strong> e fotos do cuidador</span></li>
+          </ul>
+          <div style="margin-top:8px;padding:16px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--r16);">
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--green);margin-bottom:6px;">💡 Você é notificado</div>
+            <div style="font-size:.82rem;color:var(--muted);line-height:1.5;">Cada novo registro aparece automaticamente no seu feed. Sem precisar atualizar a página.</div>
+          </div>
+        </div>
+
+        <!-- SCREEN -->
+        <div class="r1 screen-right" style="position:relative;">
+          <div class="screen-frame" style="height:400px;">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <div class="bdot" style="background:#f43f5e;"></div>
+                <div class="bdot" style="background:#f59e0b;"></div>
+                <div class="bdot" style="background:#10b981;"></div>
+              </div>
+              <div class="browser-url">cuidelar.vercel.app — Diário de Cuidados</div>
+            </div>
+            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_diario_cuidados_1785154573203.png"
+                 alt="Diário de cuidados"
+                 style="height:350px; object-fit:cover;"
+                 onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 6 — AGENDA E AVALIAÇÃO
+  ══════════════════════════════════════════════ -->
+  <section class="slide" id="s6" style="background:linear-gradient(135deg,#080e1c,#0f1520);">
+    <div class="slide-wrap">
+      <div class="slide-header">
+        <div class="eyebrow u0">Passos 5 e 6 — Agenda e Avaliação</div>
+        <h2 class="stitle u1">Agenda dos plantões e sua avaliação</h2>
+      </div>
+
+      <div class="two-col" style="max-width:1100px; align-items:start;">
+        <!-- LEFT: AGENDA -->
+        <div class="l1 gc-card" style="border-color:rgba(79,70,229,.2);">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(79,70,229,.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📅</div>
+            <div>
+              <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);">Agenda de Plantões</div>
+              <div style="font-size:.75rem;color:var(--muted);">Próximos atendimentos programados</div>
+            </div>
+          </div>
+          <!-- mini agenda -->
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:rgba(79,70,229,.08);border:1px solid rgba(79,70,229,.2);border-radius:var(--r16);padding:14px;display:flex;gap:14px;align-items:center;">
+              <div style="text-align:center;background:rgba(79,70,229,.15);border-radius:10px;padding:8px 12px;min-width:48px;">
+                <div style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;color:var(--indigo2);line-height:1;">28</div>
+                <div style="font-size:.65rem;color:var(--muted);">JUL</div>
+              </div>
+              <div>
+                <div style="font-weight:600;color:var(--white);font-size:.88rem;">Ana Paula Ferreira</div>
+                <div style="font-size:.75rem;color:var(--muted);">07:00 – 19:00 &nbsp;•&nbsp; 12h de plantão</div>
+                <span style="font-size:.7rem;background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3);border-radius:999px;padding:2px 8px;margin-top:4px;display:inline-block;">Confirmado</span>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--r16);padding:14px;display:flex;gap:14px;align-items:center;">
+              <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 12px;min-width:48px;">
+                <div style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;color:var(--muted);line-height:1;">29</div>
+                <div style="font-size:.65rem;color:var(--muted);">JUL</div>
+              </div>
+              <div>
+                <div style="font-weight:600;color:var(--white);font-size:.88rem;">Carlos Mendes</div>
+                <div style="font-size:.75rem;color:var(--muted);">19:00 – 07:00 &nbsp;•&nbsp; Plantão noturno</div>
+                <span style="font-size:.7rem;background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.3);border-radius:999px;padding:2px 8px;margin-top:4px;display:inline-block;">Agendado</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: AVALIAÇÃO -->
+        <div class="r1 gc-card" style="border-color:rgba(245,158,11,.2);">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">⭐</div>
+            <div>
+              <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);">Avalie o Cuidador</div>
+              <div style="font-size:.75rem;color:var(--muted);">Ao final de cada plantão</div>
+            </div>
+          </div>
+          <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_avaliacao_cuidador_1785154605472.png"
+               alt="Tela de avaliação do cuidador"
+               style="width:100%;border-radius:12px;margin-bottom:14px;"
+               onerror="this.style.display='none';" />
+          <div style="font-size:.83rem;color:var(--muted);line-height:1.6;">
+            Após cada plantão, você pode avaliar o cuidador em <strong style="color:var(--white);">pontualidade</strong>, 
+            <strong style="color:var(--white);">atenção ao idoso</strong> e <strong style="color:var(--white);">comunicação</strong>. 
+            Seu feedback garante a qualidade do serviço!
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 7 — CUIDADOR NO CAMPO (GPS/CHECK-IN)
+  ══════════════════════════════════════════════ -->
+  <section class="slide" id="s7-cuidador" style="background:linear-gradient(135deg,#0A0F1E,#0a1520);">
+    <div class="slide-wrap">
+      <div class="slide-header">
+        <div class="eyebrow u0">Nos bastidores — O Cuidador</div>
+        <h2 class="stitle u1">Como o cuidador usa o sistema</h2>
+        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:600px;">
+          Para que você receba atualizações em tempo real, o cuidador usa o sistema diretamente pelo smartphone.
+        </p>
+      </div>
+
+      <div class="two-col" style="max-width:1100px;">
+        <!-- PHONE MOCKUP -->
+        <div class="l1 screen-right" style="display:flex;justify-content:center;">
+          <div style="max-width:280px;width:100%;">
+            <div class="screen-frame float" style="border-radius:28px;box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 8px rgba(255,255,255,.05);">
+              <div style="background:#0F172A;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06);">
+                <span style="font-size:.7rem;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:700;">CuideLar</span>
+                <span style="font-size:.65rem;color:var(--muted);">9:41</span>
+              </div>
+              <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_cuidador_mobile_1785154559178.png"
+                   alt="App do cuidador no celular"
+                   style="width:100%;display:block;max-height:380px;object-fit:cover;"
+                   onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT INFO -->
+        <div class="r1" style="display:flex;flex-direction:column;gap:14px;">
+          <div class="info-row">
+            <div class="ir-icon" style="background:rgba(16,185,129,.15);">📍</div>
+            <div>
+              <div class="ir-title">Check-in com GPS ao chegar</div>
+              <div class="ir-desc">O sistema registra a localização do cuidador no momento da chegada, garantindo transparência total</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="ir-icon" style="background:rgba(6,182,212,.15);">⏱️</div>
+            <div>
+              <div class="ir-title">Cronômetro de plantão ao vivo</div>
+              <div class="ir-desc">O tempo de plantão é contado automaticamente e você pode acompanhar quando o cuidador chegou</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="ir-icon" style="background:rgba(79,70,229,.15);">✅</div>
+            <div>
+              <div class="ir-title">Checklist de atividades</div>
+              <div class="ir-desc">Cada atividade do plantão (banho, medicamentos, refeições) é marcada conforme é realizada</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="ir-icon" style="background:rgba(245,158,11,.15);">📋</div>
+            <div>
+              <div class="ir-title">Diário de cuidados ao final</div>
+              <div class="ir-desc">Antes de sair, o cuidador registra sinais vitais, alimentação e observações do dia</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 8 — CTA FINAL
+  ══════════════════════════════════════════════ -->
+  <section class="slide" id="s-final" style="background:linear-gradient(135deg,#0A0F1E,#0F172A,#120d30);text-align:center;">
+    <div class="orb" style="width:550px;height:550px;background:radial-gradient(circle,rgba(79,70,229,.25) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:28px;position:relative;z-index:1;max-width:780px;">
+      <div class="pglow u0" style="font-size:3.5rem;">❤️</div>
+
+      <div class="u1">
+        <div class="eyebrow" style="justify-content:center;">Resumo do sistema</div>
+        <h2 class="htitle" style="margin-bottom:16px;">
+          Tranquilidade para você,<br/><span class="g">cuidado de qualidade para ele.</span>
+        </h2>
+        <p class="lead" style="text-align:center;margin:0 auto;max-width:620px;">
+          Com o CuideLar, você tem visibilidade total sobre o cuidado do seu familiar — 
+          onde quer que você esteja, em qualquer dispositivo, 24 horas por dia.
+        </p>
+      </div>
+
+      <!-- RESUMO PILLS -->
+      <div class="u2 three-col" style="max-width:700px;gap:14px;">
+        <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--r16);padding:18px;text-align:center;">
+          <div style="font-size:1.8rem;margin-bottom:8px;">📱</div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.88rem;">Acesse pelo celular</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:4px;">Sem precisar instalar nenhum aplicativo</div>
+        </div>
+        <div style="background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.2);border-radius:var(--r16);padding:18px;text-align:center;">
+          <div style="font-size:1.8rem;margin-bottom:8px;">⚡</div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.88rem;">Tempo real</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:4px;">Cada registro chega ao instante no seu feed</div>
+        </div>
+        <div style="background:rgba(79,70,229,.07);border:1px solid rgba(79,70,229,.2);border-radius:var(--r16);padding:18px;text-align:center;">
+          <div style="font-size:1.8rem;margin-bottom:8px;">🔒</div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.88rem;">Seguro e privado</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:4px;">Seus dados são protegidos e só você tem acesso</div>
+        </div>
+      </div>
+
+      <div class="u3" style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
+        <a href="index.html" class="cta-box">🏠 Acessar o CuideLar</a>
+      </div>
+
+      <div class="u4" style="font-size:.8rem;color:rgba(148,163,184,.5);">
+        Em caso de dúvidas, entre em contato com a empresa responsável pelo cuidado. &nbsp;|&nbsp; CuideLar © 2026
+      </div>
+    </div>
+  </section>
+
+</div><!-- /ss -->
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nbtn" id="prevBtn"><i data-lucide="chevron-left"></i></button>
+  <div class="dots" id="dots"></div>
+  <button class="nbtn" id="nextBtn"><i data-lucide="chevron-right"></i></button>
+  <span class="ctr" id="ctr">1 / 8</span>
+</nav>
+
+<script>
+  lucide.createIcons();
+
+  const TOTAL = 8;
+  let cur = 0, anim = false;
+
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const prog   = document.getElementById('prog');
+  const ctr    = document.getElementById('ctr');
+  const dotsEl = document.getElementById('dots');
+
+  // Build dots
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('button');
+    d.className = 'dot' + (i === 0 ? ' on' : '');
+    d.setAttribute('aria-label', 'Slide ' + (i+1));
+    d.addEventListener('click', () => go(i));
+    dotsEl.appendChild(d);
+  }
+
+  function getDots() { return Array.from(dotsEl.querySelectorAll('.dot')); }
+
+  function go(idx) {
+    if (anim || idx === cur || idx < 0 || idx >= TOTAL) return;
+    anim = true;
+    const prev = cur; cur = idx;
+
+    slides[prev].classList.remove('active');
+    slides[prev].classList.add('out');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      slides[prev].classList.remove('out');
+      slides[cur].classList.add('active');
+      anim = false;
+    }));
+
+    getDots().forEach((d, i) => d.classList.toggle('on', i === cur));
+    prog.style.width = ((cur + 1) / TOTAL * 100).toFixed(1) + '%';
+    ctr.textContent = (cur + 1) + ' / ' + TOTAL;
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', () => go(cur + 1));
+  document.getElementById('prevBtn').addEventListener('click', () => go(cur - 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(cur + 1); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); go(cur - 1); }
+    if (e.key === 'f' || e.key === 'F') fs();
+  });
+
+  // Touch
+  let tx = 0;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend',   e => {
+    const d = e.changedTouches[0].clientX - tx;
+    if (Math.abs(d) > 48) { d < 0 ? go(cur + 1) : go(cur - 1); }
+  }, { passive: true });
+
+  // Scroll
+  let wc = false;
+  document.addEventListener('wheel', e => {
+    if (wc) return; wc = true;
+    e.deltaY > 0 ? go(cur + 1) : go(cur - 1);
+    setTimeout(() => { wc = false; }, 800);
+  }, { passive: true });
+
+  // Fullscreen
+  function fs() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  }
+  document.getElementById('fsBtn').addEventListener('click', fs);
+
+  // Re-render icons on slide change
+  new MutationObserver(() => lucide.createIcons()).observe(
+    document.getElementById('ss'), { attributes: true, subtree: true, attributeFilter: ['class'] }
+  );
+</script>
+</body>
+</html>
