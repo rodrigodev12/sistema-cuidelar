@@ -212,80 +212,47 @@
       background: rgba(255, 255, 255, 0.22);
     }
 
-    /* ── APPLE / NOTION / AIRBNB HERO STYLE ───── */
-    #s1.slide {
-      background: radial-gradient(120% 120% at 50% 10%, #1e0938 0%, #0d041c 60%, #05010a 100%) !important;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Ambient tech grid overlay */
-    #s1::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-      background-size: 36px 36px;
-      pointer-events: none;
-      opacity: 0.5;
-    }
-
+    /* ── HERO LOGO & TAGS ───────────────────── */
     .logo-hero-box {
       display: flex;
       justify-content: flex-start;
       width: 100%;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .hero-logo-img {
       height: clamp(180px, 18vw, 260px);
       width: auto;
       display: block;
+      /* mix-blend-mode: screen remove o fundo branco do PNG no fundo escuro */
       mix-blend-mode: screen;
-      filter: drop-shadow(0 0 30px rgba(255, 97, 210, 0.4)) drop-shadow(0 0 60px rgba(155, 89, 182, 0.25)) brightness(1.15);
+      filter: brightness(1.1) drop-shadow(0 0 16px rgba(255, 255, 255, 0.2));
     }
 
     .hero-tags-container {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
-      margin-top: 20px;
+      margin-top: 18px;
       width: 100%;
       position: relative;
       z-index: 2;
     }
 
     .badge-glass-green {
-      background: rgba(34, 197, 94, 0.18);
+      background: rgba(34, 197, 94, 0.22);
       color: #4ade80;
-      border: 1px solid rgba(34, 197, 94, 0.4);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
-      font-weight: 700;
-      border-radius: 999px;
-      padding: 6px 16px;
-      font-size: 0.78rem;
-      transition: all 0.3s;
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      backdrop-filter: blur(8px);
     }
 
     .badge-glass {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.14);
       color: rgba(255, 255, 255, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
-      font-weight: 700;
-      border-radius: 999px;
-      padding: 6px 16px;
-      font-size: 0.78rem;
-      transition: all 0.3s;
-    }
-
-    .badge-glass-green:hover, .badge-glass:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(8px);
     }
 
     /* ── ARROW NAV BUTTONS ───────────────────── */
@@ -1266,21 +1233,20 @@
   <div class="ss" id="ss">
 
     <!-- ════════════════════════════════════════════
-       SLIDE 1 — ABERTURA HERO (Apple / Notion / Airbnb Style)
+       SLIDE 1 — ABERTURA (dark)
   ════════════════════════════════════════════ -->
     <section class="slide s-dark" id="s1">
-      <!-- Ambient 3D glow orbs -->
       <div class="orb"
-        style="width:600px;height:600px;background:radial-gradient(circle,rgba(224,86,253,.22) 0%,rgba(155,89,182,.08) 50%,transparent 70%);top:-120px;left:-120px;filter:blur(40px);">
+        style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.08) 0%,transparent 70%);top:-80px;left:-80px;">
       </div>
       <div class="orb"
-        style="width:520px;height:520px;background:radial-gradient(circle,rgba(255,97,210,.2) 0%,rgba(74,29,110,.1) 50%,transparent 70%);bottom:-100px;right:-100px;filter:blur(40px);">
+        style="width:380px;height:380px;background:radial-gradient(circle,rgba(192,82,122,.2) 0%,transparent 70%);bottom:-60px;right:-60px;">
       </div>
 
       <div class="two" style="position:relative;z-index:1;">
-        <!-- LEFT CONTENT -->
+        <!-- LEFT -->
         <div>
-          <!-- Logo Cuidelar HD com dupla iluminação -->
+          <!-- Logo completa com fundo transparente via mix-blend-mode -->
           <div class="u0 logo-hero-box">
             <img src="assets/logo-cuidelar.png" alt="Cuidelar, Assistência Domiciliar e Hospitalar"
               class="hero-logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
@@ -1298,39 +1264,35 @@
             </div>
           </div>
 
-          <!-- Eyebrow Badge (Apple Keynote Pill Style) -->
           <div class="u1"
-            style="display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.22);backdrop-filter:blur(16px);border-radius:999px;padding:8px 20px;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;color:#FFFFFF;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 4px 20px rgba(0,0,0,0.25);margin-bottom:20px;">
-            <span style="color:#FF61D2;font-size:0.95rem;">👨‍👩‍👧</span> Portal da Família 2026
+            style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:7px 16px;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:18px;">
+            👨‍👩‍👧 Guia exclusivo para Famílias
           </div>
 
-          <!-- Main Bold Headline (Apple Style Typography) -->
-          <h1 class="htitle u2" style="margin-bottom:20px;font-family:'Outfit',sans-serif;font-size:clamp(2.2rem,4.8vw,4rem);font-weight:900;line-height:1.08;letter-spacing:-0.02em;color:#FFFFFF;text-shadow:0 4px 24px rgba(0,0,0,0.5);">
-            Seu familiar<br />
-            <span style="background:linear-gradient(135deg,#FFFFFF 0%,#FF80DF 45%,#E056FD 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 25px rgba(255,97,210,0.4));">em boas mãos,</span><br />
-            você sempre atualizado.
+          <h1 class="htitle u2" style="margin-bottom:18px;">
+            Seu familiar<br />em boas mãos <br /><span class="g">você sempre atualizado.</span>
           </h1>
 
-          <!-- Lead Paragraph (Notion Style Readability) -->
-          <p class="lead-dark u3" style="margin-bottom:24px;max-width:520px;font-size:clamp(0.95rem,1.3vw,1.15rem);line-height:1.65;color:rgba(255,255,255,0.85);font-weight:400;">
-            Neste guia rápido, você vai ver <strong style="color:#FFFFFF;font-weight:700;">todas as telas do sistema</strong>
+          <p class="lead-dark u3" style="margin-bottom:20px;max-width:500px;">
+            Neste guia rápido, você vai ver <strong style="color:rgba(255,255,255,.95);">todas as telas do
+              sistema</strong>
             e entender exatamente como acompanhar o cuidado do seu familiar, com transparência e segurança.
           </p>
         </div>
 
-        <!-- RIGHT: Celular 3D + Tags por baixo -->
+        <!-- RIGHT: celular + tags posicionadas por baixo -->
         <div class="screen-right r1"
           style="position:relative; display:flex; flex-direction:column; align-items:center;">
-          <div class="phone-mockup float" style="filter:drop-shadow(0 30px 60px rgba(0,0,0,0.6)) drop-shadow(0 0 40px rgba(224,86,253,0.25));">
+          <div class="phone-mockup float">
             <img src="assets/screenshots/tela 1.png" alt="Tela de Login Cuidelar no iPhone" />
-            <!-- Chip Apple-Style -->
-            <div class="chip" style="bottom:-10px; right:10px; background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.25); backdrop-filter:blur(16px); border-radius:999px; padding:6px 14px; display:inline-flex; align-items:center; gap:8px; box-shadow:0 8px 24px rgba(0,0,0,0.35);">
-              <span style="font-size:0.8rem;">🔒</span>
-              <span style="color:#FFFFFF; font-family:'Outfit',sans-serif; font-weight:700; font-size:0.75rem;">Exclusivo da família</span>
+            <!-- chip -->
+            <div class="chip" style="bottom:-10px; right:10px; background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(12px); border-radius:999px; padding:5px 12px; display:inline-flex; align-items:center; gap:6px;">
+              <span style="font-size:0.75rem;">🔒</span>
+              <span style="color:#FFFFFF; font-family:'Outfit',sans-serif; font-weight:700; font-size:0.72rem;">Exclusivo da família</span>
             </div>
           </div>
 
-          <!-- Tags posicionadas por baixo do celular -->
+          <!-- Tags posicionadas por baixo do celular em linha limpa -->
           <div class="u4 hero-tags-container">
             <span class="badge badge-glass-green">✅ Fácil de usar</span>
             <span class="badge badge-glass">📱 Funciona no celular</span>
@@ -1339,8 +1301,8 @@
         </div>
       </div>
 
-      <!-- Feed Scroll Cue Button (Apple Callout) -->
-      <button class="scroll-cue" id="scrollCueBtn" onclick="goTo(1)" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.22);backdrop-filter:blur(16px);color:#FFFFFF;font-weight:700;border-radius:999px;padding:9px 22px;box-shadow:0 8px 30px rgba(0,0,0,0.3);">
+      <!-- Feed Scroll Cue Button -->
+      <button class="scroll-cue" id="scrollCueBtn" onclick="goTo(1)">
         <span>Deslize para ver a apresentação</span>
         <i data-lucide="chevron-down" style="width:16px;height:16px;"></i>
       </button>
