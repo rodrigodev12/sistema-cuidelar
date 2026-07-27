@@ -57,49 +57,49 @@
   <main class="familia-content">
     <div class="familia-page">
 
-      <!-- TOP COMPACT HERO BANNER (Assistido, Status & ÚLTIMO REGISTRO) -->
-      <div class="familia-top-hero animate-fade-in" style="margin-bottom:1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.25rem;box-shadow:var(--shadow-sm);">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border);">
+      <!-- TOP COMPACT HERO BANNER (Assistido, Status & ÚLTIMO REGISTRO em Gradiente Roxo) -->
+      <div class="familia-top-hero animate-fade-in" style="margin-bottom:1.5rem;background:linear-gradient(135deg, #2D0F4E 0%, #5C2D84 50%, #7B2CBF 100%);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:1.25rem;box-shadow:0 10px 30px rgba(45,15,78,0.35);color:#FFFFFF;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid rgba(255,255,255,0.18);">
           <div style="display:flex;align-items:center;gap:1rem;">
-            <div class="idoso-hero-photo" id="sideIdosoPhoto" style="width:58px;height:58px;font-size:1.8rem;border:2px solid var(--brand-rose);">👴</div>
+            <div class="idoso-hero-photo" id="sideIdosoPhoto" style="width:58px;height:58px;font-size:1.8rem;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);">👴</div>
             <div>
-              <h2 id="sideIdosoNome" style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--text-primary);margin:0;">Maria das Graças</h2>
-              <div class="idoso-hero-age" id="sideIdosoAge" style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">83 anos · Tipo A+</div>
+              <h2 id="sideIdosoNome" style="font-family:var(--font-display);font-size:1.25rem;font-weight:800;color:#FFFFFF;margin:0;">Maria das Graças</h2>
+              <div class="idoso-hero-age" id="sideIdosoAge" style="font-size:0.85rem;color:rgba(255,255,255,0.75);margin-top:2px;">83 anos · Tipo A+</div>
             </div>
           </div>
           <div id="cuidadorStatus">
-            <div class="cuidador-online">
-              <div class="status-dot active" aria-hidden="true"></div>
-              Cuidadora presente
+            <div class="cuidador-offline">
+              <div class="status-dot inactive" aria-hidden="true"></div>
+              Cuidadora ausente
             </div>
           </div>
         </div>
 
         <!-- ÚLTIMO REGISTRO (SINAIS VITAIS) -->
         <div>
-          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:0.6rem;">
-            ⚡ Último Registro de Hoje
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.75);margin-bottom:0.6rem;">
+            ⚡ ÚLTIMO REGISTRO DE HOJE
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:0.6rem;">
-            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
-              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">💓 Batimentos</div>
-              <div style="font-size:0.88rem;font-weight:800;color:var(--text-primary);" id="lastBat">72 bpm</div>
+            <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">💓 Batimentos</div>
+              <div style="font-size:0.9rem;font-weight:800;color:#FFFFFF;" id="lastBat">72 bpm</div>
             </div>
-            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
-              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">🩺 Pressão</div>
-              <div style="font-size:0.88rem;font-weight:800;color:var(--text-primary);" id="lastPA">118/78</div>
+            <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">🩺 Pressão</div>
+              <div style="font-size:0.9rem;font-weight:800;color:#FFFFFF;" id="lastPA">118/78</div>
             </div>
-            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
-              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">🌡️ Temp.</div>
-              <div style="font-size:0.88rem;font-weight:800;color:var(--text-primary);" id="lastTemp">36.4°C</div>
+            <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">🌡️ Temp.</div>
+              <div style="font-size:0.9rem;font-weight:800;color:#FFFFFF;" id="lastTemp">36.4°C</div>
             </div>
-            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
-              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">🍽️ Alimentação</div>
-              <div style="font-size:0.88rem;font-weight:800;color:var(--success);" id="lastAlim">Aceitou</div>
+            <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">🍽️ Alimentação</div>
+              <div style="font-size:0.9rem;font-weight:800;color:#4ade80;" id="lastAlim">Aceitou</div>
             </div>
-            <div style="background:var(--bg-surface);padding:0.5rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--border);">
-              <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">💊 Medicamento</div>
-              <div style="font-size:0.88rem;font-weight:800;color:var(--success);" id="lastMed">✅ OK</div>
+            <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">💊 Medicamento</div>
+              <div style="font-size:0.9rem;font-weight:800;color:#4ade80;" id="lastMed">✅ OK</div>
             </div>
           </div>
         </div>
@@ -532,13 +532,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Restaura seção ativa anterior (ou carrega default)
-  const savedSection = localStorage.getItem('familia_active_section');
-  if (savedSection) {
-    const el = document.getElementById('nav-' + savedSection);
-    if (el) {
-      showFamiliaSection(savedSection, el);
-    }
-  }
+  const savedSection = localStorage.getItem('familia_active_section') || 'feed';
+  showFamiliaSection(savedSection);
 
   lucide.createIcons();
   document.getElementById('userAvatar').textContent = (currentUser.nome || 'F')[0].toUpperCase();
@@ -1283,17 +1278,13 @@ window.renderFeedPhotosHtml = function(fotoUrl) {
 // ============================================================
 // NAVEGAÇÃO
 // ============================================================
-window.showFamiliaSection = (name, el) => {
+window.showFamiliaSection = (name) => {
   localStorage.setItem('familia_active_section', name);
   document.querySelectorAll('.familia-section').forEach(s => s.style.display = 'none');
-  document.querySelectorAll('.familia-nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
   
   const targetSection = document.getElementById(`section-${name}`);
   if (targetSection) targetSection.style.display = '';
-  
-  const sideEl = document.getElementById(`nav-${name}`);
-  if (sideEl) sideEl.classList.add('active');
   
   const bottomEl = document.getElementById(`bnav-${name}`);
   if (bottomEl) bottomEl.classList.add('active');
