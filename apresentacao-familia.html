@@ -752,49 +752,32 @@
       font-size: .88rem;
     }
 
-    /* ── CTA BUTTON ──────────────────────────── */
+    /* ── CTA BUTTON (HIGH PROMINENCE) ────────── */
     .cta-btn {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      padding: 14px 36px;
-      background: var(--grad-cta);
+      justify-content: center;
+      gap: 12px;
+      padding: 18px 46px;
+      background: linear-gradient(135deg, #FF61D2 0%, #C0527A 50%, #9B51E0 100%);
       border-radius: 999px;
       font-family: 'Outfit', sans-serif;
-      font-size: .95rem;
-      font-weight: 700;
+      font-size: 1.12rem;
+      font-weight: 800;
       color: var(--white);
       text-decoration: none;
-      box-shadow: var(--shadow-glow);
-      transition: all .3s;
+      box-shadow: 0 10px 36px rgba(224, 86, 253, 0.55), 0 0 30px rgba(255, 97, 210, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      letter-spacing: 0.02em;
     }
 
     .cta-btn:hover {
-      transform: translateY(-3px) scale(1.03);
-      box-shadow: 0 0 50px rgba(155, 89, 182, .5);
-    }
-
-    .cta-btn-sec {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(16px);
-      border-radius: 999px;
-      font-family: 'Outfit', sans-serif;
-      font-size: .95rem;
-      font-weight: 700;
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 16px 50px rgba(224, 86, 253, 0.8), 0 0 45px rgba(255, 97, 210, 0.7);
+      border-color: rgba(255, 255, 255, 0.8);
       color: var(--white);
-      cursor: pointer;
-      transition: all .3s;
-      text-decoration: none;
-    }
-
-    .cta-btn-sec:hover {
-      background: rgba(255, 255, 255, 0.25);
-      transform: translateY(-3px) scale(1.03);
     }
 
     /* ── FLOATING BACK TO TOP BUTTON ─────────── */
@@ -1132,12 +1115,11 @@
         font-weight: 700 !important;
       }
 
-      .to-top-btn {
-        left: 12px;
-        bottom: 12px;
-        height: 36px;
-        padding: 0 12px;
-        font-size: 0.72rem;
+      .cta-btn {
+        width: 100%;
+        max-width: 320px;
+        padding: 16px 28px !important;
+        font-size: 1.05rem !important;
       }
     }
 
@@ -1713,12 +1695,11 @@
           </div>
         </div>
 
-        <div class="u3" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
-          <a href="index.html" class="cta-btn">🏠 Acessar o sistema agora</a>
-          <button onclick="goTo(0)" class="cta-btn-sec">
-            <i data-lucide="arrow-up" style="width:18px;height:18px;"></i>
-            <span>Voltar ao topo</span>
-          </button>
+        <div class="u3">
+          <a href="index.html" class="cta-btn">
+            <span>🏠 Acessar o sistema agora</span>
+            <i data-lucide="arrow-right" style="width:20px;height:20px;"></i>
+          </a>
         </div>
 
         <div class="u4" style="font-size:.78rem;color:rgba(255,255,255,.35);">
