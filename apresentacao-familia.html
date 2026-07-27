@@ -68,9 +68,15 @@
       height: 100vh;
     }
 
-    /* ── FULLPAGE SCROLL ────────────────────── */
+    /* ── FULLPAGE FEED SCROLL ────────────────── */
     .ss {
-      width: 100%;
+      width: 100vw;
+      height: 100vh;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
     }
 
     .slide {
@@ -86,6 +92,7 @@
       scroll-snap-stop: always;
       position: relative;
       overflow: hidden;
+      box-sizing: border-box;
     }
 
     /* ── PROGRESS ────────────────────────────── */
@@ -97,47 +104,105 @@
       background: var(--grad-pink);
       border-radius: 0 2px 2px 0;
       z-index: 999;
-      transition: width .4s;
+      transition: width .3s ease-out;
       box-shadow: 0 0 10px rgba(192, 82, 122, .5);
     }
 
-    /* ── SIDE DOTS NAV ────────────────────────── */
+    /* ── SIDE DOTS NAV (SOCIAL FEED STYLE) ───── */
     .side-nav {
       position: fixed;
-      right: 20px;
+      right: 22px;
       top: 50%;
       transform: translateY(-50%);
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      align-items: center;
+      gap: 12px;
+      align-items: flex-end;
       z-index: 998;
     }
 
-    .dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.3);
-      cursor: pointer;
+    .dot-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: none;
       border: none;
-      transition: all .35s cubic-bezier(.4,0,.2,1);
-      padding: 0;
-      position: relative;
+      cursor: pointer;
+      padding: 4px 0;
+      outline: none;
     }
 
-    .dot::after {
-      content: '';
-      position: absolute;
-      inset: -6px;
+    .dot-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 3px 10px;
+      border-radius: 999px;
+      opacity: 0;
+      transform: translateX(10px);
+      transition: all .25s ease;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .dot-item:hover .dot-label,
+    .dot-item.on .dot-label {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+      transition: all .3s cubic-bezier(.4, 0, .2, 1);
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
     }
 
-    .dot.on {
+    .dot-item.on .dot {
       background: var(--white);
-      height: 28px;
-      border-radius: 5px;
-      box-shadow: 0 0 14px rgba(192, 82, 122, .6);
+      height: 26px;
+      border-radius: 6px;
+      box-shadow: 0 0 16px rgba(192, 82, 122, .8);
+    }
+
+    /* ── SCROLL PROMPT CUE (SOCIAL REEL STYLE) ── */
+    @keyframes bounceY {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(8px); }
+    }
+
+    .scroll-cue {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.95);
+      cursor: pointer;
+      z-index: 10;
+      animation: bounceY 2s infinite ease-in-out;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      transition: background .2s, transform .2s;
+    }
+
+    .scroll-cue:hover {
+      background: rgba(255, 255, 255, 0.22);
     }
 
     /* ── ARROW NAV BUTTONS ───────────────────── */
@@ -951,12 +1016,16 @@
         right: 10px;
       }
 
-      .dot {
-        width: 7px;
-        height: 7px;
+      .dot-label {
+        display: none !important;
       }
 
-      .dot.on {
+      .dot {
+        width: 8px;
+        height: 8px;
+      }
+
+      .dot-item.on .dot {
         height: 22px;
       }
 
@@ -1090,6 +1159,12 @@
           </div>
         </div>
       </div>
+
+      <!-- Feed Scroll Cue Button -->
+      <button class="scroll-cue" id="scrollCueBtn" onclick="goTo(1)">
+        <span>Deslize para ver a apresentação</span>
+        <i data-lucide="chevron-down" style="width:16px;height:16px;"></i>
+      </button>
     </section>
 
     <!-- ════════════════════════════════════════════
@@ -1582,26 +1657,47 @@
 
     const TOTAL = 8;
     let cur = 0;
-    let scrollLocked = false;
 
     const slides = Array.from(document.querySelectorAll('.slide'));
     const prog = document.getElementById('prog');
     const ctrEl = document.getElementById('ctr');
     const sideNav = document.getElementById('sideNav');
+    const ssContainer = document.getElementById('ss');
 
-    // Build side dots
+    const titles = [
+      "Início",
+      "Primeiro Acesso",
+      "Feed ao Vivo",
+      "Perfil de Saúde",
+      "Agenda",
+      "Avaliação",
+      "Dicas Rápidas",
+      "Começar"
+    ];
+
+    // Build social-feed style side navigation dots with tooltips
     for (let i = 0; i < TOTAL; i++) {
-      const d = document.createElement('button');
-      d.className = 'dot' + (i === 0 ? ' on' : '');
-      d.setAttribute('aria-label', 'Ir para seção ' + (i + 1));
-      d.addEventListener('click', () => goTo(i));
-      sideNav.appendChild(d);
+      const btn = document.createElement('button');
+      btn.className = 'dot-item' + (i === 0 ? ' on' : '');
+      btn.setAttribute('aria-label', `Ir para ${titles[i]}`);
+      
+      const label = document.createElement('span');
+      label.className = 'dot-label';
+      label.textContent = `${String(i + 1).padStart(2, '0')}. ${titles[i]}`;
+
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+
+      btn.appendChild(label);
+      btn.appendChild(dot);
+      btn.addEventListener('click', () => goTo(i));
+      sideNav.appendChild(btn);
     }
 
-    function getDots() { return Array.from(sideNav.querySelectorAll('.dot')); }
+    function getDotItems() { return Array.from(sideNav.querySelectorAll('.dot-item')); }
 
     function updateUI(idx) {
-      getDots().forEach((d, i) => d.classList.toggle('on', i === idx));
+      getDotItems().forEach((item, i) => item.classList.toggle('on', i === idx));
       prog.style.width = ((idx + 1) / TOTAL * 100).toFixed(1) + '%';
       ctrEl.textContent = (idx + 1) + ' / ' + TOTAL;
     }
@@ -1613,24 +1709,24 @@
       updateUI(idx);
     }
 
-    // IntersectionObserver to sync dot/counter on native scroll
+    // IntersectionObserver syncs scroll automatically without artificial wheel locks (social feed feel)
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.45) {
           const idx = slides.indexOf(entry.target);
           if (idx !== -1 && idx !== cur) {
             cur = idx;
             updateUI(idx);
           }
-          // Animate in-view
           entry.target.classList.add('in-view');
         }
       });
-    }, { threshold: 0.5 });
+    }, {
+      root: ssContainer,
+      threshold: 0.45
+    });
 
     slides.forEach(s => observer.observe(s));
-
-    // Trigger first slide immediately
     slides[0].classList.add('in-view');
     updateUI(0);
 
@@ -1638,31 +1734,12 @@
     document.getElementById('nextBtn').addEventListener('click', () => goTo(cur + 1));
     document.getElementById('prevBtn').addEventListener('click', () => goTo(cur - 1));
 
-    // Keyboard
+    // Keyboard navigation (ArrowDown, ArrowUp, Space, PageDown, PageUp)
     document.addEventListener('keydown', e => {
-      if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(cur + 1); }
-      if (e.key === 'ArrowUp') { e.preventDefault(); goTo(cur - 1); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(cur + 1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(cur - 1); }
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goTo(cur + 1); }
+      if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goTo(cur - 1); }
       if (e.key === 'f' || e.key === 'F') fs();
     });
-
-    // Touch swipe (vertical)
-    let ty = 0;
-    document.addEventListener('touchstart', e => { ty = e.touches[0].clientY; }, { passive: true });
-    document.addEventListener('touchend', e => {
-      const dy = e.changedTouches[0].clientY - ty;
-      if (Math.abs(dy) > 60) { dy < 0 ? goTo(cur + 1) : goTo(cur - 1); }
-    }, { passive: true });
-
-    // Wheel scroll throttle for fullpage feel on desktop
-    let wc = false;
-    document.addEventListener('wheel', e => {
-      if (wc) return;
-      wc = true;
-      e.deltaY > 0 ? goTo(cur + 1) : goTo(cur - 1);
-      setTimeout(() => { wc = false; }, 900);
-    }, { passive: true });
 
     function fs() {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
