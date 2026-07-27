@@ -10,809 +10,827 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <style>
+    /* ============================================================
+       CUIDELAR — APRESENTAÇÃO FAMÍLIAS — Design fiel ao sistema real
+       Paleta real: roxo escuro sidebar + creme/branco conteúdo + rosa accent
+    ============================================================ */
     :root {
-      --navy:    #0A0F1E;
-      --navy2:   #0F172A;
-      --navy3:   #1E293B;
-      --indigo:  #4F46E5;
-      --indigo2: #6366F1;
-      --cyan:    #06B6D4;
-      --cyan2:   #22D3EE;
-      --violet:  #7C3AED;
-      --green:   #10B981;
-      --amber:   #F59E0B;
-      --rose:    #F43F5E;
-      --white:   #FFFFFF;
-      --text:    #E2E8F0;
-      --muted:   #94A3B8;
-      --border:  rgba(255,255,255,0.08);
-      --gi: linear-gradient(135deg, #4F46E5, #7C3AED);
-      --gc: linear-gradient(135deg, #06B6D4, #4F46E5);
-      --gg: linear-gradient(135deg, #10B981, #06B6D4);
-      --glow-i: 0 0 40px rgba(79,70,229,0.4);
-      --glow-c: 0 0 40px rgba(6,182,212,0.35);
-      --r8: 8px; --r16: 16px; --r24: 24px;
+      --purple-dark:  #4A1D6E;
+      --purple-mid:   #6B3FA0;
+      --purple-light: #9B59B6;
+      --pink:         #C0527A;
+      --pink-light:   #E8A4BC;
+      --cream:        #F8F0F4;
+      --cream2:       #FDF6FA;
+      --white:        #FFFFFF;
+      --text-dark:    #2D1B3D;
+      --text-mid:     #4A3560;
+      --text-soft:    #7C6B8E;
+      --text-muted:   #A090B0;
+      --border:       rgba(155,89,182,0.12);
+      --grad-purple:  linear-gradient(135deg, #4A1D6E, #9B59B6);
+      --grad-pink:    linear-gradient(135deg, #4A1D6E, #C0527A);
+      --grad-cta:     linear-gradient(135deg, #5C2D84 0%, #C0527A 100%);
+      --shadow-card:  0 4px 20px rgba(74,29,110,0.1);
+      --shadow-glow:  0 0 40px rgba(155,89,182,0.25);
+      --r8: 8px; --r12: 12px; --r16: 16px; --r24: 24px; --r32: 32px;
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
     html, body {
-      width: 100%; height: 100%;
-      font-family: 'Inter', sans-serif;
-      background: var(--navy);
-      color: var(--text);
+      width:100%; height:100%;
+      font-family:'Inter', sans-serif;
+      background: var(--purple-dark);
+      color: var(--text-dark);
       overflow: hidden;
     }
 
-    /* ── SLIDESHOW ─────────────────────────────── */
+    /* ── SLIDESHOW ──────────────────────────── */
     .ss { width:100vw; height:100vh; position:relative; overflow:hidden; }
 
     .slide {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: clamp(20px,4vw,64px);
-      opacity: 0; pointer-events: none;
+      position:absolute; inset:0;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding: clamp(20px,4vw,60px);
+      opacity:0; pointer-events:none;
       transition: opacity .55s cubic-bezier(.4,0,.2,1), transform .55s cubic-bezier(.4,0,.2,1);
       transform: translateX(60px) scale(.98);
     }
     .slide.active { opacity:1; pointer-events:all; transform:none; }
     .slide.out    { opacity:0; transform:translateX(-60px) scale(.98); }
 
-    /* ── PROGRESS ──────────────────────────────── */
-    .progress { position:fixed; top:0; left:0; height:3px; background:var(--gc); border-radius:0 2px 2px 0; z-index:999; transition:width .4s; box-shadow:0 0 12px rgba(6,182,212,.5); }
+    /* ── PROGRESS ────────────────────────────── */
+    .prog {
+      position:fixed; top:0; left:0; height:4px;
+      background: var(--grad-pink); border-radius:0 2px 2px 0;
+      z-index:999; transition:width .4s;
+      box-shadow:0 0 10px rgba(192,82,122,.5);
+    }
 
-    /* ── NAV ────────────────────────────────────── */
+    /* ── NAV ─────────────────────────────────── */
     .nav {
-      position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
       display:flex; align-items:center; gap:10px;
-      background:rgba(15,23,42,.92); backdrop-filter:blur(20px);
-      border:1px solid var(--border); border-radius:999px;
-      padding:9px 18px; box-shadow:0 8px 32px rgba(0,0,0,.5);
+      background: rgba(255,255,255,0.95); backdrop-filter:blur(20px);
+      border:1px solid rgba(155,89,182,0.2); border-radius:999px;
+      padding:9px 18px;
+      box-shadow:0 8px 32px rgba(74,29,110,0.2);
       z-index:998;
     }
     .nbtn {
-      width:38px; height:38px; border-radius:50%; border:none;
-      background:rgba(255,255,255,.05); color:var(--text);
+      width:36px; height:36px; border-radius:50%; border:none;
+      background:rgba(155,89,182,0.1); color:var(--purple-mid);
       cursor:pointer; display:flex; align-items:center; justify-content:center;
       transition:all .2s;
     }
-    .nbtn:hover { background:var(--indigo); transform:scale(1.1); }
+    .nbtn:hover { background:var(--purple-dark); color:var(--white); transform:scale(1.1); }
     .dots { display:flex; gap:5px; align-items:center; }
     .dot {
       width:7px; height:7px; border-radius:50%;
-      background:rgba(255,255,255,.2); cursor:pointer; border:none;
+      background:rgba(155,89,182,0.25); cursor:pointer; border:none;
       transition:all .3s;
     }
-    .dot.on { width:26px; border-radius:4px; background:var(--indigo); box-shadow:var(--glow-i); }
-    .ctr { font-family:'Outfit',sans-serif; font-weight:700; font-size:.72rem; color:var(--muted); min-width:32px; text-align:center; }
+    .dot.on { width:26px; border-radius:4px; background:var(--purple-dark); box-shadow:0 0 12px rgba(74,29,110,.3); }
+    .ctr { font-family:'Outfit',sans-serif; font-weight:700; font-size:.72rem; color:var(--text-soft); min-width:32px; text-align:center; }
 
-    /* ── HINT ───────────────────────────────────── */
-    .hint {
-      position:fixed; top:16px; left:50%; transform:translateX(-50%);
-      font-size:.68rem; color:rgba(148,163,184,.45);
-      display:flex; gap:6px; align-items:center; z-index:997;
-    }
-    .k { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:4px; padding:1px 7px; font-family:monospace; }
-
-    /* ── FULLSCREEN ─────────────────────────────── */
+    /* ── FULLSCREEN ──────────────────────────── */
     .fsBtn {
       position:fixed; top:14px; right:16px; z-index:998;
-      width:36px; height:36px; border-radius:50%; border:1px solid var(--border);
-      background:rgba(15,23,42,.8); backdrop-filter:blur(10px);
-      color:var(--muted); cursor:pointer;
-      display:flex; align-items:center; justify-content:center; transition:all .2s;
+      width:36px; height:36px; border-radius:50%;
+      border:1px solid rgba(155,89,182,0.3);
+      background:rgba(255,255,255,0.9); color:var(--purple-mid);
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:all .2s; backdrop-filter:blur(10px);
     }
-    .fsBtn:hover { color:var(--white); background:var(--indigo); }
+    .fsBtn:hover { background:var(--purple-dark); color:var(--white); }
 
-    /* ── ORB ─────────────────────────────────────── */
-    .orb { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; z-index:0; }
+    /* ── HINT ────────────────────────────────── */
+    .hint {
+      position:fixed; top:16px; left:50%; transform:translateX(-50%);
+      font-size:.68rem; color:rgba(255,255,255,0.4);
+      display:flex; gap:6px; align-items:center; z-index:997;
+    }
+    .k { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:4px; padding:1px 7px; font-family:monospace; }
 
-    /* ── TYPOGRAPHY ─────────────────────────────── */
+    /* ── BROWSER FRAME ───────────────────────── */
+    .bframe {
+      border-radius:var(--r16); overflow:hidden;
+      box-shadow:0 24px 60px rgba(74,29,110,0.35), 0 0 0 1px rgba(155,89,182,0.15);
+      background: var(--cream2);
+    }
+    .bbar {
+      background:#F0E8F4; padding:8px 14px;
+      display:flex; align-items:center; gap:8px;
+      border-bottom:1px solid rgba(155,89,182,0.12);
+    }
+    .bdots { display:flex; gap:5px; }
+    .bd { width:10px; height:10px; border-radius:50%; }
+    .burl {
+      flex:1; background:rgba(255,255,255,.7); border:1px solid rgba(155,89,182,.2);
+      border-radius:6px; padding:3px 10px; font-size:.72rem; color:var(--text-soft);
+      font-family:monospace;
+    }
+    .bframe img {
+      width:100%; display:block;
+      object-fit:cover;
+    }
+
+    /* ── LAYOUT ──────────────────────────────── */
+    .two   { display:grid; grid-template-columns:1fr 1fr;     gap:clamp(20px,4vw,52px); align-items:center; width:100%; max-width:1120px; }
+    .two60 { display:grid; grid-template-columns:1fr 1.3fr;   gap:clamp(20px,4vw,52px); align-items:center; width:100%; max-width:1120px; }
+    .three { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; width:100%; max-width:1100px; }
+    .wrap  { display:flex; flex-direction:column; align-items:center; width:100%; height:100%; justify-content:center; gap:clamp(10px,2vh,22px); position:relative; z-index:1; }
+    .hdr   { text-align:center; margin-bottom:clamp(16px,3vh,30px); }
+
+    /* ── ORB (for hero/final) ────────────────── */
+    .orb { position:absolute; border-radius:50%; filter:blur(90px); pointer-events:none; z-index:0; }
+
+    /* ── TYPOGRAPHY ──────────────────────────── */
     .eyebrow {
       font-family:'Outfit',sans-serif; font-size:clamp(.68rem,1.1vw,.82rem);
       font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-      color:var(--cyan); margin-bottom:12px;
+      color:var(--purple-light); margin-bottom:10px;
       display:flex; align-items:center; gap:8px;
     }
-    .eyebrow::before { content:''; width:20px; height:2px; background:var(--cyan); border-radius:2px; }
+    .eyebrow::before { content:''; width:18px; height:2px; background:var(--purple-light); border-radius:2px; }
 
     .htitle {
       font-family:'Outfit',sans-serif;
-      font-size:clamp(2.2rem,5.5vw,5rem);
-      font-weight:800; line-height:1.08; letter-spacing:-.02em; color:var(--white);
+      font-size:clamp(2rem,5vw,4.5rem);
+      font-weight:800; line-height:1.08; letter-spacing:-.025em; color:var(--white);
     }
-    .htitle .g { background:var(--gc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-
+    .htitle .g {
+      background:var(--grad-pink); -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent; background-clip:text;
+    }
     .stitle {
       font-family:'Outfit',sans-serif;
-      font-size:clamp(1.8rem,4vw,3.4rem);
-      font-weight:800; line-height:1.1; letter-spacing:-.02em; color:var(--white);
+      font-size:clamp(1.6rem,3.8vw,3.2rem);
+      font-weight:800; line-height:1.1; letter-spacing:-.02em;
     }
-    .lead { font-size:clamp(.9rem,1.6vw,1.15rem); line-height:1.7; color:var(--muted); }
+    /* light slides use dark text */
+    .light .stitle { color:var(--text-dark); }
+    /* dark slides use white */
+    .dark .stitle  { color:var(--white); }
 
-    /* ── STEP NUMBER ─────────────────────────────── */
-    .step-num {
-      font-family:'Outfit',sans-serif; font-size:5rem; font-weight:900;
-      line-height:1; background:var(--gc);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-      opacity:.18; position:absolute; top:-10px; right:16px; pointer-events:none;
-    }
+    .lead-light { font-size:clamp(.88rem,1.5vw,1.1rem); line-height:1.7; color:var(--text-soft); }
+    .lead-dark  { font-size:clamp(.88rem,1.5vw,1.1rem); line-height:1.7; color:rgba(255,255,255,.65); }
 
-    /* ── GLASS CARD ─────────────────────────────── */
-    .gc-card {
-      background:rgba(255,255,255,.03); border:1px solid var(--border);
-      border-radius:var(--r24); padding:clamp(18px,2.5vw,32px);
-      position:relative; transition:all .3s;
+    /* ── CARD ────────────────────────────────── */
+    .card {
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r16); padding:clamp(16px,2vw,26px);
+      box-shadow:var(--shadow-card); transition:all .3s;
     }
-    .gc-card:hover { transform:translateY(-5px); box-shadow:0 20px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.07); }
+    .card:hover { transform:translateY(-4px); box-shadow:0 12px 36px rgba(74,29,110,.14); }
 
-    /* ── SCREEN FRAME ─────────────────────────────── */
-    .screen-frame {
-      border-radius:var(--r16);
-      overflow:hidden;
-      box-shadow:0 24px 64px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.1);
-      background: var(--navy3);
-      position:relative;
+    .card-purple {
+      background:rgba(155,89,182,.07); border:1px solid rgba(155,89,182,.2);
+      border-radius:var(--r16); padding:clamp(16px,2vw,26px); transition:all .3s;
     }
-    .screen-frame img {
-      width:100%; height:100%;
-      object-fit:cover; display:block;
-    }
-    /* browser chrome bar */
-    .browser-bar {
-      background:rgba(15,23,42,.95); padding:8px 14px;
-      display:flex; align-items:center; gap:8px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .browser-dots { display:flex; gap:5px; }
-    .bdot { width:10px; height:10px; border-radius:50%; }
-    .browser-url {
-      flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
-      border-radius:6px; padding:3px 10px; font-size:.72rem; color:var(--muted);
-      font-family:monospace;
-    }
+    .card-purple:hover { transform:translateY(-4px); }
 
-    /* ── BADGE ─────────────────────────────────────── */
-    .badge {
-      display:inline-flex; align-items:center; gap:6px;
-      padding:5px 12px; border-radius:999px;
-      font-size:.78rem; font-weight:600; font-family:'Outfit',sans-serif;
+    /* ── STEP BADGE ──────────────────────────── */
+    .step-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(155,89,182,.1); border:1px solid rgba(155,89,182,.25);
+      border-radius:999px; padding:6px 16px;
+      font-family:'Outfit',sans-serif; font-size:.8rem; font-weight:700;
+      color:var(--purple-mid);
     }
-    .bi { background:rgba(79,70,229,.15); color:var(--indigo2); border:1px solid rgba(79,70,229,.3); }
-    .bc { background:rgba(6,182,212,.15);  color:var(--cyan);    border:1px solid rgba(6,182,212,.3); }
-    .bg { background:rgba(16,185,129,.15); color:var(--green);   border:1px solid rgba(16,185,129,.3); }
-    .ba { background:rgba(245,158,11,.15); color:var(--amber);   border:1px solid rgba(245,158,11,.3); }
-
-    /* ── STEP PILL ─────────────────────────────────── */
-    .step-pill {
-      display:inline-flex; align-items:center; gap:10px;
-      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
-      border-radius:999px; padding:10px 20px;
-      font-family:'Outfit',sans-serif; font-size:.88rem; font-weight:600; color:var(--text);
-      margin-bottom:8px;
-    }
-    .sp-icon {
-      width:30px; height:30px; border-radius:50%;
-      display:flex; align-items:center; justify-content:center; font-size:.9rem;
-    }
-
-    /* ── CHECK LIST ─────────────────────────────────── */
-    .check-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
-    .check-list li {
-      display:flex; align-items:flex-start; gap:12px;
-      font-size:clamp(.85rem,1.4vw,.98rem); color:var(--muted); line-height:1.5;
-    }
-    .chk {
-      width:22px; height:22px; border-radius:50%; flex-shrink:0; margin-top:1px;
+    .step-num-big {
+      width:36px; height:36px; border-radius:50%;
+      background:var(--grad-purple); color:var(--white);
       display:flex; align-items:center; justify-content:center;
-      background:rgba(16,185,129,.15); color:var(--green); font-size:.7rem; font-weight:900;
+      font-family:'Outfit',sans-serif; font-weight:800; font-size:.95rem;
+      box-shadow:var(--shadow-glow); flex-shrink:0;
     }
 
-    /* ── INFO ROW ─────────────────────────────────── */
-    .info-row {
-      display:flex; align-items:center; gap:14px; padding:14px;
-      background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07);
-      border-radius:var(--r16); transition:all .3s;
-    }
-    .info-row:hover { border-color:rgba(6,182,212,.3); background:rgba(6,182,212,.05); }
-    .ir-icon {
-      width:44px; height:44px; border-radius:12px; flex-shrink:0;
-      display:flex; align-items:center; justify-content:center; font-size:1.2rem;
-    }
-    .ir-title { font-family:'Outfit',sans-serif; font-weight:700; color:var(--white); font-size:.92rem; }
-    .ir-desc  { font-size:.78rem; color:var(--muted); line-height:1.4; margin-top:2px; }
-
-    /* ── LIVE DOT ─────────────────────────────────── */
-    @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
-    .live-dot {
-      width:8px; height:8px; border-radius:50%; background:#22c55e;
-      animation:livePulse 1.5s ease-in-out infinite; display:inline-block;
-    }
-
-    /* ── TIMELINE STEP ─────────────────────────────── */
+    /* ── TIMELINE ────────────────────────────── */
     .tl { display:flex; flex-direction:column; gap:0; position:relative; }
     .tl::before {
-      content:''; position:absolute; left:19px; top:24px; bottom:24px;
-      width:2px; background:linear-gradient(to bottom, var(--indigo), var(--cyan), transparent);
+      content:''; position:absolute; left:18px; top:22px; bottom:22px; width:2px;
+      background:linear-gradient(to bottom, var(--purple-dark), var(--pink), transparent);
     }
-    .tl-item { display:flex; gap:20px; align-items:flex-start; padding:12px 0; }
+    .tl-item { display:flex; gap:18px; align-items:flex-start; padding:11px 0; }
     .tl-dot {
-      width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-      font-size:.85rem; flex-shrink:0; position:relative; z-index:1;
+      width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-size:.82rem; flex-shrink:0; position:relative; z-index:1;
     }
-    .tl-title { font-family:'Outfit',sans-serif; font-weight:700; color:var(--white); font-size:.92rem; }
-    .tl-desc  { font-size:.78rem; color:var(--muted); line-height:1.45; margin-top:3px; }
+    .tl-title { font-family:'Outfit',sans-serif; font-weight:700; color:var(--text-dark); font-size:.92rem; }
+    .tl-desc  { font-size:.78rem; color:var(--text-soft); line-height:1.5; margin-top:3px; }
 
-    /* ── ANIMATIONS ─────────────────────────────────── */
-    @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-    @keyframes pGlow  { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
-    @keyframes fUp    { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes fLeft  { from{opacity:0;transform:translateX(-24px)} to{opacity:1;transform:translateX(0)} }
-    @keyframes fRight { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
-    @keyframes scaleIn{ from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
+    /* ── INFO ROW ────────────────────────────── */
+    .irow {
+      display:flex; align-items:flex-start; gap:14px; padding:14px 16px;
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r12); box-shadow:var(--shadow-card); transition:all .3s;
+    }
+    .irow:hover { border-color:rgba(155,89,182,.35); box-shadow:0 6px 20px rgba(74,29,110,.12); }
+    .irow-icon {
+      width:42px; height:42px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.1rem; flex-shrink:0;
+    }
+    .irow-title { font-family:'Outfit',sans-serif; font-weight:700; color:var(--text-dark); font-size:.9rem; }
+    .irow-desc  { font-size:.76rem; color:var(--text-soft); line-height:1.4; margin-top:2px; }
+
+    /* ── CHECK LIST ──────────────────────────── */
+    .ck-list { list-style:none; display:flex; flex-direction:column; gap:9px; }
+    .ck-list li { display:flex; align-items:flex-start; gap:10px; font-size:clamp(.82rem,1.3vw,.95rem); color:var(--text-soft); line-height:1.5; }
+    .chk {
+      width:20px; height:20px; border-radius:50%; flex-shrink:0; margin-top:2px;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(155,89,182,.12); color:var(--purple-mid); font-size:.65rem; font-weight:900;
+    }
+
+    /* ── BADGE ───────────────────────────────── */
+    .badge {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 12px; border-radius:999px;
+      font-size:.76rem; font-weight:600; font-family:'Outfit',sans-serif;
+    }
+    .bp { background:rgba(155,89,182,.12); color:var(--purple-mid); border:1px solid rgba(155,89,182,.25); }
+    .bpk{ background:rgba(192,82,122,.1); color:var(--pink);        border:1px solid rgba(192,82,122,.25); }
+    .bg { background:rgba(34,197,94,.1);  color:#16a34a;             border:1px solid rgba(34,197,94,.25); }
+
+    /* ── LIVE DOT ────────────────────────────── */
+    @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+    .ldot { width:8px; height:8px; border-radius:50%; background:#22c55e; animation:livePulse 1.5s ease-in-out infinite; display:inline-block; }
+
+    /* ── SCREEN CHIP ─────────────────────────── */
+    .chip {
+      position:absolute; background:rgba(255,255,255,.97);
+      border:1px solid rgba(155,89,182,.2); border-radius:12px;
+      padding:9px 14px; display:flex; align-items:center; gap:9px;
+      box-shadow:0 8px 24px rgba(74,29,110,.18);
+    }
+    .chip-icon { font-size:1.1rem; }
+    .chip-label { font-size:.66rem; color:var(--text-muted); }
+    .chip-value { font-family:'Outfit',sans-serif; font-weight:700; color:var(--text-dark); font-size:.88rem; }
+
+    /* ── CTA BUTTON ──────────────────────────── */
+    .cta-btn {
+      display:inline-flex; align-items:center; gap:10px;
+      padding:14px 36px; background:var(--grad-cta);
+      border-radius:999px; font-family:'Outfit',sans-serif;
+      font-size:.95rem; font-weight:700; color:var(--white);
+      text-decoration:none; box-shadow:var(--shadow-glow); transition:all .3s;
+    }
+    .cta-btn:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 0 50px rgba(155,89,182,.5); }
+
+    /* ── ROADMAP CARD ─────────────────────────── */
+    .rm-card {
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+      border-radius:var(--r16); padding:22px; text-align:center; transition:all .3s;
+    }
+    .rm-card:hover { background:rgba(255,255,255,.13); transform:translateY(-4px); }
+
+    /* ── ANIMATIONS ──────────────────────────── */
+    @keyframes floatY  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes pGlow   { 0%,100%{opacity:.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }
+    @keyframes fUp     { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fLeft   { from{opacity:0;transform:translateX(-22px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes fRight  { from{opacity:0;transform:translateX(22px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes scaleIn { from{opacity:0;transform:scale(.92)} to{opacity:1;transform:scale(1)} }
 
     .float { animation:floatY 4s ease-in-out infinite; }
     .pglow { animation:pGlow 2.5s ease-in-out infinite; }
 
-    .slide.active .u0  { animation:fUp    .5s .00s both; }
-    .slide.active .u1  { animation:fUp    .5s .08s both; }
-    .slide.active .u2  { animation:fUp    .5s .16s both; }
-    .slide.active .u3  { animation:fUp    .5s .24s both; }
-    .slide.active .u4  { animation:fUp    .5s .32s both; }
-    .slide.active .u5  { animation:fUp    .5s .40s both; }
-    .slide.active .l1  { animation:fLeft  .55s .1s both; }
-    .slide.active .r1  { animation:fRight .55s .1s both; }
-    .slide.active .r2  { animation:fRight .55s .2s both; }
-    .slide.active .sc1 { animation:scaleIn .4s .15s both; }
-    .slide.active .sc2 { animation:scaleIn .4s .25s both; }
-    .slide.active .sc3 { animation:scaleIn .4s .35s both; }
+    .slide.active .u0 { animation:fUp    .5s .00s both; }
+    .slide.active .u1 { animation:fUp    .5s .08s both; }
+    .slide.active .u2 { animation:fUp    .5s .16s both; }
+    .slide.active .u3 { animation:fUp    .5s .24s both; }
+    .slide.active .u4 { animation:fUp    .5s .32s both; }
+    .slide.active .u5 { animation:fUp    .5s .40s both; }
+    .slide.active .l1 { animation:fLeft  .55s .1s both; }
+    .slide.active .r1 { animation:fRight .55s .1s both; }
+    .slide.active .r2 { animation:fRight .55s .2s both; }
+    .slide.active .sc1{ animation:scaleIn .4s .15s both; }
 
-    /* ── SLIDE SPECIFIC ─────────────────────────────── */
-    /* Slide 1 */
-    #s1 { background:linear-gradient(135deg,#0A0F1E 0%,#0F172A 45%,#120d30 100%); }
-    #s1 .o1 { width:500px;height:500px; background:radial-gradient(circle,rgba(79,70,229,.22) 0%,transparent 70%); top:-120px; left:-120px; }
-    #s1 .o2 { width:380px;height:380px; background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%); bottom:-80px; right:-80px; }
+    /* ── SLIDE BACKGROUNDS ───────────────────── */
+    /* Slides escuros (roxo) */
+    .s-dark  { background:var(--grad-purple); }
+    .s-dark2 { background:linear-gradient(135deg, #3D1460 0%, #6B2D8B 100%); }
+    .s-dark3 { background:linear-gradient(135deg, #2D0F4E 0%, #5C2D84 100%); }
+    /* Slides claros */
+    .s-light { background:var(--cream); }
 
-    /* Slide 7 */
-    #s7 { background:linear-gradient(135deg,#0A0F1E 0%,#0F172A 45%,#120d30 100%); text-align:center; }
-    #s7 .o1 { width:560px;height:560px; background:radial-gradient(circle,rgba(79,70,229,.28) 0%,transparent 70%); top:50%;left:50%;transform:translate(-50%,-50%); }
-
-    /* layouts */
-    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,56px); align-items:center; width:100%; max-width:1140px; }
-    .two-col-60 { display:grid; grid-template-columns:1fr 1.25fr; gap:clamp(24px,4vw,56px); align-items:center; width:100%; max-width:1140px; }
-    .content-z { position:relative; z-index:1; }
-    .slide-header { text-align:center; margin-bottom:clamp(20px,3.5vh,36px); }
-    .slide-wrap {
-      display:flex; flex-direction:column; align-items:center;
-      width:100%; height:100%; justify-content:center;
-      gap:clamp(12px,2.5vh,24px); position:relative; z-index:1;
-    }
-
-    /* 3-col grid */
-    .three-col { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; width:100%; max-width:1100px; }
-
-    /* CTA box */
-    .cta-box {
-      display:inline-flex; align-items:center; gap:10px;
-      padding:14px 36px; background:var(--gi);
-      border-radius:999px; font-family:'Outfit',sans-serif;
-      font-size:.95rem; font-weight:700; color:var(--white);
-      text-decoration:none; box-shadow:var(--glow-i); transition:all .3s;
-    }
-    .cta-box:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 0 50px rgba(79,70,229,.55); }
-
-    @media (max-width: 820px) {
-      .two-col, .two-col-60, .three-col { grid-template-columns:1fr; }
+    @media (max-width:820px) {
+      .two, .two60, .three { grid-template-columns:1fr; }
       .screen-right { display:none; }
     }
   </style>
 </head>
 <body>
 
-<div class="progress" id="prog" style="width:12.5%;"></div>
-<div class="hint"><span class="k">←</span><span class="k">→</span> navegar &nbsp;|&nbsp;<span class="k">F</span> tela cheia</div>
+<div class="prog" id="prog" style="width:12.5%;"></div>
+
+<div class="hint">
+  <span class="k">←</span><span class="k">→</span> navegar &nbsp;|&nbsp;<span class="k">F</span> tela cheia
+</div>
 <button class="fsBtn" id="fsBtn"><i data-lucide="maximize-2"></i></button>
 
 <div class="ss" id="ss">
 
-  <!-- ══════════════════════════════════════════════
-       SLIDE 1 — BOAS-VINDAS / HERO
-  ══════════════════════════════════════════════ -->
-  <section class="slide active" id="s1">
-    <div class="orb o1"></div>
-    <div class="orb o2"></div>
+  <!-- ════════════════════════════════════════════
+       SLIDE 1 — ABERTURA (dark)
+  ════════════════════════════════════════════ -->
+  <section class="slide active s-dark" id="s1">
+    <div class="orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.08) 0%,transparent 70%);top:-80px;left:-80px;"></div>
+    <div class="orb" style="width:380px;height:380px;background:radial-gradient(circle,rgba(192,82,122,.2) 0%,transparent 70%);bottom:-60px;right:-60px;"></div>
 
-    <div class="two-col content-z">
+    <div class="two" style="position:relative;z-index:1;">
       <!-- LEFT -->
       <div>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;" class="u0">
-          <div style="width:50px;height:50px;background:var(--gi);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:var(--glow-i);">🏠</div>
-          <span style="font-family:'Outfit',sans-serif;font-size:1.9rem;font-weight:800;color:var(--white);">CuideLar</span>
+        <!-- Logo real -->
+        <div class="u0" style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+          <img src="assets/logo-cuidelar.png" alt="CuideLar" style="height:56px;"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+          <div style="display:none;align-items:center;gap:10px;">
+            <div style="width:50px;height:50px;background:rgba(255,255,255,.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🏠</div>
+            <span style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800;color:var(--white);">CuideLar</span>
+          </div>
         </div>
 
-        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:999px;padding:7px 16px;font-size:.8rem;font-weight:600;color:var(--green);margin-bottom:18px;" class="u1">
-          👨‍👩‍👧 Guia para Famílias
+        <div class="u1" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:7px 16px;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:18px;">
+          👨‍👩‍👧 Guia exclusivo para Famílias
         </div>
 
         <h1 class="htitle u2" style="margin-bottom:18px;">
-          Seu familiar<br/>em boas mãos —<br/>
-          <span class="g">você sempre sabe.</span>
+          Seu familiar<br/>em boas mãos —<br/><span class="g">você sempre sabe.</span>
         </h1>
 
-        <p class="lead u3" style="margin-bottom:26px; max-width:520px;">
-          O CuideLar conecta sua família ao cuidador de forma digital, 
-          transparente e em <strong style="color:var(--white);">tempo real</strong>. 
-          Neste guia, você vai entender tudo sobre como funciona.
+        <p class="lead-dark u3" style="margin-bottom:26px;max-width:500px;">
+          Neste guia rápido, você vai ver <strong style="color:rgba(255,255,255,.9);">todas as telas do sistema</strong> 
+          e entender exatamente como acompanhar o cuidado do seu familiar — com transparência e segurança.
         </p>
 
         <div class="u4" style="display:flex;gap:10px;flex-wrap:wrap;">
-          <span class="badge bg">✅ Simples de usar</span>
-          <span class="badge bc">📱 Funciona no celular</span>
-          <span class="badge bi">🔒 100% seguro</span>
+          <span class="badge bg">✅ Fácil de usar</span>
+          <span class="badge" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.2);">📱 Funciona no celular</span>
+          <span class="badge" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.2);">🔒 100% seguro</span>
         </div>
       </div>
 
-      <!-- RIGHT -->
-      <div class="screen-right r1 float" style="position:relative;">
-        <div class="screen-frame" style="height:400px;">
-          <div class="browser-bar">
-            <div class="browser-dots">
-              <div class="bdot" style="background:#f43f5e;"></div>
-              <div class="bdot" style="background:#f59e0b;"></div>
-              <div class="bdot" style="background:#10b981;"></div>
+      <!-- RIGHT: login real -->
+      <div class="screen-right r1" style="position:relative;">
+        <div class="bframe float" style="max-width:440px;margin:auto;">
+          <div class="bbar">
+            <div class="bdots">
+              <div class="bd" style="background:#f43f5e;"></div>
+              <div class="bd" style="background:#f59e0b;"></div>
+              <div class="bd" style="background:#10b981;"></div>
             </div>
-            <div class="browser-url">cuidelar.vercel.app</div>
+            <div class="burl">cuidelar.vercel.app</div>
           </div>
-          <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_login_cuidelar_1785154526978.png"
-               alt="Tela de login do CuideLar"
-               onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+          <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\real_login_cuidelar_1785155434451.png"
+               style="height:340px;object-fit:cover;object-position:top;"
+               alt="Tela de login CuideLar"
+               onerror="this.parentElement.style.minHeight='280px';this.style.display='none';" />
         </div>
-        <!-- floating chip -->
-        <div style="position:absolute;bottom:-18px;left:-18px;background:rgba(15,23,42,.95);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 12px 28px rgba(0,0,0,.4);">
-          <div style="font-size:1.2rem;">🔒</div>
-          <div>
-            <div style="font-size:.68rem;color:var(--muted);">Acesso</div>
-            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.88rem;">Exclusivo da família</div>
-          </div>
+        <!-- chip -->
+        <div class="chip" style="bottom:-16px;right:8px;">
+          <div class="chip-icon">🔒</div>
+          <div><div class="chip-label">Acesso</div><div class="chip-value">Exclusivo da família</div></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════
-       SLIDE 2 — COMO ENTRAR NO SISTEMA
-  ══════════════════════════════════════════════ -->
-  <section class="slide" id="s2" style="background:linear-gradient(135deg,#0A0F1E,#0c1424);">
-    <div class="slide-wrap">
-      <div class="slide-header">
-        <div class="eyebrow u0">Passo 1 de 6 — Acesso</div>
+  <!-- ════════════════════════════════════════════
+       SLIDE 2 — COMO ENTRAR (light)
+  ════════════════════════════════════════════ -->
+  <section class="slide s-light light" id="s2">
+    <div class="wrap">
+      <div class="hdr">
+        <div class="eyebrow u0">Passo 1 de 5 — Primeiro Acesso</div>
         <h2 class="stitle u1">Como entrar no sistema</h2>
-        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:580px;">
-          O acesso é simples: basta usar o e-mail e senha cadastrados pela empresa responsável.
+        <p class="lead-light u2" style="max-width:560px;margin:10px auto 0;text-align:center;">
+          Acesso simples em qualquer dispositivo — sem precisar instalar nenhum aplicativo.
         </p>
       </div>
 
-      <div class="two-col-60" style="max-width:1100px;">
+      <div class="two60">
         <!-- SCREEN -->
         <div class="l1 screen-right" style="position:relative;">
-          <div class="screen-frame" style="height:360px;">
-            <div class="browser-bar">
-              <div class="browser-dots">
-                <div class="bdot" style="background:#f43f5e;"></div>
-                <div class="bdot" style="background:#f59e0b;"></div>
-                <div class="bdot" style="background:#10b981;"></div>
-              </div>
-              <div class="browser-url">cuidelar.vercel.app — Login</div>
+          <div class="bframe" style="max-width:400px;margin:auto;">
+            <div class="bbar">
+              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
+              <div class="burl">cuidelar.vercel.app — Login</div>
             </div>
-            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_login_cuidelar_1785154526978.png"
-                 alt="Tela de login" style="height:310px; object-fit:cover; object-position:top;"
-                 onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\real_login_cuidelar_1785155434451.png"
+                 style="height:340px;object-fit:cover;object-position:top;"
+                 alt="Tela de login"
+                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
           </div>
         </div>
 
         <!-- STEPS -->
         <div class="tl r1">
           <div class="tl-item">
-            <div class="tl-dot" style="background:rgba(79,70,229,.2);color:var(--indigo2);">1️⃣</div>
+            <div class="tl-dot" style="background:rgba(155,89,182,.15);color:var(--purple-mid);">1️⃣</div>
             <div>
-              <div class="tl-title">Abra o link no navegador ou celular</div>
-              <div class="tl-desc">Acesse <strong style="color:var(--cyan);">cuidelar.vercel.app</strong> em qualquer dispositivo — smartphone, tablet ou computador.</div>
+              <div class="tl-title">Abra no navegador ou celular</div>
+              <div class="tl-desc">Acesse <strong style="color:var(--purple-dark);">cuidelar.vercel.app</strong> em qualquer dispositivo — sem instalar nada.</div>
             </div>
           </div>
           <div class="tl-item">
-            <div class="tl-dot" style="background:rgba(6,182,212,.2);color:var(--cyan);">2️⃣</div>
+            <div class="tl-dot" style="background:rgba(192,82,122,.12);color:var(--pink);">2️⃣</div>
             <div>
               <div class="tl-title">Selecione o perfil "Família"</div>
-              <div class="tl-desc">Na tela inicial, clique na opção <strong style="color:var(--white);">Família</strong> para acessar o portal correto.</div>
+              <div class="tl-desc">Na tela inicial, escolha a opção <strong style="color:var(--purple-dark);">Família</strong> para ser direcionado ao portal correto.</div>
             </div>
           </div>
           <div class="tl-item">
-            <div class="tl-dot" style="background:rgba(16,185,129,.2);color:var(--green);">3️⃣</div>
+            <div class="tl-dot" style="background:rgba(155,89,182,.15);color:var(--purple-mid);">3️⃣</div>
             <div>
               <div class="tl-title">Digite e-mail e senha</div>
-              <div class="tl-desc">Use as credenciais fornecidas pela empresa no momento do contrato. Em caso de dúvida, entre em contato com o suporte.</div>
+              <div class="tl-desc">Use as credenciais fornecidas pela empresa CuideLar no momento do contrato.</div>
             </div>
           </div>
           <div class="tl-item">
-            <div class="tl-dot" style="background:rgba(245,158,11,.2);color:var(--amber);">4️⃣</div>
+            <div class="tl-dot" style="background:rgba(192,82,122,.12);color:var(--pink);">4️⃣</div>
             <div>
               <div class="tl-title">Clique em "Entrar no sistema"</div>
-              <div class="tl-desc">Você será redirecionado automaticamente para o seu painel exclusivo da família.</div>
+              <div class="tl-desc">Você é redirecionado automaticamente para o seu painel exclusivo da família.</div>
             </div>
+          </div>
+          <div style="margin-top:12px;padding:12px 14px;background:rgba(155,89,182,.08);border:1px solid rgba(155,89,182,.2);border-radius:var(--r12);">
+            <div style="font-size:.78rem;color:var(--text-soft);">💡 <strong style="color:var(--purple-dark);">Dúvida na senha?</strong> Entre em contato com a equipe CuideLar pelo WhatsApp.</div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════
-       SLIDE 3 — FEED EM TEMPO REAL
-  ══════════════════════════════════════════════ -->
-  <section class="slide" id="s3" style="background:linear-gradient(135deg,#0A0F1E,#0f1629);">
-    <div class="slide-wrap">
-      <div class="slide-header">
-        <div class="eyebrow u0">Passo 2 de 6 — Feed ao Vivo</div>
-        <h2 class="stitle u1">
-          Acompanhe tudo <span class="live-dot"></span> ao vivo
+  <!-- ════════════════════════════════════════════
+       SLIDE 3 — FEED EM TEMPO REAL (dark)
+  ════════════════════════════════════════════ -->
+  <section class="slide s-dark2" id="s3">
+    <div class="orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(192,82,122,.18) 0%,transparent 70%);top:-60px;right:-60px;"></div>
+    <div class="wrap" style="position:relative;z-index:1;">
+      <div class="hdr">
+        <div class="eyebrow u0" style="justify-content:center;">Passo 2 de 5 — Feed ao Vivo</div>
+        <h2 class="stitle dark u1" style="color:var(--white);">
+          Linha do tempo <span class="ldot"></span> ao vivo
         </h2>
-        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:600px;">
-          Assim que o cuidador registra qualquer evento, você recebe a atualização 
-          <strong style="color:var(--white);">na mesma hora</strong> no seu feed.
+        <p class="lead-dark u2" style="text-align:center;max-width:600px;margin:10px auto 0;">
+          Assim que o cuidador registra qualquer evento, você recebe a atualização <strong style="color:rgba(255,255,255,.95);">instantaneamente</strong> no feed.
         </p>
       </div>
 
-      <div class="two-col" style="max-width:1100px;">
-        <!-- LEFT INFO -->
-        <div class="l1" style="display:flex;flex-direction:column;gap:14px;">
-          <div class="info-row">
-            <div class="ir-icon" style="background:rgba(16,185,129,.15);">💓</div>
-            <div>
-              <div class="ir-title">Sinais vitais registrados</div>
-              <div class="ir-desc">Pressão arterial, frequência cardíaca, temperatura e saturação de oxigênio</div>
-            </div>
-          </div>
-          <div class="info-row">
-            <div class="ir-icon" style="background:rgba(6,182,212,.15);">🍽️</div>
-            <div>
-              <div class="ir-title">Alimentação documentada</div>
-              <div class="ir-desc">Café da manhã, almoço, lanche e jantar com nível de aceitação registrado</div>
-            </div>
-          </div>
-          <div class="info-row">
-            <div class="ir-icon" style="background:rgba(79,70,229,.15);">💊</div>
-            <div>
-              <div class="ir-title">Medicamentos administrados</div>
-              <div class="ir-desc">Lista de remédios ministrados com horários e confirmação do cuidador</div>
-            </div>
-          </div>
-          <div class="info-row">
-            <div class="ir-icon" style="background:rgba(245,158,11,.15);">📸</div>
-            <div>
-              <div class="ir-title">Fotos e observações</div>
-              <div class="ir-desc">Cuidador pode enviar fotos e notas do dia para manter a família informada</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SCREEN -->
-        <div class="r1 screen-right" style="position:relative;">
-          <div class="screen-frame" style="height:400px;">
-            <div class="browser-bar">
-              <div class="browser-dots">
-                <div class="bdot" style="background:#f43f5e;"></div>
-                <div class="bdot" style="background:#f59e0b;"></div>
-                <div class="bdot" style="background:#10b981;"></div>
-              </div>
-              <div class="browser-url">cuidelar.vercel.app/familia — Feed ao Vivo</div>
-            </div>
-            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_dashboard_familia_1785154541209.png"
-                 alt="Feed em tempo real da família"
-                 style="height:350px; object-fit:cover;"
-                 onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
-          </div>
-          <div style="position:absolute;top:-16px;right:-16px;background:rgba(15,23,42,.95);backdrop-filter:blur(14px);border:1px solid rgba(22,163,74,.3);border-radius:14px;padding:10px 16px;display:flex;align-items:center;gap:8px;">
-            <span class="live-dot"></span>
-            <span style="font-family:'Outfit',sans-serif;font-weight:700;color:#22c55e;font-size:.82rem;">AO VIVO</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════
-       SLIDE 4 — PERFIL DO IDOSO
-  ══════════════════════════════════════════════ -->
-  <section class="slide" id="s4" style="background:linear-gradient(135deg,#0A0F1E,#0f1a2c);">
-    <div class="slide-wrap">
-      <div class="slide-header">
-        <div class="eyebrow u0">Passo 3 de 6 — Perfil de Saúde</div>
-        <h2 class="stitle u1">Tudo sobre seu familiar em um só lugar</h2>
-        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:600px;">
-          O perfil do assistido reúne histórico de saúde, informações pessoais, 
-          alergias, contatos de emergência e gráficos de evolução.
-        </p>
-      </div>
-
-      <div class="two-col-60" style="max-width:1100px;">
+      <div class="two" style="align-items:start;">
         <!-- SCREEN -->
         <div class="l1 screen-right" style="position:relative;">
-          <div class="screen-frame" style="height:380px;">
-            <div class="browser-bar">
-              <div class="browser-dots">
-                <div class="bdot" style="background:#f43f5e;"></div>
-                <div class="bdot" style="background:#f59e0b;"></div>
-                <div class="bdot" style="background:#10b981;"></div>
-              </div>
-              <div class="browser-url">cuidelar.vercel.app/familia — Perfil do Assistido</div>
+          <div class="bframe" style="box-shadow:0 24px 60px rgba(0,0,0,.5);">
+            <div class="bbar">
+              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
+              <div class="burl">cuidelar.vercel.app/familia — Linha do Tempo</div>
             </div>
-            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_perfil_idoso_1785154587598.png"
-                 alt="Perfil de saúde do idoso"
-                 style="height:330px; object-fit:cover;"
-                 onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\real_feed_familia_1785155480735.png"
+                 style="height:340px;object-fit:cover;"
+                 alt="Feed em tempo real da família"
+                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
+          </div>
+          <div class="chip" style="top:-14px;right:8px;background:rgba(255,255,255,.97);">
+            <span class="ldot"></span>
+            <div><div class="chip-value" style="color:#16a34a;font-size:.82rem;">AO VIVO</div></div>
           </div>
         </div>
 
-        <!-- RIGHT -->
-        <div class="r1" style="display:flex;flex-direction:column;gap:16px;">
-          <div class="gc-card" style="position:relative;">
-            <div class="step-num">1</div>
-            <div style="font-size:1.6rem;margin-bottom:10px;">👴</div>
-            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);margin-bottom:6px;">Dados pessoais completos</div>
-            <div style="font-size:.83rem;color:var(--muted);line-height:1.55;">Nome, data de nascimento, tipo sanguíneo, alergias e contatos de emergência acessíveis a qualquer momento.</div>
+        <!-- INFO -->
+        <div class="r1" style="display:flex;flex-direction:column;gap:12px;">
+          <div class="irow">
+            <div class="irow-icon" style="background:rgba(155,89,182,.12);">💓</div>
+            <div>
+              <div class="irow-title">Sinais vitais registrados</div>
+              <div class="irow-desc">Pressão arterial, batimentos, temperatura e saturação aparecem no feed com horário exato</div>
+            </div>
           </div>
-          <div class="gc-card" style="position:relative;">
-            <div class="step-num">2</div>
-            <div style="font-size:1.6rem;margin-bottom:10px;">📊</div>
-            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);margin-bottom:6px;">Gráficos de evolução de saúde</div>
-            <div style="font-size:.83rem;color:var(--muted);line-height:1.55;">Acompanhe a tendência da pressão arterial, peso e frequência cardíaca ao longo dos últimos 7, 15 ou 30 dias.</div>
+          <div class="irow">
+            <div class="irow-icon" style="background:rgba(192,82,122,.1);">🍽️</div>
+            <div>
+              <div class="irow-title">Alimentação documentada</div>
+              <div class="irow-desc">Café da manhã, almoço, lanche e jantar — com nível de aceitação do seu familiar</div>
+            </div>
           </div>
-          <div class="gc-card" style="position:relative;">
-            <div class="step-num">3</div>
-            <div style="font-size:1.6rem;margin-bottom:10px;">🏥</div>
-            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);margin-bottom:6px;">Condições de saúde e diagnósticos</div>
-            <div style="font-size:.83rem;color:var(--muted);line-height:1.55;">Diagnósticos, condições crônicas e restrições ficam registrados para orientar o cuidador em cada plantão.</div>
+          <div class="irow">
+            <div class="irow-icon" style="background:rgba(155,89,182,.12);">💊</div>
+            <div>
+              <div class="irow-title">Medicamentos confirmados</div>
+              <div class="irow-desc">Lista de remédios ministrados com horários — incluindo o Losartana e demais prescrições</div>
+            </div>
+          </div>
+          <div class="irow">
+            <div class="irow-icon" style="background:rgba(245,158,11,.1);">📸</div>
+            <div>
+              <div class="irow-title">Fotos e observações do dia</div>
+              <div class="irow-desc">O cuidador pode enviar fotos e notas para manter a família sempre informada</div>
+            </div>
+          </div>
+          <div style="padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--r12);">
+            <div style="font-size:.78rem;color:rgba(255,255,255,.7);">💡 O feed atualiza <strong style="color:rgba(255,255,255,.95);">sem precisar recarregar a página</strong> — tecnologia Realtime integrada.</div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════
-       SLIDE 5 — DIÁRIO DE CUIDADOS
-  ══════════════════════════════════════════════ -->
-  <section class="slide" id="s5" style="background:linear-gradient(135deg,#0A0F1E,#0d1022);">
-    <div class="slide-wrap">
-      <div class="slide-header">
-        <div class="eyebrow u0">Passo 4 de 6 — Diário de Cuidados</div>
-        <h2 class="stitle u1">O que o cuidador registra a cada plantão</h2>
-        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:620px;">
-          Em cada turno, o cuidador preenche o diário digital. 
-          Você acessa todos os registros no feed — com horário exato de cada entrada.
+  <!-- ════════════════════════════════════════════
+       SLIDE 4 — PERFIL DE SAÚDE (light)
+  ════════════════════════════════════════════ -->
+  <section class="slide s-light light" id="s4">
+    <div class="wrap">
+      <div class="hdr">
+        <div class="eyebrow u0">Passo 3 de 5 — Perfil de Saúde</div>
+        <h2 class="stitle u1">Tudo sobre seu familiar em um lugar só</h2>
+        <p class="lead-light u2" style="max-width:580px;margin:10px auto 0;text-align:center;">
+          O perfil reúne dados pessoais, informações médicas, alergias e medicamentos contínuos.
         </p>
       </div>
 
-      <div class="two-col" style="max-width:1100px;">
-        <!-- LEFT -->
-        <div class="l1" style="display:flex;flex-direction:column;gap:12px;">
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
-            <span class="badge bg"><span class="live-dot" style="width:6px;height:6px;"></span> Tempo real</span>
-            <span class="badge bc">📱 Mobile</span>
+      <div class="two60">
+        <!-- SCREEN -->
+        <div class="l1 screen-right" style="position:relative;">
+          <div class="bframe" style="max-width:420px;margin:auto;">
+            <div class="bbar">
+              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
+              <div class="burl">cuidelar.vercel.app/familia — Perfil de Saúde</div>
+            </div>
+            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\real_perfil_saude_1785155488180.png"
+                 style="height:360px;object-fit:cover;"
+                 alt="Perfil de saúde"
+                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
           </div>
-          <ul class="check-list">
-            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Pressão Arterial</strong> — medida e registrada com horário</span></li>
-            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Temperatura e saturação</strong> de oxigênio</span></li>
-            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Refeições</strong> — tipo e nível de aceitação do idoso</span></li>
-            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Medicamentos</strong> — nome, dosagem e horário de administração</span></li>
-            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Humor e estado geral</strong> do assistido no dia</span></li>
-            <li><div class="chk">✓</div><span><strong style="color:var(--white);">Observações livres</strong> e fotos do cuidador</span></li>
-          </ul>
-          <div style="margin-top:8px;padding:16px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--r16);">
-            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--green);margin-bottom:6px;">💡 Você é notificado</div>
-            <div style="font-size:.82rem;color:var(--muted);line-height:1.5;">Cada novo registro aparece automaticamente no seu feed. Sem precisar atualizar a página.</div>
+        </div>
+
+        <!-- INFO CARDS -->
+        <div class="r1" style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card">
+            <div style="font-size:1.3rem;margin-bottom:8px;">👤</div>
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--text-dark);margin-bottom:5px;">Dados pessoais completos</div>
+            <div style="font-size:.82rem;color:var(--text-soft);line-height:1.55;">Nome, data de nascimento, gênero, médico responsável e plano de saúde acessíveis a qualquer momento.</div>
+          </div>
+          <div class="card">
+            <div style="font-size:1.3rem;margin-bottom:8px;">🚨</div>
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--text-dark);margin-bottom:5px;">Alergias em destaque</div>
+            <div style="font-size:.82rem;color:var(--text-soft);line-height:1.55;">As alergias do assistido aparecem em vermelho para que o cuidador jamais cometa um erro de medicação.</div>
+          </div>
+          <div class="card">
+            <div style="font-size:1.3rem;margin-bottom:8px;">💊</div>
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--text-dark);margin-bottom:5px;">Medicamentos contínuos cadastrados</div>
+            <div style="font-size:.82rem;color:var(--text-soft);line-height:1.55;">Lista de remédios de uso contínuo com dosagem e frequência — visível para o cuidador em cada plantão.</div>
+          </div>
+          <div class="card">
+            <div style="font-size:1.3rem;margin-bottom:8px;">🆘</div>
+            <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--text-dark);margin-bottom:5px;">Contato de emergência</div>
+            <div style="font-size:.82rem;color:var(--text-soft);line-height:1.55;">Seus contatos são registrados para situações urgentes durante o plantão.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════
+       SLIDE 5 — PRÓXIMOS PLANTÕES (dark)
+  ════════════════════════════════════════════ -->
+  <section class="slide s-dark3" id="s5">
+    <div class="orb" style="width:420px;height:420px;background:radial-gradient(circle,rgba(155,89,182,.2) 0%,transparent 70%);bottom:-60px;left:-60px;"></div>
+    <div class="wrap" style="position:relative;z-index:1;">
+      <div class="hdr">
+        <div class="eyebrow u0" style="justify-content:center;">Passo 4 de 5 — Agenda</div>
+        <h2 class="stitle u1" style="color:var(--white);">Próximos plantões programados</h2>
+        <p class="lead-dark u2" style="text-align:center;max-width:580px;margin:10px auto 0;">
+          Veja todos os cuidadores escalados, datas e horários com antecedência — com total transparência.
+        </p>
+      </div>
+
+      <div class="two">
+        <!-- SCREEN -->
+        <div class="l1 screen-right" style="position:relative;">
+          <div class="bframe" style="max-width:440px;margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.5);">
+            <div class="bbar">
+              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
+              <div class="burl">cuidelar.vercel.app/familia — Próximos Plantões</div>
+            </div>
+            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\real_proximos_plantoes_1785155519852.png"
+                 style="height:360px;object-fit:cover;"
+                 alt="Próximos plantões"
+                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
+          </div>
+        </div>
+
+        <!-- INFO -->
+        <div class="r1" style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <!-- mini agenda card replica -->
+            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--r12);padding:14px;display:flex;gap:14px;align-items:center;">
+              <div style="text-align:center;background:rgba(192,82,122,.25);border-radius:8px;padding:8px 10px;min-width:46px;">
+                <div style="font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:800;color:#f9a8c9;line-height:1;">01</div>
+                <div style="font-size:.6rem;color:rgba(255,255,255,.6);">AGO</div>
+              </div>
+              <div>
+                <div style="font-weight:600;color:var(--white);font-size:.86rem;">🧑‍⚕️ Priscila de Carvalho da Silva</div>
+                <div style="font-size:.74rem;color:rgba(255,255,255,.55);">07:00 – 19:00 &nbsp;•&nbsp; Plantão diurno</div>
+                <span style="font-size:.68rem;background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3);border-radius:999px;padding:2px 8px;display:inline-block;margin-top:4px;">agendado</span>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:var(--r12);padding:14px;display:flex;gap:14px;align-items:center;">
+              <div style="text-align:center;background:rgba(155,89,182,.25);border-radius:8px;padding:8px 10px;min-width:46px;">
+                <div style="font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:800;color:#c4b5fd;line-height:1;">01</div>
+                <div style="font-size:.6rem;color:rgba(255,255,255,.6);">AGO</div>
+              </div>
+              <div>
+                <div style="font-weight:600;color:var(--white);font-size:.86rem;">🧑‍⚕️ Raimunda Pereira da Silva</div>
+                <div style="font-size:.74rem;color:rgba(255,255,255,.55);">19:00 – 07:00 &nbsp;•&nbsp; Plantão noturno</div>
+                <span style="font-size:.68rem;background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3);border-radius:999px;padding:2px 8px;display:inline-block;margin-top:4px;">agendado</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+            <div class="irow" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);">
+              <div class="irow-icon" style="background:rgba(155,89,182,.2);">📅</div>
+              <div>
+                <div class="irow-title" style="color:var(--white);">Escala semanal completa</div>
+                <div class="irow-desc" style="color:rgba(255,255,255,.55);">Visualize todos os plantões da semana — dias, horários e nomes dos cuidadores</div>
+              </div>
+            </div>
+            <div class="irow" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);">
+              <div class="irow-icon" style="background:rgba(192,82,122,.18);">🔁</div>
+              <div>
+                <div class="irow-title" style="color:var(--white);">Substituições indicadas</div>
+                <div class="irow-desc" style="color:rgba(255,255,255,.55);">Quando há substituição de cuidador, você é informado com o nome do substituto na agenda</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════
+       SLIDE 6 — AVALIAR CUIDADOR (light)
+  ════════════════════════════════════════════ -->
+  <section class="slide s-light light" id="s6">
+    <div class="wrap">
+      <div class="hdr">
+        <div class="eyebrow u0">Passo 5 de 5 — Avaliação</div>
+        <h2 class="stitle u1">Avalie o cuidador após cada plantão</h2>
+        <p class="lead-light u2" style="max-width:580px;margin:10px auto 0;text-align:center;">
+          Seu feedback é fundamental para garantir a qualidade do atendimento. É simples e leva menos de 1 minuto.
+        </p>
+      </div>
+
+      <div class="two">
+        <!-- INFO -->
+        <div class="l1" style="display:flex;flex-direction:column;gap:14px;">
+          <div class="tl">
+            <div class="tl-item">
+              <div class="tl-dot" style="background:rgba(192,82,122,.12);color:var(--pink);">1️⃣</div>
+              <div>
+                <div class="tl-title">Acesse "Avaliar Cuidador(a)"</div>
+                <div class="tl-desc">No menu lateral do seu painel, clique na opção com a ⭐ estrela.</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot" style="background:rgba(155,89,182,.15);color:var(--purple-mid);">2️⃣</div>
+              <div>
+                <div class="tl-title">Selecione o plantão a avaliar</div>
+                <div class="tl-desc">Escolha qual plantão deseja avaliar na lista — aparece o nome do cuidador e a data.</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot" style="background:rgba(192,82,122,.12);color:var(--pink);">3️⃣</div>
+              <div>
+                <div class="tl-title">Clique nas estrelas</div>
+                <div class="tl-desc">De 1 a 5 estrelas — quanto mais estrelas, melhor o atendimento avaliado.</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot" style="background:rgba(155,89,182,.15);color:var(--purple-mid);">4️⃣</div>
+              <div>
+                <div class="tl-title">Deixe um comentário (opcional)</div>
+                <div class="tl-desc">Descreva o atendimento com palavras — pontos positivos, observações ou sugestões.</div>
+              </div>
+            </div>
+            <div class="tl-item" style="padding-bottom:0;">
+              <div class="tl-dot" style="background:rgba(192,82,122,.12);color:var(--pink);">5️⃣</div>
+              <div>
+                <div class="tl-title">Clique em "Enviar Avaliação"</div>
+                <div class="tl-desc">Pronto! Seu feedback é registrado e ajuda a manter o padrão de cuidado elevado.</div>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- SCREEN -->
         <div class="r1 screen-right" style="position:relative;">
-          <div class="screen-frame" style="height:400px;">
-            <div class="browser-bar">
-              <div class="browser-dots">
-                <div class="bdot" style="background:#f43f5e;"></div>
-                <div class="bdot" style="background:#f59e0b;"></div>
-                <div class="bdot" style="background:#10b981;"></div>
-              </div>
-              <div class="browser-url">cuidelar.vercel.app — Diário de Cuidados</div>
+          <div class="bframe" style="max-width:420px;margin:auto;">
+            <div class="bbar">
+              <div class="bdots"><div class="bd" style="background:#f43f5e;"></div><div class="bd" style="background:#f59e0b;"></div><div class="bd" style="background:#10b981;"></div></div>
+              <div class="burl">cuidelar.vercel.app/familia — Avaliar Cuidador(a)</div>
             </div>
-            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_diario_cuidados_1785154573203.png"
-                 alt="Diário de cuidados"
-                 style="height:350px; object-fit:cover;"
-                 onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
+            <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\real_avaliacao_1785155526785.png"
+                 style="height:360px;object-fit:cover;"
+                 alt="Tela de avaliação do cuidador"
+                 onerror="this.parentElement.style.minHeight='200px';this.style.display='none';" />
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════
-       SLIDE 6 — AGENDA E AVALIAÇÃO
-  ══════════════════════════════════════════════ -->
-  <section class="slide" id="s6" style="background:linear-gradient(135deg,#080e1c,#0f1520);">
-    <div class="slide-wrap">
-      <div class="slide-header">
-        <div class="eyebrow u0">Passos 5 e 6 — Agenda e Avaliação</div>
-        <h2 class="stitle u1">Agenda dos plantões e sua avaliação</h2>
+  <!-- ════════════════════════════════════════════
+       SLIDE 7 — RESUMO / DICAS (dark)
+  ════════════════════════════════════════════ -->
+  <section class="slide s-dark" id="s7">
+    <div class="orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(192,82,122,.2) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+    <div class="wrap" style="position:relative;z-index:1;">
+      <div class="hdr">
+        <div class="eyebrow u0" style="justify-content:center;">Dicas rápidas</div>
+        <h2 class="stitle u1" style="color:var(--white);text-align:center;">Tudo que você precisa saber</h2>
       </div>
 
-      <div class="two-col" style="max-width:1100px; align-items:start;">
-        <!-- LEFT: AGENDA -->
-        <div class="l1 gc-card" style="border-color:rgba(79,70,229,.2);">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
-            <div style="width:44px;height:44px;border-radius:12px;background:rgba(79,70,229,.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📅</div>
-            <div>
-              <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);">Agenda de Plantões</div>
-              <div style="font-size:.75rem;color:var(--muted);">Próximos atendimentos programados</div>
-            </div>
-          </div>
-          <!-- mini agenda -->
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div style="background:rgba(79,70,229,.08);border:1px solid rgba(79,70,229,.2);border-radius:var(--r16);padding:14px;display:flex;gap:14px;align-items:center;">
-              <div style="text-align:center;background:rgba(79,70,229,.15);border-radius:10px;padding:8px 12px;min-width:48px;">
-                <div style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;color:var(--indigo2);line-height:1;">28</div>
-                <div style="font-size:.65rem;color:var(--muted);">JUL</div>
-              </div>
-              <div>
-                <div style="font-weight:600;color:var(--white);font-size:.88rem;">Ana Paula Ferreira</div>
-                <div style="font-size:.75rem;color:var(--muted);">07:00 – 19:00 &nbsp;•&nbsp; 12h de plantão</div>
-                <span style="font-size:.7rem;background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3);border-radius:999px;padding:2px 8px;margin-top:4px;display:inline-block;">Confirmado</span>
-              </div>
-            </div>
-            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--r16);padding:14px;display:flex;gap:14px;align-items:center;">
-              <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 12px;min-width:48px;">
-                <div style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;color:var(--muted);line-height:1;">29</div>
-                <div style="font-size:.65rem;color:var(--muted);">JUL</div>
-              </div>
-              <div>
-                <div style="font-weight:600;color:var(--white);font-size:.88rem;">Carlos Mendes</div>
-                <div style="font-size:.75rem;color:var(--muted);">19:00 – 07:00 &nbsp;•&nbsp; Plantão noturno</div>
-                <span style="font-size:.7rem;background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.3);border-radius:999px;padding:2px 8px;margin-top:4px;display:inline-block;">Agendado</span>
-              </div>
-            </div>
-          </div>
+      <div class="three u2" style="max-width:960px;">
+        <div class="rm-card">
+          <div style="font-size:2rem;margin-bottom:10px;">📱</div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.95rem;margin-bottom:6px;">Acesse pelo celular</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.5;">Abra pelo navegador do smartphone — sem instalar aplicativo. Funciona no iPhone e Android.</div>
         </div>
-
-        <!-- RIGHT: AVALIAÇÃO -->
-        <div class="r1 gc-card" style="border-color:rgba(245,158,11,.2);">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
-            <div style="width:44px;height:44px;border-radius:12px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">⭐</div>
-            <div>
-              <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);">Avalie o Cuidador</div>
-              <div style="font-size:.75rem;color:var(--muted);">Ao final de cada plantão</div>
-            </div>
-          </div>
-          <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_avaliacao_cuidador_1785154605472.png"
-               alt="Tela de avaliação do cuidador"
-               style="width:100%;border-radius:12px;margin-bottom:14px;"
-               onerror="this.style.display='none';" />
-          <div style="font-size:.83rem;color:var(--muted);line-height:1.6;">
-            Após cada plantão, você pode avaliar o cuidador em <strong style="color:var(--white);">pontualidade</strong>, 
-            <strong style="color:var(--white);">atenção ao idoso</strong> e <strong style="color:var(--white);">comunicação</strong>. 
-            Seu feedback garante a qualidade do serviço!
-          </div>
+        <div class="rm-card">
+          <div style="font-size:2rem;margin-bottom:10px;">⚡</div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.95rem;margin-bottom:6px;">Atualizações em tempo real</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.5;">O feed atualiza automaticamente. Você não precisa ficar recarregando a página para ver novos registros.</div>
+        </div>
+        <div class="rm-card">
+          <div style="font-size:2rem;margin-bottom:10px;">🔒</div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.95rem;margin-bottom:6px;">Seus dados são privados</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.5;">Cada família acessa apenas os dados do seu familiar. Zero exposição de informações pessoais.</div>
+        </div>
+        <div class="rm-card">
+          <div style="font-size:2rem;margin-bottom:10px;">📅</div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.95rem;margin-bottom:6px;">Escala sempre atualizada</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.5;">A agenda de plantões é gerenciada pela equipe administrativa e fica disponível para você ver a qualquer hora.</div>
+        </div>
+        <div class="rm-card">
+          <div style="font-size:2rem;margin-bottom:10px;">⭐</div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.95rem;margin-bottom:6px;">Sua opinião importa</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.5;">As avaliações que você envia são analisadas pela gestão e influenciam diretamente na qualidade do serviço.</div>
+        </div>
+        <div class="rm-card">
+          <div style="font-size:2rem;margin-bottom:10px;">🆘</div>
+          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.95rem;margin-bottom:6px;">Precisa de ajuda?</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.5;">Nossa equipe está disponível pelo WhatsApp para ajudar com qualquer dúvida sobre o acesso ou o sistema.</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════
-       SLIDE 7 — CUIDADOR NO CAMPO (GPS/CHECK-IN)
-  ══════════════════════════════════════════════ -->
-  <section class="slide" id="s7-cuidador" style="background:linear-gradient(135deg,#0A0F1E,#0a1520);">
-    <div class="slide-wrap">
-      <div class="slide-header">
-        <div class="eyebrow u0">Nos bastidores — O Cuidador</div>
-        <h2 class="stitle u1">Como o cuidador usa o sistema</h2>
-        <p class="lead u2" style="margin:10px auto 0;text-align:center;max-width:600px;">
-          Para que você receba atualizações em tempo real, o cuidador usa o sistema diretamente pelo smartphone.
-        </p>
-      </div>
+  <!-- ════════════════════════════════════════════
+       SLIDE 8 — CTA FINAL (dark gradiente)
+  ════════════════════════════════════════════ -->
+  <section class="slide" id="s8" style="background:linear-gradient(135deg,#2D0F4E 0%,#5C2D84 50%,#8B3060 100%);text-align:center;">
+    <div class="orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.07) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
 
-      <div class="two-col" style="max-width:1100px;">
-        <!-- PHONE MOCKUP -->
-        <div class="l1 screen-right" style="display:flex;justify-content:center;">
-          <div style="max-width:280px;width:100%;">
-            <div class="screen-frame float" style="border-radius:28px;box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 8px rgba(255,255,255,.05);">
-              <div style="background:#0F172A;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06);">
-                <span style="font-size:.7rem;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:700;">CuideLar</span>
-                <span style="font-size:.65rem;color:var(--muted);">9:41</span>
-              </div>
-              <img src="C:\Users\rlmesquita\.gemini\antigravity-ide\brain\485122ff-003c-4370-9b6f-a1a245c0bcca\screen_cuidador_mobile_1785154559178.png"
-                   alt="App do cuidador no celular"
-                   style="width:100%;display:block;max-height:380px;object-fit:cover;"
-                   onerror="this.parentElement.style.background='linear-gradient(135deg,#1E293B,#0F172A)';this.style.display='none';" />
-            </div>
-          </div>
-        </div>
-
-        <!-- RIGHT INFO -->
-        <div class="r1" style="display:flex;flex-direction:column;gap:14px;">
-          <div class="info-row">
-            <div class="ir-icon" style="background:rgba(16,185,129,.15);">📍</div>
-            <div>
-              <div class="ir-title">Check-in com GPS ao chegar</div>
-              <div class="ir-desc">O sistema registra a localização do cuidador no momento da chegada, garantindo transparência total</div>
-            </div>
-          </div>
-          <div class="info-row">
-            <div class="ir-icon" style="background:rgba(6,182,212,.15);">⏱️</div>
-            <div>
-              <div class="ir-title">Cronômetro de plantão ao vivo</div>
-              <div class="ir-desc">O tempo de plantão é contado automaticamente e você pode acompanhar quando o cuidador chegou</div>
-            </div>
-          </div>
-          <div class="info-row">
-            <div class="ir-icon" style="background:rgba(79,70,229,.15);">✅</div>
-            <div>
-              <div class="ir-title">Checklist de atividades</div>
-              <div class="ir-desc">Cada atividade do plantão (banho, medicamentos, refeições) é marcada conforme é realizada</div>
-            </div>
-          </div>
-          <div class="info-row">
-            <div class="ir-icon" style="background:rgba(245,158,11,.15);">📋</div>
-            <div>
-              <div class="ir-title">Diário de cuidados ao final</div>
-              <div class="ir-desc">Antes de sair, o cuidador registra sinais vitais, alimentação e observações do dia</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════
-       SLIDE 8 — CTA FINAL
-  ══════════════════════════════════════════════ -->
-  <section class="slide" id="s-final" style="background:linear-gradient(135deg,#0A0F1E,#0F172A,#120d30);text-align:center;">
-    <div class="orb" style="width:550px;height:550px;background:radial-gradient(circle,rgba(79,70,229,.25) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
-
-    <div style="display:flex;flex-direction:column;align-items:center;gap:28px;position:relative;z-index:1;max-width:780px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:26px;position:relative;z-index:1;max-width:740px;">
       <div class="pglow u0" style="font-size:3.5rem;">❤️</div>
 
       <div class="u1">
-        <div class="eyebrow" style="justify-content:center;">Resumo do sistema</div>
-        <h2 class="htitle" style="margin-bottom:16px;">
+        <div class="eyebrow u0" style="justify-content:center;color:var(--pink-light);">Cuidar é a nossa missão</div>
+        <h2 class="htitle" style="margin-bottom:14px;font-size:clamp(2rem,4.5vw,4rem);">
           Tranquilidade para você,<br/><span class="g">cuidado de qualidade para ele.</span>
         </h2>
-        <p class="lead" style="text-align:center;margin:0 auto;max-width:620px;">
+        <p style="font-size:clamp(.88rem,1.5vw,1.1rem);line-height:1.7;color:rgba(255,255,255,.65);max-width:580px;margin:0 auto;">
           Com o CuideLar, você tem visibilidade total sobre o cuidado do seu familiar — 
-          onde quer que você esteja, em qualquer dispositivo, 24 horas por dia.
+          de qualquer lugar, em qualquer dispositivo, 24 horas por dia.
         </p>
       </div>
 
-      <!-- RESUMO PILLS -->
-      <div class="u2 three-col" style="max-width:700px;gap:14px;">
-        <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--r16);padding:18px;text-align:center;">
-          <div style="font-size:1.8rem;margin-bottom:8px;">📱</div>
-          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.88rem;">Acesse pelo celular</div>
-          <div style="font-size:.75rem;color:var(--muted);margin-top:4px;">Sem precisar instalar nenhum aplicativo</div>
+      <!-- QUICK RECAP -->
+      <div class="u2" style="display:flex;gap:28px;flex-wrap:wrap;justify-content:center;">
+        <div style="text-align:center;">
+          <div style="font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:800;background:var(--grad-pink);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:4px;">5</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.55);">Telas para você</div>
         </div>
-        <div style="background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.2);border-radius:var(--r16);padding:18px;text-align:center;">
-          <div style="font-size:1.8rem;margin-bottom:8px;">⚡</div>
-          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.88rem;">Tempo real</div>
-          <div style="font-size:.75rem;color:var(--muted);margin-top:4px;">Cada registro chega ao instante no seu feed</div>
+        <div style="text-align:center;">
+          <div style="font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:800;background:var(--grad-pink);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:4px;">Live</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.55);">Atualizações em tempo real</div>
         </div>
-        <div style="background:rgba(79,70,229,.07);border:1px solid rgba(79,70,229,.2);border-radius:var(--r16);padding:18px;text-align:center;">
-          <div style="font-size:1.8rem;margin-bottom:8px;">🔒</div>
-          <div style="font-family:'Outfit',sans-serif;font-weight:700;color:var(--white);font-size:.88rem;">Seguro e privado</div>
-          <div style="font-size:.75rem;color:var(--muted);margin-top:4px;">Seus dados são protegidos e só você tem acesso</div>
+        <div style="text-align:center;">
+          <div style="font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:800;background:var(--grad-pink);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:4px;">100%</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.55);">Digital e seguro</div>
         </div>
       </div>
 
-      <div class="u3" style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
-        <a href="index.html" class="cta-box">🏠 Acessar o CuideLar</a>
+      <div class="u3">
+        <a href="index.html" class="cta-btn">🏠 Acessar o CuideLar agora</a>
       </div>
 
-      <div class="u4" style="font-size:.8rem;color:rgba(148,163,184,.5);">
-        Em caso de dúvidas, entre em contato com a empresa responsável pelo cuidado. &nbsp;|&nbsp; CuideLar © 2026
+      <div class="u4" style="font-size:.78rem;color:rgba(255,255,255,.35);">
+        CuideLar — Assistência Domiciliar e Hospitalar &nbsp;|&nbsp; © 2026
       </div>
     </div>
   </section>
@@ -838,7 +856,6 @@
   const ctr    = document.getElementById('ctr');
   const dotsEl = document.getElementById('dots');
 
-  // Build dots
   for (let i = 0; i < TOTAL; i++) {
     const d = document.createElement('button');
     d.className = 'dot' + (i === 0 ? ' on' : '');
@@ -853,7 +870,6 @@
     if (anim || idx === cur || idx < 0 || idx >= TOTAL) return;
     anim = true;
     const prev = cur; cur = idx;
-
     slides[prev].classList.remove('active');
     slides[prev].classList.add('out');
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -861,7 +877,6 @@
       slides[cur].classList.add('active');
       anim = false;
     }));
-
     getDots().forEach((d, i) => d.classList.toggle('on', i === cur));
     prog.style.width = ((cur + 1) / TOTAL * 100).toFixed(1) + '%';
     ctr.textContent = (cur + 1) + ' / ' + TOTAL;
@@ -876,32 +891,28 @@
     if (e.key === 'f' || e.key === 'F') fs();
   });
 
-  // Touch
   let tx = 0;
-  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive:true });
   document.addEventListener('touchend',   e => {
     const d = e.changedTouches[0].clientX - tx;
     if (Math.abs(d) > 48) { d < 0 ? go(cur + 1) : go(cur - 1); }
-  }, { passive: true });
+  }, { passive:true });
 
-  // Scroll
   let wc = false;
   document.addEventListener('wheel', e => {
     if (wc) return; wc = true;
     e.deltaY > 0 ? go(cur + 1) : go(cur - 1);
     setTimeout(() => { wc = false; }, 800);
-  }, { passive: true });
+  }, { passive:true });
 
-  // Fullscreen
   function fs() {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
     else document.exitFullscreen?.();
   }
   document.getElementById('fsBtn').addEventListener('click', fs);
 
-  // Re-render icons on slide change
   new MutationObserver(() => lucide.createIcons()).observe(
-    document.getElementById('ss'), { attributes: true, subtree: true, attributeFilter: ['class'] }
+    document.getElementById('ss'), { attributes:true, subtree:true, attributeFilter:['class'] }
   );
 </script>
 </body>
