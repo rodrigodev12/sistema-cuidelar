@@ -310,7 +310,7 @@
      ============================================================ -->
 <script>
 let supabase = null;
-let DEMO_MODE = true;
+let DEMO_MODE = false;
 
 const _stubSupabase = {
   from: () => ({
@@ -353,15 +353,16 @@ function setupCrossSync() {
     };
   }
 
-  // Fallback: polling localStorage a cada 8 segundos
+  // Fallback: polling localStorage a cada 8 segundos (apenas se DEMO_MODE ativo)
   setInterval(() => {
-    const savedProfile = localStorage.getItem('cl_current_profile');
-    if (savedProfile && savedProfile !== currentDemoProfile) {
-      currentDemoProfile = savedProfile;
-      showDemoData();
-      loadFeed();
-      restoreCheckinStatus();
-      showToast(`Familiar alterado via painel da cuidadora: ${currentDemoProfile === 'idoso' ? 'Maria' : 'Enzo'}`, 'info');
+    if (DEMO_MODE) {
+      const savedProfile = localStorage.getItem('cl_current_profile');
+      if (savedProfile && savedProfile !== currentDemoProfile) {
+        currentDemoProfile = savedProfile;
+        showDemoData();
+        loadFeed();
+        restoreCheckinStatus();
+      }
     }
 
     const raw = localStorage.getItem('cl_last_update');
@@ -388,7 +389,7 @@ function handleRemoteUpdate(type, payload) {
     profileChanged = true;
   }
 
-  if (profileChanged) {
+  if (profileChanged && DEMO_MODE) {
     localStorage.setItem('cl_current_profile', currentDemoProfile);
     showDemoData();
     restoreCheckinStatus();
