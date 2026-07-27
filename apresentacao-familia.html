@@ -774,6 +774,68 @@
       box-shadow: 0 0 50px rgba(155, 89, 182, .5);
     }
 
+    .cta-btn-sec {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(16px);
+      border-radius: 999px;
+      font-family: 'Outfit', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--white);
+      cursor: pointer;
+      transition: all .3s;
+      text-decoration: none;
+    }
+
+    .cta-btn-sec:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-3px) scale(1.03);
+    }
+
+    /* ── FLOATING BACK TO TOP BUTTON ─────────── */
+    .to-top-btn {
+      position: fixed;
+      bottom: 28px;
+      left: 24px;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      z-index: 998;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .to-top-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+
+    .to-top-btn:hover {
+      background: var(--purple-dark);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 12px 28px rgba(155, 89, 182, 0.4);
+    }
+
     /* ── ROADMAP CARD ─────────────────────────── */
     .rm-card {
       background: rgba(255, 255, 255, .08);
@@ -1070,8 +1132,12 @@
         font-weight: 700 !important;
       }
 
-      .hint, .fsBtn {
-        display: none !important;
+      .to-top-btn {
+        left: 12px;
+        bottom: 12px;
+        height: 36px;
+        padding: 0 12px;
+        font-size: 0.72rem;
       }
     }
 
@@ -1647,8 +1713,12 @@
           </div>
         </div>
 
-        <div class="u3">
-          <a href="index.html" class="cta-btn">🏠 Acessar o Cuidelar agora</a>
+        <div class="u3" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+          <a href="index.html" class="cta-btn">🏠 Acessar o sistema agora</a>
+          <button onclick="goTo(0)" class="cta-btn-sec">
+            <i data-lucide="arrow-up" style="width:18px;height:18px;"></i>
+            <span>Voltar ao topo</span>
+          </button>
         </div>
 
         <div class="u4" style="font-size:.78rem;color:rgba(255,255,255,.35);">
@@ -1658,6 +1728,12 @@
     </section>
 
   </div><!-- /ss -->
+
+  <!-- Floating Back to Top Button -->
+  <button class="to-top-btn" id="toTopBtn" onclick="goTo(0)" aria-label="Voltar ao topo">
+    <i data-lucide="arrow-up" style="width:16px;height:16px;"></i>
+    <span>Topo</span>
+  </button>
 
   <!-- Bottom nav (prev/next + counter) -->
   <nav class="nav">
@@ -1714,6 +1790,12 @@
       getDotItems().forEach((item, i) => item.classList.toggle('on', i === idx));
       prog.style.width = ((idx + 1) / TOTAL * 100).toFixed(1) + '%';
       ctrEl.textContent = (idx + 1) + ' / ' + TOTAL;
+
+      // Show/hide floating back-to-top button
+      const toTopBtn = document.getElementById('toTopBtn');
+      if (toTopBtn) {
+        toTopBtn.classList.toggle('visible', idx > 0);
+      }
     }
 
     function goTo(idx) {
