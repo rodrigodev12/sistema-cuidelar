@@ -212,7 +212,25 @@
       background: rgba(255, 255, 255, 0.22);
     }
 
-    /* ── HERO LOGO & TAGS ───────────────────── */
+    /* ── SAAS HEALTH TECH HERO 2026 ─────────────── */
+    #s1.slide {
+      background: radial-gradient(130% 130% at 50% 0%, #3D1668 0%, #22083E 55%, #0F031D 100%) !important;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ambient particles / grid overlay */
+    #s1::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      opacity: 0.6;
+      z-index: 0;
+    }
+
     .logo-hero-box {
       display: flex;
       justify-content: flex-start;
@@ -224,9 +242,56 @@
       height: clamp(180px, 18vw, 260px);
       width: auto;
       display: block;
-      /* mix-blend-mode: screen remove o fundo branco do PNG no fundo escuro */
       mix-blend-mode: screen;
-      filter: brightness(1.1) drop-shadow(0 0 16px rgba(255, 255, 255, 0.2));
+      filter: drop-shadow(0 0 35px rgba(255, 255, 255, 0.22)) drop-shadow(0 0 65px rgba(192, 82, 122, 0.15)) brightness(1.08);
+      transition: filter 0.4s ease;
+    }
+
+    /* Hero Eyebrow Pill Badge */
+    .hero-pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      border-radius: 999px;
+      padding: 7px 18px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.95);
+      margin-bottom: 22px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hero-pill-badge:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 6px 24px rgba(192, 82, 122, 0.25);
+      transform: translateY(-2px);
+    }
+
+    /* Headline Gradient Highlight */
+    .hero-gradient-text {
+      background: linear-gradient(135deg, #FF7AD9 0%, #C084FC 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 20px rgba(255, 122, 217, 0.3));
+    }
+
+    /* Floating Phone Motion */
+    @keyframes heroFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .hero-phone-floating {
+      animation: heroFloat 6s ease-in-out infinite;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 45px rgba(192, 82, 122, 0.25);
+      border-radius: 38px;
     }
 
     .hero-tags-container {
@@ -1233,20 +1298,21 @@
   <div class="ss" id="ss">
 
     <!-- ════════════════════════════════════════════
-       SLIDE 1 — ABERTURA (dark)
+       SLIDE 1 — HERO SECTION (SaaS Health Tech Premium 2026)
   ════════════════════════════════════════════ -->
     <section class="slide s-dark" id="s1">
+      <!-- Difuse ambient purple lighting orbs -->
       <div class="orb"
-        style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.08) 0%,transparent 70%);top:-80px;left:-80px;">
+        style="width:650px;height:650px;background:radial-gradient(circle,rgba(192,82,122,.18) 0%,rgba(155,89,182,.1) 45%,transparent 70%);top:-140px;left:-140px;filter:blur(60px);pointer-events:none;">
       </div>
       <div class="orb"
-        style="width:380px;height:380px;background:radial-gradient(circle,rgba(192,82,122,.2) 0%,transparent 70%);bottom:-60px;right:-60px;">
+        style="width:550px;height:550px;background:radial-gradient(circle,rgba(155,89,182,.2) 0%,rgba(74,29,110,.12) 50%,transparent 70%);bottom:-120px;right:-120px;filter:blur(60px);pointer-events:none;">
       </div>
 
-      <div class="two" style="position:relative;z-index:1;">
-        <!-- LEFT -->
+      <div class="two" style="position:relative;z-index:1;align-items:center;">
+        <!-- LEFT: TEXT & BRANDING -->
         <div>
-          <!-- Logo completa com fundo transparente via mix-blend-mode -->
+          <!-- Logo Cuidelar HD com glow suave imperceptível -->
           <div class="u0 logo-hero-box">
             <img src="assets/logo-cuidelar.png" alt="Cuidelar, Assistência Domiciliar e Hospitalar"
               class="hero-logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
@@ -1264,35 +1330,38 @@
             </div>
           </div>
 
-          <div class="u1"
-            style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:7px 16px;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:18px;">
-            👨‍👩‍👧 Guia exclusivo para Famílias
+          <!-- Glassmorphism Pill Badge -->
+          <div class="u1 hero-pill-badge">
+            <span style="font-size:0.95rem;">👨‍👩‍👧</span> Guia exclusivo para Famílias
           </div>
 
-          <h1 class="htitle u2" style="margin-bottom:18px;">
-            Seu familiar<br />em boas mãos <br /><span class="g">você sempre atualizado.</span>
+          <!-- Bold Impact Headline -->
+          <h1 class="htitle u2" style="font-family:'Outfit',sans-serif;font-size:clamp(2.2rem,4.8vw,4rem);font-weight:800;line-height:1.1;letter-spacing:-0.02em;margin-bottom:20px;color:#FFFFFF;text-shadow:0 4px 20px rgba(0,0,0,0.4);">
+            Seu familiar<br />
+            em boas mãos,<br />
+            <span class="hero-gradient-text">você sempre atualizado.</span>
           </h1>
 
-          <p class="lead-dark u3" style="margin-bottom:20px;max-width:500px;">
-            Neste guia rápido, você vai ver <strong style="color:rgba(255,255,255,.95);">todas as telas do
-              sistema</strong>
+          <!-- Legible Descriptive Paragraph -->
+          <p class="lead-dark u3" style="max-width:620px;line-height:1.7;color:rgba(255,255,255,0.82);font-size:clamp(0.92rem,1.3vw,1.1rem);margin-bottom:24px;">
+            Neste guia rápido, você vai ver <strong style="color:#FFFFFF;font-weight:700;">todas as telas do sistema</strong>
             e entender exatamente como acompanhar o cuidado do seu familiar, com transparência e segurança.
           </p>
         </div>
 
-        <!-- RIGHT: celular + tags posicionadas por baixo -->
+        <!-- RIGHT: MOCKUP DO CELULAR + TAGS -->
         <div class="screen-right r1"
           style="position:relative; display:flex; flex-direction:column; align-items:center;">
-          <div class="phone-mockup float">
+          <div class="phone-mockup hero-phone-floating">
             <img src="assets/screenshots/tela 1.png" alt="Tela de Login Cuidelar no iPhone" />
-            <!-- chip -->
-            <div class="chip" style="bottom:-10px; right:10px; background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(12px); border-radius:999px; padding:5px 12px; display:inline-flex; align-items:center; gap:6px;">
+            <!-- Chip Glassmorphic -->
+            <div class="chip" style="bottom:-10px; right:10px; background:rgba(15,23,42,0.88); border:1px solid rgba(255,255,255,0.22); backdrop-filter:blur(16px); border-radius:999px; padding:6px 14px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 8px 24px rgba(0,0,0,0.35);">
               <span style="font-size:0.75rem;">🔒</span>
               <span style="color:#FFFFFF; font-family:'Outfit',sans-serif; font-weight:700; font-size:0.72rem;">Exclusivo da família</span>
             </div>
           </div>
 
-          <!-- Tags posicionadas por baixo do celular em linha limpa -->
+          <!-- Tags posicionadas por baixo do celular -->
           <div class="u4 hero-tags-container">
             <span class="badge badge-glass-green">✅ Fácil de usar</span>
             <span class="badge badge-glass">📱 Funciona no celular</span>
