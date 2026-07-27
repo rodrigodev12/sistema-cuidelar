@@ -53,67 +53,6 @@
 
 <div class="familia-layout">
 
-  <!-- SIDEBAR -->
-  <aside class="familia-sidebar">
-
-    <div class="familia-sidebar-header">
-      <div class="idoso-hero animate-fade-in">
-        <div class="idoso-hero-photo" id="sideIdosoPhoto">👴</div>
-        <div>
-          <h2 id="sideIdosoNome">Maria das Graças</h2>
-          <div class="idoso-hero-age" id="sideIdosoAge">83 anos · Tipo A+</div>
-          <div style="margin-top:.5rem;" id="cuidadorStatus">
-            <div class="cuidador-online">
-              <div class="status-dot active" aria-hidden="true"></div>
-              Cuidadora presente
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <nav class="familia-nav" aria-label="Navegação do painel família">
-      <div class="familia-nav-item active" id="nav-feed" onclick="showFamiliaSection('feed', this)">
-        <i data-lucide="activity" aria-hidden="true"></i> Feed em Tempo Real
-      </div>
-      <div class="familia-nav-item" id="nav-perfil" onclick="showFamiliaSection('perfil', this)">
-        <i data-lucide="heart" aria-hidden="true"></i> Perfil de Saúde
-      </div>
-      <div class="familia-nav-item" id="nav-plantoes" onclick="showFamiliaSection('plantoes', this)">
-        <i data-lucide="calendar" aria-hidden="true"></i> Próximos Plantões
-      </div>
-      <div class="familia-nav-item" id="nav-avaliacao" onclick="showFamiliaSection('avaliacao', this)">
-        <i data-lucide="star" aria-hidden="true"></i> Avaliar Cuidador(a)
-      </div>
-    </nav>
-
-    <!-- Info rápida -->
-    <div class="idoso-quick-info animate-fade-in-up">
-      <div class="quick-info-title">Último Registro</div>
-      <div class="quick-info-row">
-        <span class="quick-info-label">💓 Batimentos</span>
-        <span class="quick-info-value" id="lastBat">72 bpm</span>
-      </div>
-      <div class="quick-info-row">
-        <span class="quick-info-label">🩺 Pressão</span>
-        <span class="quick-info-value" id="lastPA">118/78</span>
-      </div>
-      <div class="quick-info-row">
-        <span class="quick-info-label">🌡️ Temp.</span>
-        <span class="quick-info-value" id="lastTemp">36.4°C</span>
-      </div>
-      <div class="quick-info-row">
-        <span class="quick-info-label">🍽️ Alimentação</span>
-        <span class="quick-info-value" id="lastAlim" style="color:var(--success)">Aceitou</span>
-      </div>
-      <div class="quick-info-row">
-        <span class="quick-info-label">💊 Medicamento</span>
-        <span class="quick-info-value" style="color:var(--success)" id="lastMed">✅ OK</span>
-      </div>
-    </div>
-
-  </aside>
-
   <!-- MAIN CONTENT -->
   <main class="familia-content">
 
@@ -292,6 +231,26 @@
   </main>
 
 </div>
+
+<!-- NAVEGAÇÃO INFERIOR ESTÁTICA (FAMÍLIA) -->
+<nav class="familia-bottom-nav" aria-label="Navegação inferior família">
+  <button class="bottom-nav-item active" id="bnav-feed" onclick="showFamiliaSection('feed')">
+    <i data-lucide="activity" aria-hidden="true"></i>
+    <span>Feed</span>
+  </button>
+  <button class="bottom-nav-item" id="bnav-perfil" onclick="showFamiliaSection('perfil')">
+    <i data-lucide="heart" aria-hidden="true"></i>
+    <span>Perfil</span>
+  </button>
+  <button class="bottom-nav-item" id="bnav-plantoes" onclick="showFamiliaSection('plantoes')">
+    <i data-lucide="calendar" aria-hidden="true"></i>
+    <span>Plantões</span>
+  </button>
+  <button class="bottom-nav-item" id="bnav-avaliacao" onclick="showFamiliaSection('avaliacao')">
+    <i data-lucide="star" aria-hidden="true"></i>
+    <span>Avaliar</span>
+  </button>
+</nav>
 
 <!-- Toast -->
 <div class="toast-container" id="toastContainer" aria-live="polite"></div>
@@ -1288,8 +1247,7 @@ window.showFamiliaSection = (name, el) => {
   
   const bottomEl = document.getElementById(`bnav-${name}`);
   if (bottomEl) bottomEl.classList.add('active');
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+
   lucide.createIcons();
 };
 
