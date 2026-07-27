@@ -205,6 +205,43 @@
       background: rgba(255, 255, 255, 0.22);
     }
 
+    /* ── HERO LOGO & ENQUADRAMENTO ───────────── */
+    .logo-hero-box {
+      display: flex;
+      justify-content: flex-start;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .logo-hero-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .hero-logo-img {
+      height: clamp(80px, 8.5vw, 115px);
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.45)) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.5)) contrast(1.1) brightness(1.08);
+    }
+
+    .hero-logo-sub {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(0.68rem, 0.85vw, 0.78rem);
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      background: linear-gradient(90deg, #F8F0F4 0%, #FFFFFF 50%, #E8A4BC 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-top: 5px;
+      text-align: left;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
+    }
+
     /* ── ARROW NAV BUTTONS ───────────────────── */
     .nav {
       position: fixed;
@@ -990,12 +1027,24 @@
         justify-content: center;
       }
 
-      .u0 {
+      .logo-hero-box {
         justify-content: center !important;
+        margin-bottom: 12px !important;
       }
 
-      .u0 img {
-        height: 160px !important;
+      .logo-hero-wrap {
+        align-items: center !important;
+      }
+
+      .hero-logo-img {
+        height: 72px !important;
+      }
+
+      .hero-logo-sub {
+        font-size: 0.62rem !important;
+        letter-spacing: 0.16em !important;
+        text-align: center !important;
+        margin-top: 3px !important;
       }
 
       .u4 {
@@ -1059,19 +1108,24 @@
 
     @media (max-width: 480px) {
       .slide {
-        padding: 50px 12px 90px 12px !important;
+        padding: 45px 12px 85px 12px !important;
       }
 
       .phone-mockup {
-        max-width: 190px !important;
+        max-width: 185px !important;
       }
 
       .phone-mockup img {
-        max-height: 360px !important;
+        max-height: 320px !important;
       }
 
-      .u0 img {
-        height: 145px !important;
+      .hero-logo-img {
+        height: 62px !important;
+      }
+
+      .hero-logo-sub {
+        font-size: 0.58rem !important;
+        letter-spacing: 0.14em !important;
       }
     }
   </style>
@@ -1105,16 +1159,16 @@
       <div class="two" style="position:relative;z-index:1;">
         <!-- LEFT -->
         <div>
-          <!-- Logo real transparente e centralizado -->
-          <div class="u0" style="display:flex; justify-content:center; width:100%; margin-bottom:24px;">
-            <img src="assets/logo-cuidelar.png" alt="CuideLar" style="height:165px; width:auto; display:block; filter: drop-shadow(0 0 25px rgba(255,255,255,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.4));"
-              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-            <div style="display:none;align-items:center;gap:10px;">
-              <div
-                style="width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">
-                🏠</div>
-              <span
-                style="font-family:'Outfit',sans-serif;font-size:2.2rem;font-weight:800;color:var(--white);">CuideLar</span>
+          <!-- Logo HD enquadrado com alta visibilidade da tagline -->
+          <div class="u0 logo-hero-box">
+            <div class="logo-hero-wrap">
+              <img src="assets/logo-cuidelar.png" alt="CuideLar" class="hero-logo-img"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+              <div style="display:none;align-items:center;gap:10px;">
+                <div style="width:48px;height:48px;background:rgba(255,255,255,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🏠</div>
+                <span style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:var(--white);">CuideLar</span>
+              </div>
+              <div class="hero-logo-sub">ASSISTÊNCIA DOMICILIAR E HOSPITALAR</div>
             </div>
           </div>
 
