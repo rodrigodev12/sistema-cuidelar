@@ -1540,8 +1540,7 @@ async function loadHistorico() {
     if (todayEntries.length > 0) {
       diarioHistorico = todayEntries;
     } else {
-      // Apenas exibe registro mockado se for escala de demonstração (demo)
-      if (escalaId.toString().startsWith('demo')) {
+      if (DEMO_MODE && escalaId.toString().startsWith('demo')) {
         diarioHistorico = [
           { horario: new Date(Date.now()-7200000).toISOString(), batimento_cardiaco:72, pressao_arterial:'118/78', temperatura:36.4, alimentacao:'aceitou', medicamento_ministrado:true, observacoes:'Paciente bem disposta, tomou café da manhã com apetite.' }
         ];
@@ -1554,6 +1553,27 @@ async function loadHistorico() {
     console.error('Erro no loadHistorico:', err);
     diarioHistorico = [];
     renderHistorico();
+  }
+}
+
+function formatRegistroDataHora(horarioISO) {
+  if (!horarioISO) return '—';
+  const d = new Date(horarioISO);
+  if (isNaN(d.getTime())) return '—';
+  
+  const hoje = new Date();
+  const ontem = new Date();
+  ontem.setDate(hoje.getDate() - 1);
+  
+  const horaStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  
+  if (d.toDateString() === hoje.toDateString()) {
+    return `Hoje às ${horaStr}`;
+  } else if (d.toDateString() === ontem.toDateString()) {
+    return `Ontem às ${horaStr}`;
+  } else {
+    const diaMes = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    return `${diaMes} às ${horaStr}`;
   }
 }
 
@@ -1575,10 +1595,10 @@ function renderHistorico() {
     <div class="historico-item">
       <div class="historico-header">
         <span style="font-weight:700;font-size:.9rem;">📋 Registro de cuidados</span>
-        <span class="historico-time">${new Date(r.horario).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>
+        <span class="historico-time">⏰ ${formatRegistroDataHora(r.horario)}</span>
       </div>
       <div class="historico-vitais">
-        ${r.batimento_cardiaco ? `<span class="vital-pill">💓 ${r.batimento_cardiaco}bpm</span>` : ''}
+        ${r.batimento_cardiaco ? `<span class="vital-pill">💓 ${r.batimento_cardiaco} bpm</span>` : ''}
         ${r.pressao_arterial   ? `<span class="vital-pill">🩺 ${r.pressao_arterial}</span>` : ''}
         ${r.temperatura        ? `<span class="vital-pill">🌡️ ${r.temperatura}°C</span>` : ''}
         ${r.saturacao_oxigenio ? `<span class="vital-pill">🫁 ${r.saturacao_oxigenio}%</span>` : ''}
