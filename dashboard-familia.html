@@ -83,23 +83,23 @@
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:0.6rem;">
             <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
               <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">💓 Batimentos</div>
-              <div style="font-size:0.9rem;font-weight:800;color:#FFFFFF;" id="lastBat">72 bpm</div>
+              <div style="font-size:0.9rem;font-weight:800;color:#FFFFFF;" id="lastBat">—</div>
             </div>
             <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
               <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">🩺 Pressão</div>
-              <div style="font-size:0.9rem;font-weight:800;color:#FFFFFF;" id="lastPA">118/78</div>
+              <div style="font-size:0.9rem;font-weight:800;color:#FFFFFF;" id="lastPA">—</div>
             </div>
             <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
               <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">🌡️ Temp.</div>
-              <div style="font-size:0.9rem;font-weight:800;color:#FFFFFF;" id="lastTemp">36.4°C</div>
+              <div style="font-size:0.9rem;font-weight:800;color:#FFFFFF;" id="lastTemp">—</div>
             </div>
             <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
               <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">🍽️ Alimentação</div>
-              <div style="font-size:0.9rem;font-weight:800;color:#4ade80;" id="lastAlim">Aceitou</div>
+              <div style="font-size:0.9rem;font-weight:800;color:rgba(255,255,255,0.75);" id="lastAlim">—</div>
             </div>
             <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:0.6rem 0.8rem;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
               <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);font-weight:600;">💊 Medicamento</div>
-              <div style="font-size:0.9rem;font-weight:800;color:#4ade80;" id="lastMed">✅ OK</div>
+              <div style="font-size:0.9rem;font-weight:800;color:rgba(255,255,255,0.75);" id="lastMed">—</div>
             </div>
           </div>
         </div>
@@ -431,18 +431,38 @@ function handleRemoteUpdate(type, payload) {
 }
 
 function updateSidebarQuickInfo(entry) {
-  if (entry.batimento_cardiaco) document.getElementById('lastBat').textContent = entry.batimento_cardiaco + ' bpm';
-  if (entry.pressao_arterial)   document.getElementById('lastPA').textContent  = entry.pressao_arterial;
-  if (entry.temperatura)        document.getElementById('lastTemp').textContent = entry.temperatura + '°C';
+  if (!entry) { resetQuickInfo(); return; }
+  document.getElementById('lastBat').textContent = entry.batimento_cardiaco ? entry.batimento_cardiaco + ' bpm' : '—';
+  document.getElementById('lastPA').textContent  = entry.pressao_arterial ? entry.pressao_arterial : '—';
+  document.getElementById('lastTemp').textContent = entry.temperatura ? entry.temperatura + '°C' : '—';
   if (entry.alimentacao) {
-    const colors = { aceitou:'var(--success)', parcial:'var(--warning)', recusou:'var(--danger)' };
+    const colors = { aceitou:'#4ade80', parcial:'#facc15', recusou:'#f87171' };
     const el = document.getElementById('lastAlim');
-    if (el) { el.textContent = entry.alimentacao; el.style.color = colors[entry.alimentacao] || ''; }
+    if (el) { el.textContent = entry.alimentacao; el.style.color = colors[entry.alimentacao] || 'rgba(255,255,255,0.75)'; }
+  } else {
+    const el = document.getElementById('lastAlim');
+    if (el) { el.textContent = '—'; el.style.color = 'rgba(255,255,255,0.75)'; }
   }
   if (entry.medicamento_ministrado) {
     const el = document.getElementById('lastMed');
-    if (el) el.textContent = '✅ OK';
+    if (el) { el.textContent = '✅ OK'; el.style.color = '#4ade80'; }
+  } else {
+    const el = document.getElementById('lastMed');
+    if (el) { el.textContent = '—'; el.style.color = 'rgba(255,255,255,0.75)'; }
   }
+}
+
+function resetQuickInfo() {
+  const lastBat = document.getElementById('lastBat');
+  if (lastBat) lastBat.textContent = '—';
+  const lastPA = document.getElementById('lastPA');
+  if (lastPA) lastPA.textContent = '—';
+  const lastTemp = document.getElementById('lastTemp');
+  if (lastTemp) lastTemp.textContent = '—';
+  const lastAlim = document.getElementById('lastAlim');
+  if (lastAlim) { lastAlim.textContent = '—'; lastAlim.style.color = 'rgba(255,255,255,0.75)'; }
+  const lastMed = document.getElementById('lastMed');
+  if (lastMed) { lastMed.textContent = '—'; lastMed.style.color = 'rgba(255,255,255,0.75)'; }
 }
 
 // Restaura status do checkin ao carregar
@@ -1012,6 +1032,7 @@ function renderFeed(entries) {
   const container = document.getElementById('feedList');
 
   if (!entries.length) {
+    resetQuickInfo();
     container.innerHTML = `
       <div class="feed-empty">
         <div class="feed-empty-icon">📋</div>
