@@ -589,7 +589,8 @@
 /* ============================================================
    NAVEGAÇÃO INFERIOR FIXA (FAMÍLIA)
    ============================================================ */
-.familia-bottom-nav {
+.familia-bottom-nav,
+.mobile-nav {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -606,7 +607,8 @@
   box-shadow: 0 -4px 16px rgba(92, 60, 103, 0.08);
 }
 
-.bottom-nav-item {
+.bottom-nav-item,
+.mobile-nav-item {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -625,7 +627,8 @@
   border-radius: var(--radius-md);
 }
 
-.bottom-nav-item .nav-icon-wrap {
+.bottom-nav-item .nav-icon-wrap,
+.mobile-nav-item .nav-icon-wrap {
   width: 28px;
   height: 28px;
   display: flex;
@@ -635,28 +638,39 @@
   transition: all var(--transition-spring);
 }
 
-.bottom-nav-item .nav-icon-wrap i {
+.bottom-nav-item .nav-icon-wrap i,
+.mobile-nav-item .nav-icon-wrap i {
   width: 20px;
   height: 20px;
   stroke-width: 2.2;
 }
 
-.bottom-nav-item:hover {
+.bottom-nav-item:hover,
+.mobile-nav-item:hover {
   color: var(--brand-purple);
 }
 
-.bottom-nav-item.active {
+.bottom-nav-item.active,
+.mobile-nav-item.active {
   color: var(--brand-rose) !important;
   font-weight: 700 !important;
 }
 
-.bottom-nav-item.active .nav-icon-wrap {
-  background: rgba(224, 122, 138, 0.14);
-  transform: translateY(-3px);
+.bottom-nav-item.active .nav-icon-wrap,
+.mobile-nav-item.active .nav-icon-wrap {
+  background: rgba(224, 122, 138, 0.14) !important;
+  transform: translateY(-3px) !important;
 }
 
-.bottom-nav-item.active i {
+.bottom-nav-item.active i,
+.mobile-nav-item.active i {
   stroke: var(--brand-rose) !important;
+}
+
+.mobile-nav-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
 
 .familia-page {

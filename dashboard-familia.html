@@ -293,22 +293,22 @@
 </div>
 
 <!-- NAVEGAÇÃO INFERIOR FIXA DA FAMÍLIA -->
-<nav class="familia-bottom-nav" aria-label="Navegação inferior família">
-  <button class="bottom-nav-item active" id="bnav-feed" onclick="showFamiliaSection('feed')">
+<nav class="mobile-nav familia-bottom-nav" aria-label="Navegação principal família">
+  <button class="mobile-nav-item bottom-nav-item active" id="bnav-feed" onclick="showFamiliaSection('feed', this)" aria-current="page">
     <div class="nav-icon-wrap"><i data-lucide="activity" aria-hidden="true"></i></div>
-    <span>Feed</span>
+    <span class="mobile-nav-label">Feed</span>
   </button>
-  <button class="bottom-nav-item" id="bnav-perfil" onclick="showFamiliaSection('perfil')">
+  <button class="mobile-nav-item bottom-nav-item" id="bnav-perfil" onclick="showFamiliaSection('perfil', this)">
     <div class="nav-icon-wrap"><i data-lucide="heart" aria-hidden="true"></i></div>
-    <span>Perfil</span>
+    <span class="mobile-nav-label">Perfil</span>
   </button>
-  <button class="bottom-nav-item" id="bnav-plantoes" onclick="showFamiliaSection('plantoes')">
+  <button class="mobile-nav-item bottom-nav-item" id="bnav-plantoes" onclick="showFamiliaSection('plantoes', this)">
     <div class="nav-icon-wrap"><i data-lucide="calendar" aria-hidden="true"></i></div>
-    <span>Plantões</span>
+    <span class="mobile-nav-label">Plantões</span>
   </button>
-  <button class="bottom-nav-item" id="bnav-avaliacao" onclick="showFamiliaSection('avaliacao')">
+  <button class="mobile-nav-item bottom-nav-item" id="bnav-avaliacao" onclick="showFamiliaSection('avaliacao', this)">
     <div class="nav-icon-wrap"><i data-lucide="star" aria-hidden="true"></i></div>
-    <span>Avaliar</span>
+    <span class="mobile-nav-label">Avaliar</span>
   </button>
 </nav>
 
@@ -1339,16 +1339,22 @@ window.renderFeedPhotosHtml = function(fotoUrl) {
 // ============================================================
 // NAVEGAÇÃO
 // ============================================================
-window.showFamiliaSection = (name) => {
+window.showFamiliaSection = (name, el) => {
   localStorage.setItem('familia_active_section', name);
   document.querySelectorAll('.familia-section').forEach(s => s.style.display = 'none');
-  document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-item, .mobile-nav-item').forEach(n => {
+    n.classList.remove('active');
+    n.removeAttribute('aria-current');
+  });
   
   const targetSection = document.getElementById(`section-${name}`);
   if (targetSection) targetSection.style.display = '';
   
-  const bottomEl = document.getElementById(`bnav-${name}`);
-  if (bottomEl) bottomEl.classList.add('active');
+  const bottomEl = el || document.getElementById(`bnav-${name}`);
+  if (bottomEl) {
+    bottomEl.classList.add('active');
+    bottomEl.setAttribute('aria-current', 'page');
+  }
 
   lucide.createIcons();
 };
