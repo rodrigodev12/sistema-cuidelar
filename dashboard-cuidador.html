@@ -809,6 +809,7 @@ function restoreChecklist() {
       const item = checklistData.find(i => i.id === si.id);
       if (item) item.done = si.done;
     });
+    sortChecklistByHorario();
     renderChecklist();
   } catch(e) { console.error('restoreChecklist:', e); }
 }
@@ -1302,15 +1303,24 @@ function getLocation() {
 // ============================================================
 // CHECKLIST
 // ============================================================
+function sortChecklistByHorario() {
+  checklistData.sort((a, b) => {
+    if (a.horario === '—') return 1;
+    if (b.horario === '—') return -1;
+    return a.horario.localeCompare(b.horario);
+  });
+}
+
 function loadDefaultChecklist() {
   checklistData = [
     { id:1, descricao:'Administrar medicamentos da manhã', horario:'08:00', done:false, icon:'💊' },
     { id:2, descricao:'Auxiliar no banho e higiene pessoal', horario:'09:00', done:false, icon:'🚿' },
-    { id:3, descricao:'Preparar e servir o almoço', horario:'12:00', done:false, icon:'🍽️' },
     { id:4, descricao:'Registrar sinais vitais', horario:'10:00', done:false, icon:'💓' },
-    { id:5, descricao:'Hidratação — oferecer água a cada 2h', horario:'—', done:false, icon:'💧' },
     { id:6, descricao:'Acompanhar caminhada leve (15 min)', horario:'11:00', done:false, icon:'🦯' },
+    { id:3, descricao:'Preparar e servir o almoço', horario:'12:00', done:false, icon:'🍽️' },
+    { id:5, descricao:'Hidratação — oferecer água a cada 2h', horario:'—', done:false, icon:'💧' },
   ];
+  sortChecklistByHorario();
   renderChecklist();
 }
 
