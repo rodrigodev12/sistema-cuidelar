@@ -594,37 +594,51 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background: rgba(250, 244, 242, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  height: 68px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
   display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 0 0.5rem;
+  align-items: stretch;
+  padding: 0 0.5rem env(safe-area-inset-bottom, 0.5rem);
   z-index: 1000;
-  box-shadow: 0 -4px 20px rgba(90, 61, 102, 0.08);
+  box-shadow: 0 -4px 16px rgba(92, 60, 103, 0.08);
 }
 
 .bottom-nav-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  flex: 1;
-  height: 100%;
+  gap: 4px;
+  padding: 0.5rem 0.25rem;
+  cursor: pointer;
   border: none;
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 6px 0;
-  position: relative;
+  transition: color var(--transition-fast);
+  border-radius: var(--radius-md);
+}
+
+.bottom-nav-item .nav-icon-wrap {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-spring);
+}
+
+.bottom-nav-item .nav-icon-wrap i {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.2;
 }
 
 .bottom-nav-item:hover {
@@ -632,33 +646,17 @@
 }
 
 .bottom-nav-item.active {
-  color: #5A3D66 !important;
-  font-weight: 800 !important;
-  transform: translateY(-2px);
+  color: var(--brand-rose) !important;
+  font-weight: 700 !important;
+}
+
+.bottom-nav-item.active .nav-icon-wrap {
+  background: rgba(224, 122, 138, 0.14);
+  transform: translateY(-3px);
 }
 
 .bottom-nav-item.active i {
-  stroke: #C0527A !important;
-  filter: drop-shadow(0 0 8px rgba(192, 82, 122, 0.5));
-}
-
-.bottom-nav-item::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  width: 24px;
-  height: 3px;
-  border-radius: 999px;
-  background: #CE7A8B;
-  box-shadow: 0 0 8px #CE7A8B;
-  opacity: 0;
-  transform: scaleX(0);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.bottom-nav-item.active::after {
-  opacity: 1;
-  transform: scaleX(1);
+  stroke: var(--brand-rose) !important;
 }
 
 .familia-page {
