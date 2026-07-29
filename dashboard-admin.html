@@ -187,78 +187,78 @@
 
       <!-- KPIs -->
       <div class="kpi-grid mb-8" aria-label="Indicadores principais">
-        <div class="kpi-card animate-fade-in-up">
+        <div class="kpi-card animate-fade-in-up" onclick="showSection('idosos', document.getElementById('nav-idosos'))" data-tooltip="Clique para gerenciar assistidos">
           <div class="flex justify-between items-center">
             <div class="kpi-icon" style="background:rgba(99,102,241,0.15);">👥</div>
-            <span class="badge badge-success">+3 mês</span>
+            <span class="badge badge-success" id="kpi-idosos-badge">Assistidos</span>
           </div>
           <div>
-            <div class="kpi-value" id="kpi-idosos">—</div>
+            <div class="kpi-value" id="kpi-idosos">0</div>
             <div class="kpi-label">Assistidos Ativos</div>
           </div>
-          <div class="kpi-change positive">
+          <div class="kpi-change positive" id="kpi-idosos-sub">
             <i data-lucide="trending-up" style="width:14px;height:14px"></i>
-            +15% este mês
+            Idosos e Crianças autistas
           </div>
         </div>
 
-        <div class="kpi-card animate-fade-in-up delay-100">
+        <div class="kpi-card animate-fade-in-up delay-100" onclick="showSection('cuidadores', document.getElementById('nav-cuidadores'))" data-tooltip="Clique para gerenciar cuidadoras">
           <div class="flex justify-between items-center">
             <div class="kpi-icon" style="background:rgba(6,182,212,0.15);">👨‍⚕️</div>
-            <span class="badge badge-info">Escalados</span>
+            <span class="badge badge-info" id="kpi-cuidadores-badge">Equipe</span>
           </div>
           <div>
-            <div class="kpi-value" id="kpi-cuidadores">—</div>
+            <div class="kpi-value" id="kpi-cuidadores">0</div>
             <div class="kpi-label">Cuidadores Ativos</div>
           </div>
-          <div class="kpi-change positive">
+          <div class="kpi-change positive" id="kpi-cuidadores-sub">
             <i data-lucide="trending-up" style="width:14px;height:14px"></i>
-            2 novos esta semana
+            Disponíveis para plantão
           </div>
         </div>
 
-        <div class="kpi-card animate-fade-in-up delay-200">
+        <div class="kpi-card animate-fade-in-up delay-200" onclick="showSection('relatorios', document.getElementById('nav-relatorios'))" data-tooltip="Clique para ver relatórios financeiros">
           <div class="flex justify-between items-center">
             <div class="kpi-icon" style="background:rgba(16,185,129,0.15);">💰</div>
-            <span class="badge badge-success">Julho</span>
+            <span class="badge badge-success" id="kpi-mes-badge">Mês Atual</span>
           </div>
           <div>
-            <div class="kpi-value" id="kpi-faturamento">—</div>
+            <div class="kpi-value" id="kpi-faturamento">R$ 0,00</div>
             <div class="kpi-label">Faturamento Mês</div>
           </div>
-          <div class="kpi-change positive">
+          <div class="kpi-change positive" id="kpi-faturamento-sub">
             <i data-lucide="trending-up" style="width:14px;height:14px"></i>
-            +8% vs. mês anterior
+            Total contratos ativos
           </div>
         </div>
 
-        <div class="kpi-card animate-fade-in-up delay-250">
+        <div class="kpi-card animate-fade-in-up delay-250" onclick="showSection('relatorios', document.getElementById('nav-relatorios'))" data-tooltip="Clique para ver extrato da agência">
           <div class="flex justify-between items-center">
             <div class="kpi-icon" style="background:rgba(99,102,241,0.15);">📈</div>
             <span class="badge badge-primary">Lucro</span>
           </div>
           <div>
-            <div class="kpi-value" id="kpi-lucro-agencia">—</div>
+            <div class="kpi-value" id="kpi-lucro-agencia">R$ 0,00</div>
             <div class="kpi-label">Lucro Agência Mês</div>
           </div>
           <div class="kpi-change positive" id="kpi-lucro-margem">
             <i data-lucide="trending-up" style="width:14px;height:14px"></i>
-            — margem
+            0.0% margem real
           </div>
         </div>
 
-        <div class="kpi-card animate-fade-in-up delay-300">
+        <div class="kpi-card animate-fade-in-up delay-300" onclick="showSection('escalas', document.getElementById('nav-escalas'))" data-tooltip="Clique para gerenciar escalas">
           <div class="flex justify-between items-center">
             <div class="kpi-icon" style="background:rgba(245,158,11,0.15);">⚠️</div>
             <span class="badge badge-warning" id="kpi-alertas-badge">0</span>
           </div>
           <div>
-            <div class="kpi-value" id="kpi-alertas">—</div>
+            <div class="kpi-value" id="kpi-alertas">0</div>
             <div class="kpi-label">Plantões sem Cuidador(a)</div>
           </div>
-          <div class="kpi-change negative" id="alertaDesc">
-            <i data-lucide="alert-triangle" style="width:14px;height:14px"></i>
-            Requer atenção
+          <div class="kpi-change positive" id="alertaDesc">
+            <i data-lucide="check-circle-2" style="width:14px;height:14px"></i>
+            Tudo em dia
           </div>
         </div>
       </div>
@@ -1489,13 +1489,20 @@ async function loadDashboard() {
   const ativos = (allCuidadores || []).filter(c => c.status !== 'inativo').length;
   const idosos = (allIdosos || []).filter(i => i.ativo !== false).length;
   
+  // Nome do mês atual dinâmico (ex: Julho, Agosto, etc.)
+  const mesAtualNome = new Date().toLocaleDateString('pt-BR', { month: 'long' });
+  const mesFormatado = mesAtualNome.charAt(0).toUpperCase() + mesAtualNome.slice(1);
+  if (document.getElementById('kpi-mes-badge')) {
+    document.getElementById('kpi-mes-badge').textContent = mesFormatado;
+  }
+
   const concluidas = (allEscalas || []).filter(e => e.status === 'concluido' || e.pago);
   const faturamentoReal = (allEscalas || []).reduce((sum, e) => sum + (e.valor_cliente || e.valor_total || 0), 0);
   const repasseReal = (allEscalas || []).reduce((sum, e) => sum + (e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0)), 0);
   const lucroReal = faturamentoReal - repasseReal;
   const margemReal = faturamentoReal > 0 ? (lucroReal / faturamentoReal) * 100 : 0;
 
-  const alertasCount = document.getElementById('alertasContainer')?.querySelectorAll('.alert-card')?.length || 0;
+  const alertasCount = (allEscalas || []).filter(e => !e.id_cuidador && !e.cuidador_id && (!e.cuidadores || !e.cuidadores.id)).length;
 
   if (document.getElementById('kpi-idosos')) document.getElementById('kpi-idosos').textContent = idosos;
   if (document.getElementById('kpi-cuidadores')) document.getElementById('kpi-cuidadores').textContent = ativos;
@@ -1509,8 +1516,21 @@ async function loadDashboard() {
   if (document.getElementById('kpi-alertas')) document.getElementById('kpi-alertas').textContent = alertasCount;
   if (document.getElementById('kpi-alertas-badge')) document.getElementById('kpi-alertas-badge').textContent = alertasCount;
 
+  // Atualiza mensagem de alertas sem cuidador
+  const alertaDescEl = document.getElementById('alertaDesc');
+  if (alertaDescEl) {
+    if (alertasCount === 0) {
+      alertaDescEl.className = 'kpi-change positive';
+      alertaDescEl.innerHTML = `<i data-lucide="check-circle-2" style="width:14px;height:14px"></i> Tudo em dia`;
+    } else {
+      alertaDescEl.className = 'kpi-change negative';
+      alertaDescEl.innerHTML = `<i data-lucide="alert-triangle" style="width:14px;height:14px"></i> Requer atenção (${alertasCount})`;
+    }
+  }
+
   updateAgendaBadge();
   renderCharts();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 window.zerarTodaBaseDeDados = async () => {
