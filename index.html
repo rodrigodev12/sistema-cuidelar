@@ -351,25 +351,51 @@
       } else {
         // Login Real Supabase
         try {
+          // 1. Tenta autenticação nativa do Supabase Auth
           const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password: senha });
-          if (authError) throw new Error(authError.message);
+          
+          if (!authError && authData && authData.user) {
+            const { data: profile } = await supabase
+              .from('usuarios')
+              .select('*')
+              .eq('auth_id', authData.user.id)
+              .maybeSingle();
 
-          const { data: profile, error: profError } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('auth_id', authData.user.id)
-            .single();
-
-          if (profError || !profile) {
-            throw new Error('Perfil do usuário não encontrado no banco de dados.');
+            if (profile) {
+              localStorage.setItem('cuidelar_user', JSON.stringify(profile));
+              showToast(`Bem-vindo, ${profile.nome.split(' ')[0]}! 🎉`, 'success', 2000);
+              setTimeout(() => { window.location.href = REDIRECT_MAP[profile.tipo] || 'index.html'; }, 900);
+              return;
+            }
           }
 
-          localStorage.setItem('cuidelar_user', JSON.stringify(profile));
-          showToast(`Bem-vindo, ${profile.nome.split(' ')[0]}! 🎉`, 'success', 2000);
-          setTimeout(() => { window.location.href = REDIRECT_MAP[profile.tipo]; }, 900);
+          // 2. Fallback: Usuário cadastrado diretamente na tabela public.usuarios pelo admin
+          const { data: profile } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('email', email)
+            .maybeSingle();
+
+          if (profile && profile.ativo) {
+            localStorage.setItem('cuidelar_user', JSON.stringify(profile));
+            showToast(`Bem-vindo, ${profile.nome.split(' ')[0]}! 🎉`, 'success', 2000);
+            setTimeout(() => { window.location.href = REDIRECT_MAP[profile.tipo] || 'index.html'; }, 900);
+            return;
+          }
+
+          let msg = 'E-mail ou senha incorretos. Por favor, verifique suas credenciais.';
+          if (authError && authError.message && authError.message.trim() !== '{}' && !authError.message.includes('Invalid login credentials')) {
+            msg = authError.message;
+          }
+          throw new Error(msg);
+
         } catch (err) {
           console.error('Erro de login:', err);
-          errMsg.textContent = (err && typeof err.message === 'string') ? err.message : 'Erro ao realizar login. Verifique os dados.';
+          let displayMsg = 'E-mail ou senha incorretos. Verifique os dados.';
+          if (err && err.message && typeof err.message === 'string' && err.message.trim() !== '{}' && err.message.trim().length > 0) {
+            displayMsg = err.message;
+          }
+          errMsg.textContent = displayMsg;
           errEl.classList.add('visible');
           btn.classList.remove('loading');
           btn.disabled = false;
