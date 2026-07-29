@@ -2175,20 +2175,43 @@ window.verAgendaCuidador = (cuidadorId) => {
   } else {
     const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
     tbody.innerHTML = escalasCuidador.map(e => {
+
+      // Busca escala pai para herdar dados quando o registro individual estiver incompleto
+      const escalaPai = (e.escala_pai_id || e.id_escala)
+        ? (allEscalas || []).find(p => p.id === (e.escala_pai_id || e.id_escala))
+        : null;
+
+      // Tipo de cobrança: usa o do registro, senão herda da escala pai e traduz para o plantão
+      let tipoCobranca = e.tipo_cobranca;
+      if (!tipoCobranca && escalaPai) {
+        // Escala mensal gera plantões conforme frequência
+        const freq = escalaPai.frequencia_escala || '12x36';
+        if (freq.includes('24')) {
+          tipoCobranca = 'Por Plantão (24h)';
+        } else {
+          tipoCobranca = 'Por Plantão (12h)';
+        }
+      }
+      tipoCobranca = tipoCobranca || 'Por Hora';
+
       // Calcula repasse total do item
       let vr = 0;
-      if (e.valor_repasse_cuidador > 0) {
-        // Para cobranças por hora, multiplica pela quantidade de horas do plantão
-        if (e.tipo_cobranca === 'Por Hora') {
+      const repasseUnitario = e.valor_repasse_cuidador > 0
+        ? e.valor_repasse_cuidador
+        : (escalaPai?.valor_repasse_cuidador || 0); // herda da escala pai se nulo/zero
+
+      if (repasseUnitario > 0) {
+        if (tipoCobranca === 'Por Hora') {
+          // Taxa horária × horas do plantão
           const horas = (new Date(e.data_termino || e.data_fim) - new Date(e.data_inicio)) / 3600000;
-          vr = e.valor_repasse_cuidador * (isNaN(horas) ? 0 : horas);
+          vr = repasseUnitario * (isNaN(horas) ? 0 : horas);
         } else {
-          vr = e.valor_repasse_cuidador;
+          vr = repasseUnitario;
         }
       } else if (e.valor_total > 0) {
-        // Fallback: estima repasse como 70% do total (sem dado de repasse)
         vr = e.valor_total * 0.7;
       }
+
       if (e.e_substituicao && e.cuidador_substituta_id && e.cuidador_substituta_id !== cuidadorId) {
         vr = 0;
       }
@@ -2218,7 +2241,7 @@ window.verAgendaCuidador = (cuidadorId) => {
             <div>${dIni}</div>
             <div style="font-size:0.75rem; color:var(--text-muted)">até ${dFim}</div>
           </td>
-          <td style="padding: 10px 14px;"><span class="badge badge-neutral">${e.tipo_cobranca || 'Por Hora'}</span></td>
+          <td style="padding: 10px 14px;"><span class="badge badge-neutral">${tipoCobranca}</span></td>
           <td style="padding: 10px 14px; font-weight:600; color:var(--success)">R$ ${vr.toFixed(2).replace('.', ',')}</td>
           <td style="padding: 10px 14px;"><span class="badge ${statusMap[e.status] || 'badge-neutral'}">${e.status?.replace('_',' ') || '—'}</span></td>
           <td style="padding: 10px 14px; text-align:center;">
