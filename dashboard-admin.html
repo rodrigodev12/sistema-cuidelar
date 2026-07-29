@@ -1657,98 +1657,115 @@ function autoGerarPlantoesRodizioSeNecessario() {
       const startHour = parentStart.getHours();
       const startMin = parentStart.getMinutes();
 
+      let activeShiftIndex = 0;
       while (curr <= endDt) {
-        if (is24h) {
-          const equipeIds = [c1Id, c2Id, c3Id, c4Id].filter(Boolean);
-          if (equipeIds.length > 0) {
-            const cuidadorDaVezId = equipeIds[diaIndex % equipeIds.length];
-            const cuidadorDaVezObj = allCuidadores.find(c => c.id === cuidadorDaVezId);
-            
-            const pIni = new Date(curr);
-            pIni.setHours(startHour, startMin, 0, 0);
-            const pFim = new Date(pIni);
-            pFim.setHours(pIni.getHours() + 24);
+        const dayOfWeek = curr.getDay(); // 0 = Dom, 1 = Seg, ..., 6 = Sáb
+        let deveGerar = true;
 
-            if (cuidadorDaVezObj) {
+        if (freq === 'segunda_sexta') {
+          deveGerar = (dayOfWeek >= 1 && dayOfWeek <= 5);
+        } else if (freq === 'fim_semana') {
+          deveGerar = (dayOfWeek === 0 || dayOfWeek === 6);
+        } else if (freq === '24x48') {
+          deveGerar = (diaIndex % 3 === 0);
+        } else if (freq === '24x36') {
+          deveGerar = (diaIndex % 2 === 0);
+        }
+
+        if (deveGerar) {
+          if (is24h) {
+            const equipeIds = [c1Id, c2Id, c3Id, c4Id].filter(Boolean);
+            if (equipeIds.length > 0) {
+              const cuidadorDaVezId = equipeIds[activeShiftIndex % equipeIds.length];
+              const cuidadorDaVezObj = allCuidadores.find(c => c.id === cuidadorDaVezId);
+              
+              const pIni = new Date(curr);
+              pIni.setHours(startHour, startMin, 0, 0);
+              const pFim = new Date(pIni);
+              pFim.setHours(pIni.getHours() + 24);
+
+              if (cuidadorDaVezObj) {
+                allPlantoesDiarios.push({
+                  id: 'p_auto_' + (esc.id || 'e') + '_' + diaIndex,
+                  escala_pai_id: esc.id,
+                  id_escala: esc.id,
+                  assistido_id: esc.id_idoso,
+                  idosos: esc.idosos || { nome: 'Raimundo Nonato' },
+                  cuidador_id: cuidadorDaVezId,
+                  id_cuidador: cuidadorDaVezId,
+                  cuidadores: cuidadorDaVezObj,
+                  data_inicio: pIni.toISOString(),
+                  data_termino: pFim.toISOString(),
+                  data_fim: pFim.toISOString(),
+                  tipo_cobranca: 'Por Plantão (24h)',
+                  valor_repasse_cuidador: 280,
+                  valor_cliente: (esc.valor_cliente || esc.valor_total || 250) / 15,
+                  valor_total: (esc.valor_cliente || esc.valor_total || 250) / 15,
+                  status: 'agendado'
+                });
+              }
+            }
+          } else {
+            // Plantão 12h: Revezamento Diário/Noturno
+            // Dia (R$ 150)
+            const diaCuidId = (activeShiftIndex % 2 === 0) ? (c1Id || c2Id) : (c2Id || c1Id);
+            const diaCuidObj = allCuidadores.find(c => c.id === diaCuidId);
+            if (diaCuidObj) {
+              const pIni = new Date(curr);
+              pIni.setHours(startHour, startMin, 0, 0);
+              const pFim = new Date(pIni);
+              pFim.setHours(pIni.getHours() + 12);
+
               allPlantoesDiarios.push({
-                id: 'p_auto_' + (esc.id || 'e') + '_' + diaIndex,
+                id: 'p_auto_d_' + (esc.id || 'e') + '_' + diaIndex,
                 escala_pai_id: esc.id,
                 id_escala: esc.id,
                 assistido_id: esc.id_idoso,
                 idosos: esc.idosos || { nome: 'Raimundo Nonato' },
-                cuidador_id: cuidadorDaVezId,
-                id_cuidador: cuidadorDaVezId,
-                cuidadores: cuidadorDaVezObj,
+                cuidador_id: diaCuidId,
+                id_cuidador: diaCuidId,
+                cuidadores: diaCuidObj,
                 data_inicio: pIni.toISOString(),
                 data_termino: pFim.toISOString(),
                 data_fim: pFim.toISOString(),
-                tipo_cobranca: 'Por Plantão (24h)',
-                valor_repasse_cuidador: rate,
-                valor_cliente: (esc.valor_cliente || esc.valor_total || 250) / 15,
-                valor_total: (esc.valor_cliente || esc.valor_total || 250) / 15,
+                tipo_cobranca: 'Por Plantão (12h)',
+                valor_repasse_cuidador: 150,
+                valor_cliente: (esc.valor_cliente || esc.valor_total || 250) / 30,
+                valor_total: (esc.valor_cliente || esc.valor_total || 250) / 30,
+                status: 'agendado'
+              });
+            }
+
+            // Noite (R$ 180)
+            const noiteCuidId = (activeShiftIndex % 2 === 0) ? (c3Id || c4Id) : (c4Id || c3Id);
+            const noiteCuidObj = allCuidadores.find(c => c.id === noiteCuidId);
+            if (noiteCuidObj) {
+              const pIni = new Date(curr);
+              pIni.setHours(startHour + 12, startMin, 0, 0);
+              const pFim = new Date(pIni);
+              pFim.setHours(pIni.getHours() + 12);
+
+              allPlantoesDiarios.push({
+                id: 'p_auto_n_' + (esc.id || 'e') + '_' + diaIndex,
+                escala_pai_id: esc.id,
+                id_escala: esc.id,
+                assistido_id: esc.id_idoso,
+                idosos: esc.idosos || { nome: 'Raimundo Nonato' },
+                cuidador_id: noiteCuidId,
+                id_cuidador: noiteCuidId,
+                cuidadores: noiteCuidObj,
+                data_inicio: pIni.toISOString(),
+                data_termino: pFim.toISOString(),
+                data_fim: pFim.toISOString(),
+                tipo_cobranca: 'Por Plantão (12h)',
+                valor_repasse_cuidador: 180,
+                valor_cliente: (esc.valor_cliente || esc.valor_total || 250) / 30,
+                valor_total: (esc.valor_cliente || esc.valor_total || 250) / 30,
                 status: 'agendado'
               });
             }
           }
-        } else {
-          // Plantão 12h: Revezamento Diário/Noturno
-          // Dia
-          const diaCuidId = (diaIndex % 2 === 0) ? (c1Id || c2Id) : (c2Id || c1Id);
-          const diaCuidObj = allCuidadores.find(c => c.id === diaCuidId);
-          if (diaCuidObj) {
-            const pIni = new Date(curr);
-            pIni.setHours(startHour, startMin, 0, 0);
-            const pFim = new Date(pIni);
-            pFim.setHours(pIni.getHours() + 12);
-
-            allPlantoesDiarios.push({
-              id: 'p_auto_d_' + (esc.id || 'e') + '_' + diaIndex,
-              escala_pai_id: esc.id,
-              id_escala: esc.id,
-              assistido_id: esc.id_idoso,
-              idosos: esc.idosos || { nome: 'Raimundo Nonato' },
-              cuidador_id: diaCuidId,
-              id_cuidador: diaCuidId,
-              cuidadores: diaCuidObj,
-              data_inicio: pIni.toISOString(),
-              data_termino: pFim.toISOString(),
-              data_fim: pFim.toISOString(),
-              tipo_cobranca: 'Por Plantão (12h)',
-              valor_repasse_cuidador: rate,
-              valor_cliente: (esc.valor_cliente || esc.valor_total || 250) / 30,
-              valor_total: (esc.valor_cliente || esc.valor_total || 250) / 30,
-              status: 'agendado'
-            });
-          }
-
-          // Noite
-          const noiteCuidId = (diaIndex % 2 === 0) ? (c3Id || c4Id) : (c4Id || c3Id);
-          const noiteCuidObj = allCuidadores.find(c => c.id === noiteCuidId);
-          if (noiteCuidObj) {
-            const pIni = new Date(curr);
-            pIni.setHours(startHour + 12, startMin, 0, 0);
-            const pFim = new Date(pIni);
-            pFim.setHours(pIni.getHours() + 12);
-
-            allPlantoesDiarios.push({
-              id: 'p_auto_n_' + (esc.id || 'e') + '_' + diaIndex,
-              escala_pai_id: esc.id,
-              id_escala: esc.id,
-              assistido_id: esc.id_idoso,
-              idosos: esc.idosos || { nome: 'Raimundo Nonato' },
-              cuidador_id: noiteCuidId,
-              id_cuidador: noiteCuidId,
-              cuidadores: noiteCuidObj,
-              data_inicio: pIni.toISOString(),
-              data_termino: pFim.toISOString(),
-              data_fim: pFim.toISOString(),
-              tipo_cobranca: 'Por Plantão (12h)',
-              valor_repasse_cuidador: rate,
-              valor_cliente: (esc.valor_cliente || esc.valor_total || 250) / 30,
-              valor_total: (esc.valor_cliente || esc.valor_total || 250) / 30,
-              status: 'agendado'
-            });
-          }
+          activeShiftIndex++;
         }
 
         curr.setDate(curr.getDate() + 1);
@@ -4548,32 +4565,49 @@ function calcularPlantoesEquipeDetalhado(dataInicio, dataFim, frequencia, c1, c2
 
   const curr = new Date(start);
   let diaIndex = 0;
+  let activeShiftIndex = 0;
 
   const tempDate = new Date(curr);
   while (tempDate <= end) {
-    if (is24h) {
-      const equipeIds = [c1, c2, c3, c4].filter(Boolean);
-      if (equipeIds.length > 0) {
-        const cuidId = equipeIds[diaIndex % equipeIds.length];
-        if (cuidId === c1) plantoes.c1.count++;
-        else if (cuidId === c2) plantoes.c2.count++;
-        else if (cuidId === c3) plantoes.c3.count++;
-        else if (cuidId === c4) plantoes.c4.count++;
+    const dayOfWeek = tempDate.getDay(); // 0 = Dom, 1 = Seg, ..., 6 = Sáb
+    let deveGerar = true;
+
+    if (frequencia === 'segunda_sexta') {
+      deveGerar = (dayOfWeek >= 1 && dayOfWeek <= 5);
+    } else if (frequencia === 'fim_semana') {
+      deveGerar = (dayOfWeek === 0 || dayOfWeek === 6);
+    } else if (frequencia === '24x48') {
+      deveGerar = (diaIndex % 3 === 0);
+    } else if (frequencia === '24x36') {
+      deveGerar = (diaIndex % 2 === 0);
+    }
+
+    if (deveGerar) {
+      if (is24h) {
+        const equipeIds = [c1, c2, c3, c4].filter(Boolean);
+        if (equipeIds.length > 0) {
+          const cuidId = equipeIds[activeShiftIndex % equipeIds.length];
+          if (cuidId === c1) plantoes.c1.count++;
+          else if (cuidId === c2) plantoes.c2.count++;
+          else if (cuidId === c3) plantoes.c3.count++;
+          else if (cuidId === c4) plantoes.c4.count++;
+        }
+      } else {
+        // Plantão 12h: Revezamento Diário/Noturno
+        // Dia (R$ 150): alterna entre C1 e C2
+        const diaCuidId = (activeShiftIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
+        if (diaCuidId) {
+          if (diaCuidId === c1) plantoes.c1.count++;
+          else if (diaCuidId === c2) plantoes.c2.count++;
+        }
+        // Noite (R$ 180): alterna entre C3 e C4
+        const noiteCuidId = (activeShiftIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
+        if (noiteCuidId) {
+          if (noiteCuidId === c3) plantoes.c3.count++;
+          else if (noiteCuidId === c4) plantoes.c4.count++;
+        }
       }
-    } else {
-      // Plantão 12h: Revezamento Diário/Noturno
-      // Dia (R$ 150): alterna entre C1 e C2
-      const diaCuidId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
-      if (diaCuidId) {
-        if (diaCuidId === c1) plantoes.c1.count++;
-        else if (diaCuidId === c2) plantoes.c2.count++;
-      }
-      // Noite (R$ 180): alterna entre C3 e C4
-      const noiteCuidId = (diaIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
-      if (noiteCuidId) {
-        if (noiteCuidId === c3) plantoes.c3.count++;
-        else if (noiteCuidId === c4) plantoes.c4.count++;
-      }
+      activeShiftIndex++;
     }
     tempDate.setDate(tempDate.getDate() + 1);
     diaIndex++;
