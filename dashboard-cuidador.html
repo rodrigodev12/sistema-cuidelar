@@ -823,6 +823,38 @@ function saveChecklistState() {
 // ============================================================
 // ESCALA DO CUIDADOR
 // ============================================================
+function buildEscalaFromPlantao(plantao, cuidadorId) {
+  const parent = plantao.escalas_servicos || {};
+  let repasse = 0;
+  if (plantao.cuidador_substituta_id === cuidadorId) {
+    if (parent.tipo_cobranca === 'Mensal Fixado') {
+      repasse = parent.valor_repasse_cuidador ? parseFloat((parent.valor_repasse_cuidador / 15).toFixed(2)) : 170;
+    } else {
+      repasse = parent.valor_repasse_cuidador || 0;
+    }
+  } else {
+    if (plantao.e_substituicao) {
+      repasse = 0;
+    } else {
+      if (parent.tipo_cobranca === 'Mensal Fixado') {
+        repasse = parent.valor_repasse_cuidador ? parseFloat((parent.valor_repasse_cuidador / 15).toFixed(2)) : 170;
+      } else {
+        repasse = parent.valor_repasse_cuidador || 0;
+      }
+    }
+  }
+
+  return {
+    id: plantao.id,
+    escala_pai_id: plantao.escala_pai_id,
+    data_inicio: plantao.data_inicio,
+    data_termino: plantao.data_fim,
+    valor_repasse_cuidador: repasse,
+    status: plantao.status,
+    idosos: plantao.idosos
+  };
+}
+
 async function loadEscalaCuidador() {
   try {
     const { data: cuidador, error: cuidErr } = await supabase
@@ -839,8 +871,8 @@ async function loadEscalaCuidador() {
 
     const agora = new Date().toISOString();
     
-    // 1. Busca plantão diário primeiro (incluindo escalas normais/desmembradas e substituições)
-    let plantaoEncontrado = null;
+    // Candidato 1: Busca em plantoes_diarios (incluindo desmembrados e substituições)
+    let candidatePlantao = null;
     try {
       const { data: plantoes, error: pltErr } = await supabase
         .from('plantoes_diarios')
@@ -852,68 +884,51 @@ async function loadEscalaCuidador() {
         .limit(1);
 
       if (!pltErr && plantoes && plantoes.length > 0) {
-        plantaoEncontrado = plantoes[0];
+        candidatePlantao = plantoes[0];
       }
     } catch(errPlt) {
       console.warn('Erro ao consultar plantoes_diarios:', errPlt);
     }
 
-    if (plantaoEncontrado) {
-      const plantao = plantaoEncontrado;
-      const parent = plantao.escalas_servicos || {};
-      
-      let repasse = 0;
-      if (plantao.cuidador_substituta_id === cuidador.id) {
-        if (parent.tipo_cobranca === 'Mensal Fixado') {
-          repasse = parent.valor_repasse_cuidador ? parseFloat((parent.valor_repasse_cuidador / 15).toFixed(2)) : 170;
-        } else {
-          repasse = parent.valor_repasse_cuidador || 0;
-        }
-      } else {
-        if (plantao.e_substituicao) {
-          repasse = 0;
-        } else {
-          if (parent.tipo_cobranca === 'Mensal Fixado') {
-            repasse = parent.valor_repasse_cuidador ? parseFloat((parent.valor_repasse_cuidador / 15).toFixed(2)) : 170;
-          } else {
-            repasse = parent.valor_repasse_cuidador || 0;
-          }
-        }
+    // Candidato 2: Busca em escalas_servicos direto
+    let candidateEscala = null;
+    try {
+      const { data: escalas, error: escErr } = await supabase
+        .from('escalas_servicos')
+        .select('*, idosos(*, clientes_familia(*))')
+        .eq('id_cuidador', cuidador.id)
+        .in('status', ['agendado', 'em_andamento'])
+        .gte('data_termino', agora)
+        .order('data_inicio')
+        .limit(1);
+
+      if (!escErr && escalas && escalas.length > 0) {
+        candidateEscala = escalas[0];
       }
-
-      currentEscala = {
-        id: plantao.id,
-        escala_pai_id: plantao.escala_pai_id,
-        data_inicio: plantao.data_inicio,
-        data_termino: plantao.data_fim,
-        valor_repasse_cuidador: repasse,
-        status: plantao.status,
-        idosos: plantao.idosos
-      };
-      escalaPendingId = currentEscala.id;
-      updateEscalaUI(currentEscala);
-      await loadHistorico();
-      return;
+    } catch(errEsc) {
+      console.warn('Erro ao consultar escalas_servicos:', errEsc);
     }
 
-    // 2. Fallback para escalas_servicos direto
-    const { data: escalas, error: escErr } = await supabase
-      .from('escalas_servicos')
-      .select('*, idosos(*, clientes_familia(*))')
-      .eq('id_cuidador', cuidador.id)
-      .in('status', ['agendado', 'em_andamento'])
-      .gte('data_termino', agora)
-      .order('data_inicio')
-      .limit(1);
+    // Compara os candidatos e escolhe a escala/plantão que inicia MAIS CEDO (mais próximo do momento atual)
+    let selectedEscala = null;
 
-    if (escErr) {
-      console.error('Erro ao consultar escalas no Supabase:', escErr);
-      if (DEMO_MODE) showDemoData(); else showEmptyState();
-      return;
+    if (candidatePlantao && candidateEscala) {
+      const startPlantao = new Date(candidatePlantao.data_inicio).getTime();
+      const startEscala = new Date(candidateEscala.data_inicio).getTime();
+      
+      if (startPlantao <= startEscala) {
+        selectedEscala = buildEscalaFromPlantao(candidatePlantao, cuidador.id);
+      } else {
+        selectedEscala = candidateEscala;
+      }
+    } else if (candidatePlantao) {
+      selectedEscala = buildEscalaFromPlantao(candidatePlantao, cuidador.id);
+    } else if (candidateEscala) {
+      selectedEscala = candidateEscala;
     }
 
-    if (escalas?.length) {
-      currentEscala = escalas[0];
+    if (selectedEscala) {
+      currentEscala = selectedEscala;
       escalaPendingId = currentEscala.id;
       updateEscalaUI(currentEscala);
       await loadHistorico();
