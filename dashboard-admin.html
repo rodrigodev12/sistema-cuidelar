@@ -166,6 +166,10 @@
         <button class="btn btn-secondary btn-icon" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Alternar sidebar">
           <i data-lucide="panel-left" aria-hidden="true"></i>
         </button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(239,68,68,0.3);" onclick="zerarTodaBaseDeDados()" data-tooltip="Limpar dados para operações reais">
+          <i data-lucide="trash-2" aria-hidden="true"></i>
+          Zerar Base
+        </button>
         <button class="btn btn-primary btn-sm" id="headerActionBtn" onclick="openQuickModal()">
           <i data-lucide="plus" aria-hidden="true"></i>
           Nova Escala
@@ -1482,76 +1486,93 @@ async function loadAllData() {
 }
 
 async function loadDashboard() {
-  if (typeof supabase !== 'undefined' && supabase === _stub) {
-    // Demo mode — KPIs dinâmicos calculados a partir dos dados mock
-    const hoje = new Date().toDateString();
-    const ativos  = (allCuidadores.length || 5);
-    const idosos  = (allIdosos.length || 8);
-    const escsHoje = (allEscalas || []).filter(e => new Date(e.data_inicio).toDateString() === hoje);
-    const faturamento = (allEscalas || []).reduce((acc, e) => acc + (e.valor_cliente || e.valor_total || 0), 0);
-    const repasse = (allEscalas || []).reduce((acc, e) => acc + (e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0)), 0);
-    const lucro = faturamento - repasse;
-    const margemMedia = faturamento > 0 ? (lucro / faturamento) * 100 : 0;
+  const ativos = (allCuidadores || []).filter(c => c.status !== 'inativo').length;
+  const idosos = (allIdosos || []).filter(i => i.ativo !== false).length;
+  
+  const concluidas = (allEscalas || []).filter(e => e.status === 'concluido' || e.pago);
+  const faturamentoReal = (allEscalas || []).reduce((sum, e) => sum + (e.valor_cliente || e.valor_total || 0), 0);
+  const repasseReal = (allEscalas || []).reduce((sum, e) => sum + (e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0)), 0);
+  const lucroReal = faturamentoReal - repasseReal;
+  const margemReal = faturamentoReal > 0 ? (lucroReal / faturamentoReal) * 100 : 0;
 
-    document.getElementById('kpi-idosos').textContent       = idosos;
-    document.getElementById('kpi-cuidadores').textContent   = ativos;
-    document.getElementById('kpi-faturamento').textContent  = 'R$ ' + faturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-    if (document.getElementById('kpi-lucro-agencia')) {
-      document.getElementById('kpi-lucro-agencia').textContent = 'R$ ' + lucro.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-    }
-    if (document.getElementById('kpi-lucro-margem')) {
-      document.getElementById('kpi-lucro-margem').innerHTML = `<i data-lucide="trending-up" style="width:14px;height:14px"></i> ${margemMedia.toFixed(1)}% margem média`;
-    }
-    document.getElementById('kpi-alertas').textContent      = '1';
-    document.getElementById('kpi-alertas-badge').textContent = '1';
-    updateAgendaBadge();
-    renderCharts();
-    return;
+  const alertasCount = document.getElementById('alertasContainer')?.querySelectorAll('.alert-card')?.length || 0;
+
+  if (document.getElementById('kpi-idosos')) document.getElementById('kpi-idosos').textContent = idosos;
+  if (document.getElementById('kpi-cuidadores')) document.getElementById('kpi-cuidadores').textContent = ativos;
+  if (document.getElementById('kpi-faturamento')) document.getElementById('kpi-faturamento').textContent = 'R$ ' + faturamentoReal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (document.getElementById('kpi-lucro-agencia')) {
+    document.getElementById('kpi-lucro-agencia').textContent = 'R$ ' + lucroReal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
-  try {
-    const { count: idosCount } = await supabase.from('idosos').select('*', {count:'exact', head:true}).eq('ativo', true);
-    const { count: cuidCount } = await supabase.from('cuidadores').select('*', {count:'exact', head:true}).eq('status','ativo');
-
-    // Calcular faturamento real das escalas concluídas/pagas
-    const concluidas = (allEscalas || []).filter(e => e.status === 'concluido' || e.pago);
-    const faturamentoReal = concluidas.reduce((sum, e) => sum + (e.valor_cliente || e.valor_total || 0), 0);
-    const repasseReal = concluidas.reduce((sum, e) => sum + (e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0)), 0);
-    const lucroReal = faturamentoReal - repasseReal;
-    const margemReal = faturamentoReal > 0 ? (lucroReal / faturamentoReal) * 100 : 0;
-
-    const alertasCount = document.getElementById('alertasContainer')?.querySelectorAll('.alert-card')?.length || 0;
-
-    document.getElementById('kpi-idosos').textContent = idosCount ?? '—';
-    document.getElementById('kpi-cuidadores').textContent = cuidCount ?? '—';
-    document.getElementById('kpi-faturamento').textContent = 'R$ ' + faturamentoReal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    if (document.getElementById('kpi-lucro-agencia')) {
-      document.getElementById('kpi-lucro-agencia').textContent = 'R$ ' + lucroReal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    }
-    if (document.getElementById('kpi-lucro-margem')) {
-      document.getElementById('kpi-lucro-margem').innerHTML = `<i data-lucide="trending-up" style="width:14px;height:14px"></i> ${margemReal.toFixed(1)}% margem real`;
-    }
-    document.getElementById('kpi-alertas').textContent = alertasCount;
-    if (document.getElementById('kpi-alertas-badge')) {
-      document.getElementById('kpi-alertas-badge').textContent = alertasCount;
-    }
-  } catch(e) {
-    // Demo mode
-    document.getElementById('kpi-idosos').textContent = '24';
-    document.getElementById('kpi-cuidadores').textContent = '18';
-    document.getElementById('kpi-faturamento').textContent = 'R$ 38.4k';
-    if (document.getElementById('kpi-lucro-agencia')) {
-      document.getElementById('kpi-lucro-agencia').textContent = 'R$ 12.8k';
-    }
-    if (document.getElementById('kpi-lucro-margem')) {
-      document.getElementById('kpi-lucro-margem').innerHTML = `<i data-lucide="trending-up" style="width:14px;height:14px"></i> 33.3% margem`;
-    }
-    document.getElementById('kpi-alertas').textContent = '2';
+  if (document.getElementById('kpi-lucro-margem')) {
+    document.getElementById('kpi-lucro-margem').innerHTML = `<i data-lucide="trending-up" style="width:14px;height:14px"></i> ${margemReal.toFixed(1)}% margem real`;
   }
+  if (document.getElementById('kpi-alertas')) document.getElementById('kpi-alertas').textContent = alertasCount;
+  if (document.getElementById('kpi-alertas-badge')) document.getElementById('kpi-alertas-badge').textContent = alertasCount;
 
+  updateAgendaBadge();
   renderCharts();
 }
 
+window.zerarTodaBaseDeDados = async () => {
+  if (confirm('⚠️ ATENÇÃO: Deseja realmente zerar todos os registros de teste (Cuidadores, Assistidos, Famílias e Escalas) para iniciar as operações reais com o sistema 100% limpo?')) {
+    try {
+      localStorage.setItem('cuidelar_clean_state', 'true');
+      
+      if (typeof supabase !== 'undefined' && supabase !== _stub) {
+        await supabase.from('plantoes_diarios').delete().neq('id', '0');
+        await supabase.from('escalas_servicos').delete().neq('id', '0');
+        await supabase.from('idosos').delete().neq('id', '0');
+        await supabase.from('clientes_familia').delete().neq('id', '0');
+        await supabase.from('cuidadores').delete().neq('id', '0');
+      }
+
+      allCuidadores = [];
+      allIdosos = [];
+      allFamilias = [];
+      allEscalas = [];
+      allPlantoesDiarios = [];
+
+      renderCuidadores(allCuidadores);
+      renderIdosos(allIdosos);
+      renderFamilias(allFamilias);
+      renderEscalas(allEscalas);
+      renderEscalasHoje(allEscalas);
+      populateSelects();
+      initCalendar(allEscalas);
+      await loadDashboard();
+
+      showToast('✨ Base de dados zerada com sucesso! O sistema está pronto para a operação real.', 'success');
+    } catch(err) {
+      showToast('Erro ao zerar base: ' + err.message, 'error');
+    }
+  }
+};
+
+window.restaurarDadosDemo = () => {
+  if (confirm('Deseja recarregar os dados demonstrativos fictícios para teste?')) {
+    localStorage.removeItem('cuidelar_clean_state');
+    location.reload();
+  }
+};
+
 function loadDemoData() {
+  if (localStorage.getItem('cuidelar_clean_state') === 'true') {
+    allCuidadores = [];
+    allIdosos = [];
+    allFamilias = [];
+    allEscalas = [];
+    allPlantoesDiarios = [];
+
+    renderCuidadores(allCuidadores);
+    renderIdosos(allIdosos);
+    renderFamilias(allFamilias);
+    renderEscalas(allEscalas);
+    renderEscalasHoje(allEscalas);
+    populateSelects();
+    initCalendar(allEscalas);
+    loadDashboard();
+    return;
+  }
   const agora   = new Date();
   const hoje    = new Date(); hoje.setHours(8,0,0,0);
   const hojeM   = new Date(); hojeM.setHours(14,0,0,0);
