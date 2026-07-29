@@ -1639,9 +1639,12 @@ function autoGerarPlantoesRodizioSeNecessario() {
       const freq = esc.frequencia_escala || '12x36';
       const is24h = freq === '24x48' || freq === '24x36' || freq.includes('24');
       const shiftSize = is24h ? 24 : 12;
-      // Usa o repasse real da escala pai ao invés de valores fixos
+      // Calcula taxa unitária por plantão (ex: R$ 120 para 12h em escala mensal)
       const repassePai = parseFloat(esc.valor_repasse_cuidador || 0);
-      const rate = repassePai > 0 ? repassePai : (is24h ? 240 : 120);
+      let rate = is24h ? 240 : 120;
+      if (repassePai > 0) {
+        rate = repassePai < 500 ? repassePai : (is24h ? repassePai / 15 : repassePai / 64);
+      }
 
       const parentStart = new Date(esc.data_inicio);
       const startHour = parentStart.getHours();
@@ -2194,22 +2197,30 @@ window.verAgendaCuidador = (cuidadorId) => {
       }
       tipoCobranca = tipoCobranca || 'Por Hora';
 
-      // Calcula repasse total do item
+      // Calcula o repasse unitário por plantão (ex: R$ 120 para plantão 12h)
       let vr = 0;
-      const repasseUnitario = e.valor_repasse_cuidador > 0
-        ? e.valor_repasse_cuidador
-        : (escalaPai?.valor_repasse_cuidador || 0); // herda da escala pai se nulo/zero
+      let repasseBruto = parseFloat(e.valor_repasse_cuidador || 0);
 
-      if (repasseUnitario > 0) {
-        if (tipoCobranca === 'Por Hora') {
-          // Taxa horária × horas do plantão
-          const horas = (new Date(e.data_termino || e.data_fim) - new Date(e.data_inicio)) / 3600000;
-          vr = repasseUnitario * (isNaN(horas) ? 0 : horas);
+      // Se o plantão herdou o total mensal da escala pai (ex: >= R$ 500), converte para taxa unitária por plantão
+      if (!repasseBruto || repasseBruto >= 500) {
+        const totalPai = parseFloat(escalaPai?.valor_repasse_cuidador || 0);
+        if (totalPai > 0) {
+          if (totalPai < 500) {
+            repasseBruto = totalPai;
+          } else {
+            const is24 = tipoCobranca.includes('24');
+            repasseBruto = is24 ? (totalPai / 15) : (totalPai / 64);
+          }
         } else {
-          vr = repasseUnitario;
+          repasseBruto = tipoCobranca.includes('24') ? 240 : 120;
         }
-      } else if (e.valor_total > 0) {
-        vr = e.valor_total * 0.7;
+      }
+
+      if (tipoCobranca === 'Por Hora') {
+        const horas = (new Date(e.data_termino || e.data_fim) - new Date(e.data_inicio)) / 3600000;
+        vr = repasseBruto * (isNaN(horas) ? 0 : horas);
+      } else {
+        vr = repasseBruto;
       }
 
       if (e.e_substituicao && e.cuidador_substituta_id && e.cuidador_substituta_id !== cuidadorId) {
