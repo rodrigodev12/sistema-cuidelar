@@ -690,7 +690,7 @@
         
         <!-- Detalhamento de Projeção de Ganhos das Cuidadoras -->
         <div id="divProjecaoGanhos" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md); padding: var(--space-3); font-size: 0.8rem; line-height: 1.4;">
-          <strong style="color: var(--text-main); display: block; margin-bottom: 6px;">Projeção de Repasse Individual (Plantoes de R$ 120 / R$ 240):</strong>
+          <strong style="color: var(--text-main); display: block; margin-bottom: 6px;">Projeção de Repasse Individual (Dia R$ 150 · Noite R$ 180 · 24h R$ 280):</strong>
           <div id="projecaoLista" style="color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;">
             Selecione as cuidadoras e configure as datas/frequência para ver a projeção.
           </div>
@@ -2806,7 +2806,6 @@ window.submitEscala = async (e) => {
         const end = new Date(endDt);
         let diaIndex = 0;
         const is24h = freq === '24x48' || freq === '24x36' || freq.includes('24');
-        const rate = is24h ? 240 : 120;
 
         while (curr <= end) {
           if (is24h) {
@@ -2832,14 +2831,14 @@ window.submitEscala = async (e) => {
                 data_termino: pFim.toISOString(),
                 data_fim: pFim.toISOString(),
                 tipo_cobranca: 'Por Plantão (24h)',
-                valor_repasse_cuidador: rate,
+                valor_repasse_cuidador: 280,
                 valor_cliente: totalCliente / 15,
                 valor_total: totalCliente / 15,
                 status: 'agendado'
               });
             }
           } else {
-            // Dia (07:00 às 19:00)
+            // Dia (07:00 às 19:00 - R$ 150)
             const diaCuidId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
             if (diaCuidId) {
               const cuidDaVezObj = allCuidadores.find(c => c.id === diaCuidId);
@@ -2861,14 +2860,14 @@ window.submitEscala = async (e) => {
                 data_termino: pFim.toISOString(),
                 data_fim: pFim.toISOString(),
                 tipo_cobranca: 'Por Plantão (12h)',
-                valor_repasse_cuidador: rate,
+                valor_repasse_cuidador: 150,
                 valor_cliente: totalCliente / 30,
                 valor_total: totalCliente / 30,
                 status: 'agendado'
               });
             }
 
-            // Noite (19:00 às 07:00 do dia seguinte)
+            // Noite (19:00 às 07:00 do dia seguinte - R$ 180)
             const noiteCuidId = (diaIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
             if (noiteCuidId) {
               const cuidDaVezObj = allCuidadores.find(c => c.id === noiteCuidId);
@@ -2891,7 +2890,7 @@ window.submitEscala = async (e) => {
                 data_termino: pFim.toISOString(),
                 data_fim: pFim.toISOString(),
                 tipo_cobranca: 'Por Plantão (12h)',
-                valor_repasse_cuidador: rate,
+                valor_repasse_cuidador: 180,
                 valor_cliente: totalCliente / 30,
                 valor_total: totalCliente / 30,
                 status: 'agendado'
@@ -2933,7 +2932,6 @@ window.submitEscala = async (e) => {
         const end = new Date(endDt);
         let diaIndex = 0;
         const is24h = freq === '24x48' || freq === '24x36' || freq.includes('24');
-        const rate = is24h ? 240 : 120;
         const startHour = startDt.getHours();
         const startMin = startDt.getMinutes();
 
@@ -2961,14 +2959,14 @@ window.submitEscala = async (e) => {
                 data_termino: pFim.toISOString(),
                 data_fim: pFim.toISOString(),
                 tipo_cobranca: 'Por Plantão (24h)',
-                valor_repasse_cuidador: rate,
+                valor_repasse_cuidador: 280,
                 valor_cliente: totalCliente / 15,
                 valor_total: totalCliente / 15,
                 status: 'agendado'
               });
             }
           } else {
-            // Dia
+            // Dia (07:00 às 19:00 - R$ 150)
             const diaCuidId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
             if (diaCuidId) {
               const cuidDaVezObj = allCuidadores.find(c => c.id === diaCuidId);
@@ -2990,14 +2988,14 @@ window.submitEscala = async (e) => {
                 data_termino: pFim.toISOString(),
                 data_fim: pFim.toISOString(),
                 tipo_cobranca: 'Por Plantão (12h)',
-                valor_repasse_cuidador: rate,
+                valor_repasse_cuidador: 150,
                 valor_cliente: totalCliente / 30,
                 valor_total: totalCliente / 30,
                 status: 'agendado'
               });
             }
 
-            // Noite
+            // Noite (19:00 às 07:00 do dia seguinte - R$ 180)
             const noiteCuidId = (diaIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
             if (noiteCuidId) {
               const cuidDaVezObj = allCuidadores.find(c => c.id === noiteCuidId);
@@ -3019,7 +3017,7 @@ window.submitEscala = async (e) => {
                 data_termino: pFim.toISOString(),
                 data_fim: pFim.toISOString(),
                 tipo_cobranca: 'Por Plantão (12h)',
-                valor_repasse_cuidador: rate,
+                valor_repasse_cuidador: 180,
                 valor_cliente: totalCliente / 30,
                 valor_total: totalCliente / 30,
                 status: 'agendado'
@@ -4518,17 +4516,17 @@ function toggleTipoCobranca() {
 
 function calcularPlantoesEquipeDetalhado(dataInicio, dataFim, frequencia, c1, c2, c3, c4) {
   const plantoes = {
-    c1: { id: c1, count: 0, nome: 'Cuidadora 1' },
-    c2: { id: c2, count: 0, nome: 'Cuidadora 2' },
-    c3: { id: c3, count: 0, nome: 'Cuidadora 3' },
-    c4: { id: c4, count: 0, nome: 'Cuidadora 4' }
+    c1: { id: c1, count: 0, rate: 150, nome: 'Cuidadora 1', turno: 'Dia' },
+    c2: { id: c2, count: 0, rate: 150, nome: 'Cuidadora 2', turno: 'Dia' },
+    c3: { id: c3, count: 0, rate: 180, nome: 'Cuidadora 3', turno: 'Noite' },
+    c4: { id: c4, count: 0, rate: 180, nome: 'Cuidadora 4', turno: 'Noite' }
   };
 
-  if (!dataInicio || !dataFim) return { plantoes, valorUnitario: 120 };
+  if (!dataInicio || !dataFim) return { plantoes };
 
   const start = new Date(dataInicio);
   const end = new Date(dataFim);
-  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) return { plantoes, valorUnitario: 120 };
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) return { plantoes };
 
   const c1Obj = allCuidadores.find(c => c.id === c1);
   const c2Obj = allCuidadores.find(c => c.id === c2);
@@ -4540,14 +4538,17 @@ function calcularPlantoesEquipeDetalhado(dataInicio, dataFim, frequencia, c1, c2
   plantoes.c3.nome = c3Obj ? c3Obj.usuarios?.nome : 'Cuidadora 3';
   plantoes.c4.nome = c4Obj ? c4Obj.usuarios?.nome : 'Cuidadora 4';
 
+  const is24h = frequencia === '24x48' || frequencia === '24x36' || (frequencia && frequencia.includes('24'));
+  if (is24h) {
+    plantoes.c1.rate = 280; plantoes.c1.turno = '24h';
+    plantoes.c2.rate = 280; plantoes.c2.turno = '24h';
+    plantoes.c3.rate = 280; plantoes.c3.turno = '24h';
+    plantoes.c4.rate = 280; plantoes.c4.turno = '24h';
+  }
+
   const curr = new Date(start);
   let diaIndex = 0;
 
-  // Determinar se o plantão é de 24h ou 12h
-  const is24h = frequencia === '24x48' || frequencia === '24x36' || frequencia.includes('24');
-  const valorUnitario = is24h ? 240 : 120;
-
-  // Clone o curr para não alterar original no loop
   const tempDate = new Date(curr);
   while (tempDate <= end) {
     if (is24h) {
@@ -4561,13 +4562,13 @@ function calcularPlantoesEquipeDetalhado(dataInicio, dataFim, frequencia, c1, c2
       }
     } else {
       // Plantão 12h: Revezamento Diário/Noturno
-      // Dia: alterna entre C1 e C2
+      // Dia (R$ 150): alterna entre C1 e C2
       const diaCuidId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
       if (diaCuidId) {
         if (diaCuidId === c1) plantoes.c1.count++;
         else if (diaCuidId === c2) plantoes.c2.count++;
       }
-      // Noite: alterna entre C3 e C4
+      // Noite (R$ 180): alterna entre C3 e C4
       const noiteCuidId = (diaIndex % 2 === 0) ? (c3 || c4) : (c4 || c3);
       if (noiteCuidId) {
         if (noiteCuidId === c3) plantoes.c3.count++;
@@ -4578,7 +4579,7 @@ function calcularPlantoesEquipeDetalhado(dataInicio, dataFim, frequencia, c1, c2
     diaIndex++;
   }
 
-  return { plantoes, valorUnitario };
+  return { plantoes };
 }
 
 function calcularValoresEscala(dataInicio, dataFim, tipoCobranca, valorInseridoCliente, valorInseridoRepasse) {
@@ -4824,7 +4825,6 @@ function calcularFinanceiro() {
 
     const info = calcularPlantoesEquipeDetalhado(deVal, ateVal, freq, c1, c2, c3, c4);
     const plantoes = info.plantoes;
-    const rate = info.valorUnitario;
 
     let totalRepasseCalculado = 0;
     let htmlList = '';
@@ -4835,6 +4835,7 @@ function calcularFinanceiro() {
     activeCuidadores.forEach((cuid, idx) => {
       if (cuid.id) {
         selectedAny = true;
+        const rate = cuid.rate;
         const val = cuid.count * rate;
         totalRepasseCalculado += val;
         htmlList += `<div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
