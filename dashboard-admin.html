@@ -3619,7 +3619,6 @@ window.submitCuidador = async (e) => {
         if (cuidErr) throw cuidErr;
         showToast('Cuidador cadastrado com sucesso!', 'success');
       }
-      }
       window._editingCuidadorId = null;
       closeModal('modalCuidador');
       await loadAllData();
