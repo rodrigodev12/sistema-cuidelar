@@ -1312,14 +1312,35 @@ function sortChecklistByHorario() {
 }
 
 function loadDefaultChecklist() {
-  checklistData = [
-    { id:1, descricao:'Administrar medicamentos da manhã', horario:'08:00', done:false, icon:'💊' },
-    { id:2, descricao:'Auxiliar no banho e higiene pessoal', horario:'09:00', done:false, icon:'🚿' },
-    { id:4, descricao:'Registrar sinais vitais', horario:'10:00', done:false, icon:'💓' },
-    { id:6, descricao:'Acompanhar caminhada leve (15 min)', horario:'11:00', done:false, icon:'🦯' },
-    { id:3, descricao:'Preparar e servir o almoço', horario:'12:00', done:false, icon:'🍽️' },
-    { id:5, descricao:'Hidratação — oferecer água a cada 2h', horario:'—', done:false, icon:'💧' },
-  ];
+  const activeIdoso = (typeof currentEscala !== 'undefined' && currentEscala && currentEscala.idosos) || 
+                      (typeof plantaoEncontrado !== 'undefined' && plantaoEncontrado && plantaoEncontrado.idosos) || 
+                      null;
+  const rawPlano = activeIdoso ? activeIdoso.plano_cuidados : null;
+
+  if (rawPlano && rawPlano.trim().length > 0) {
+    const lines = rawPlano.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    checklistData = lines.map((line, idx) => {
+      let icon = '📋';
+      let desc = line;
+      // Extrai o primeiro emoji se houver
+      const matchEmoji = line.match(/^(\p{Extended_Pictographic}|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F\uDE80-\uDEF8])/u);
+      if (matchEmoji) {
+        icon = matchEmoji[0];
+        desc = line.substring(icon.length).trim();
+      }
+      return { id: idx + 1, descricao: desc, done: false, icon: icon };
+    });
+  } else {
+    // Padrão Universal Agnóstico de Turno/Horário
+    checklistData = [
+      { id: 1, descricao: 'Administração de medicamentos prescritos', done: false, icon: '💊' },
+      { id: 2, descricao: 'Higiene pessoal e banho do assistido', done: false, icon: '🚿' },
+      { id: 3, descricao: 'Aferição e registro dos sinais vitais', done: false, icon: '💓' },
+      { id: 4, descricao: 'Auxílio e acompanhamento nas refeições', done: false, icon: '🍽️' },
+      { id: 5, descricao: 'Conforto e mobilização do assistido', done: false, icon: '🛏️' },
+      { id: 6, descricao: 'Incentivo à hidratação constante', done: false, icon: '💧' },
+    ];
+  }
   sortChecklistByHorario();
   renderChecklist();
 }
@@ -1339,8 +1360,8 @@ function renderChecklist() {
     <div class="checklist-item ${item.done ? 'done' : ''}" onclick="toggleTask(${i})" role="checkbox" aria-checked="${item.done}" tabindex="0">
       <div class="checklist-checkbox">${item.done ? '✓' : ''}</div>
       <div class="checklist-text">
-        <div class="checklist-desc">${item.icon} ${item.descricao}</div>
-        ${item.horario !== '—' ? `<div class="checklist-time">⏰ ${item.horario}</div>` : ''}
+        <div class="checklist-desc">${item.icon || '📋'} ${item.descricao}</div>
+        ${item.horario && item.horario !== '—' ? `<div class="checklist-time">⏰ ${item.horario}</div>` : ''}
       </div>
     </div>
   `).join('');

@@ -905,6 +905,7 @@
       <div class="tab-bar">
         <div class="tab-item active" onclick="showFormTab('tab-idoso-dados', this)">Dados Pessoais</div>
         <div class="tab-item" onclick="showFormTab('tab-idoso-saude', this)">Saúde</div>
+        <div class="tab-item" onclick="showFormTab('tab-idoso-plano', this)">Plano de Cuidados</div>
         <div class="tab-item" onclick="showFormTab('tab-idoso-familia', this)">Família</div>
       </div>
 
@@ -989,6 +990,17 @@
             <label class="form-label" for="idPlano">Plano de Saúde</label>
             <input type="text" class="form-input" id="idPlano" placeholder="Nome do plano" />
           </div>
+        </div>
+      </div>
+
+      <!-- Aba: Plano de Cuidados -->
+      <div id="tab-idoso-plano" class="tab-content">
+        <div class="form-group mb-4">
+          <label class="form-label" for="idPlanoCuidados">Checklist do Plantão / Plano de Cuidados</label>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
+            Digite a lista de tarefas personalizadas que a cuidadora deve realizar no plantão deste assistido (uma por linha):
+          </p>
+          <textarea class="form-textarea" id="idPlanoCuidados" rows="6" placeholder="💊 Administração de medicamentos prescritos&#10;🚿 Higiene pessoal e banho do assistido&#10;💓 Aferição e registro dos sinais vitais&#10;🍽️ Auxílio e acompanhamento nas refeições&#10;🛏️ Mudança de decúbito / Conforto&#10;💧 Incentivo à hidratação constante"></textarea>
         </div>
       </div>
 
@@ -3484,6 +3496,7 @@ window.submitIdoso = async (e) => {
       contato_emergencia: document.getElementById('idContEmer').value,
       telefone_emergencia: document.getElementById('idFoneEmer').value,
       observacoes:      document.getElementById('idObs').value,
+      plano_cuidados:   document.getElementById('idPlanoCuidados').value || null,
       perfil:           document.getElementById('idPerfil').value,
       ativo:            true
     };
@@ -3495,17 +3508,35 @@ window.submitIdoso = async (e) => {
       };
 
       if (window._editingIdosoId) {
-        const { error } = await supabase
+        let { error } = await supabase
           .from('idosos')
           .update(dbData)
           .eq('id', window._editingIdosoId);
-        if (error) throw error;
+        
+        if (error && error.message && error.message.includes('plano_cuidados')) {
+          const dbDataFallback = { ...dbData };
+          delete dbDataFallback.plano_cuidados;
+          const { error: fbErr } = await supabase.from('idosos').update(dbDataFallback).eq('id', window._editingIdosoId);
+          if (fbErr) throw fbErr;
+        } else if (error) {
+          throw error;
+        }
+
         showToast('Assistido atualizado com sucesso!', 'success');
       } else {
-        const { error } = await supabase
+        let { error } = await supabase
           .from('idosos')
           .insert(dbData);
-        if (error) throw error;
+
+        if (error && error.message && error.message.includes('plano_cuidados')) {
+          const dbDataFallback = { ...dbData };
+          delete dbDataFallback.plano_cuidados;
+          const { error: fbErr } = await supabase.from('idosos').insert(dbDataFallback);
+          if (fbErr) throw fbErr;
+        } else if (error) {
+          throw error;
+        }
+
         showToast('Assistido cadastrado com sucesso!', 'success');
       }
       window._editingIdosoId = null;
@@ -4138,6 +4169,8 @@ window.editIdoso = (id) => {
   document.getElementById('idContEmer').value = i.contato_emergencia || '';
   document.getElementById('idFoneEmer').value = i.telefone_emergencia || '';
   document.getElementById('idObs').value = i.observacoes || '';
+  const planoEl = document.getElementById('idPlanoCuidados');
+  if (planoEl) planoEl.value = i.plano_cuidados || '';
   openModal('modalIdoso');
 };
 
@@ -4169,6 +4202,7 @@ window.viewIdoso = (id) => {
       <p style="margin: 6px 0;"><strong>⚠️ Restrições:</strong> ${i.restricoes_medicas || 'Nenhuma'}</p>
       <p style="margin: 6px 0;"><strong>🚫 Alergias:</strong> ${i.alergias || 'Nenhuma'}</p>
       <p style="margin: 6px 0;"><strong>💊 Medicamentos:</strong> ${i.medicamentos || 'Nenhum'}</p>
+      <p style="margin: 6px 0;"><strong>📋 Plano de Cuidados:</strong> ${i.plano_cuidados ? i.plano_cuidados.replace(/\n/g, ' · ') : 'Padrão Universal'}</p>
       <p style="margin: 6px 0;"><strong>📞 Emergência:</strong> ${i.contato_emergencia || '—'} (${i.telefone_emergencia || '—'})</p>
     </div>
   `;
