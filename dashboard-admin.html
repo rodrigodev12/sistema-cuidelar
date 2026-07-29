@@ -1639,7 +1639,9 @@ function autoGerarPlantoesRodizioSeNecessario() {
       const freq = esc.frequencia_escala || '12x36';
       const is24h = freq === '24x48' || freq === '24x36' || freq.includes('24');
       const shiftSize = is24h ? 24 : 12;
-      const rate = is24h ? 240 : 120;
+      // Usa o repasse real da escala pai ao invés de valores fixos
+      const repassePai = parseFloat(esc.valor_repasse_cuidador || 0);
+      const rate = repassePai > 0 ? repassePai : (is24h ? 240 : 120);
 
       const parentStart = new Date(esc.data_inicio);
       const startHour = parentStart.getHours();
@@ -2173,7 +2175,20 @@ window.verAgendaCuidador = (cuidadorId) => {
   } else {
     const statusMap = { agendado:'badge-primary', em_andamento:'badge-info', concluido:'badge-success', cancelado:'badge-danger' };
     tbody.innerHTML = escalasCuidador.map(e => {
-      let vr = e.valor_repasse_cuidador || (e.valor_total ? e.valor_total * 0.7 : 0);
+      // Calcula repasse total do item
+      let vr = 0;
+      if (e.valor_repasse_cuidador > 0) {
+        // Para cobranças por hora, multiplica pela quantidade de horas do plantão
+        if (e.tipo_cobranca === 'Por Hora') {
+          const horas = (new Date(e.data_termino || e.data_fim) - new Date(e.data_inicio)) / 3600000;
+          vr = e.valor_repasse_cuidador * (isNaN(horas) ? 0 : horas);
+        } else {
+          vr = e.valor_repasse_cuidador;
+        }
+      } else if (e.valor_total > 0) {
+        // Fallback: estima repasse como 70% do total (sem dado de repasse)
+        vr = e.valor_total * 0.7;
+      }
       if (e.e_substituicao && e.cuidador_substituta_id && e.cuidador_substituta_id !== cuidadorId) {
         vr = 0;
       }
