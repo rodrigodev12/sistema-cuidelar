@@ -4590,32 +4590,45 @@ function recalcularCamposValores(origem) {
   
   const pct = parseFloat(taxaAgenciaEl?.value || 0);
 
-  if (origem === 'cliente' || (baseCalculo === 'cliente' && (origem === 'cuid' || origem === 'taxa'))) {
-    let valCliente = parseFloat(valClienteEl?.value || 0);
-    if (!valCliente || isNaN(valCliente) || valCliente <= 0) {
-      if (valRepasseEl) valRepasseEl.value = '';
-    } else {
-      // Margem por Dentro: Repasse = Cliente × (1 - Taxa/100)
-      // Ex: Cliente R$300 com margem 40% → Repasse = 300 × 0,60 = R$180
-      const valRepasse = valCliente * (1 - (pct / 100));
-      if (valRepasseEl) valRepasseEl.value = valRepasse.toFixed(2);
-    }
-  } 
-  else if (origem === 'repasse' || (baseCalculo === 'repasse' && (origem === 'cuid' || origem === 'taxa'))) {
-    let valRepasse = parseFloat(valRepasseEl?.value || 0);
-    if (!valRepasse || isNaN(valRepasse) || valRepasse <= 0) {
-      if (valClienteEl) valClienteEl.value = '';
-    } else {
-      // Margem por Dentro: Cliente = Repasse ÷ (1 - Taxa/100)
-      // Ex: Repasse R$180 com margem 40% → Cliente = 180 ÷ 0,60 = R$300
-      if (pct >= 100) {
-        if (valClienteEl) valClienteEl.value = '';
+  if (baseCalculo === 'cliente') {
+    // FONTE é o Cliente → recalcula Repasse APENAS quando:
+    // - usuário digitou no campo Cliente (origem === 'cliente')
+    // - ou taxa/cuidadora mudaram (origem === 'taxa' | 'cuid')
+    // Se usuário editou o Repasse diretamente → só atualiza a Margem, sem tocar no Cliente
+    if (origem === 'cliente' || origem === 'taxa' || origem === 'cuid') {
+      let valCliente = parseFloat(valClienteEl?.value || 0);
+      if (!valCliente || isNaN(valCliente) || valCliente <= 0) {
+        if (valRepasseEl) valRepasseEl.value = '';
       } else {
-        const valCliente = valRepasse / (1 - (pct / 100));
-        if (valClienteEl) valClienteEl.value = valCliente.toFixed(2);
+        // Margem por Dentro: Repasse = Cliente × (1 - Taxa/100)
+        const valRepasse = valCliente * (1 - (pct / 100));
+        if (valRepasseEl) valRepasseEl.value = valRepasse.toFixed(2);
       }
     }
+    // origem === 'repasse': usuário ajustou o Repasse manualmente → só atualiza Margem
+
+  } else if (baseCalculo === 'repasse') {
+    // FONTE é o Repasse → recalcula Cliente APENAS quando:
+    // - usuário digitou no campo Repasse (origem === 'repasse')
+    // - ou taxa/cuidadora mudaram (origem === 'taxa' | 'cuid')
+    // Se usuário editou o Cliente diretamente (arredondou) → só atualiza a Margem, sem tocar no Repasse
+    if (origem === 'repasse' || origem === 'taxa' || origem === 'cuid') {
+      let valRepasse = parseFloat(valRepasseEl?.value || 0);
+      if (!valRepasse || isNaN(valRepasse) || valRepasse <= 0) {
+        if (valClienteEl) valClienteEl.value = '';
+      } else {
+        // Margem por Dentro: Cliente = Repasse ÷ (1 - Taxa/100)
+        if (pct >= 100) {
+          if (valClienteEl) valClienteEl.value = '';
+        } else {
+          const valCliente = valRepasse / (1 - (pct / 100));
+          if (valClienteEl) valClienteEl.value = valCliente.toFixed(2);
+        }
+      }
+    }
+    // origem === 'cliente': usuário arredondou o Cliente → só atualiza a Margem
   }
+  // baseCalculo === 'manual': ambos os campos livres, só atualiza Margem
 
   calcularFinanceiro();
 }
