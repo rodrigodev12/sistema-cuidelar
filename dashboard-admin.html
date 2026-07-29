@@ -5026,9 +5026,30 @@ function calcularFinanceiro() {
       helperRepasse.textContent = '(Total repasse equipe projetado)';
       helperRepasse.style.display = 'block';
     }
+
+    const baseCalculo = document.getElementById('escBaseCalculo')?.value || 'repasse';
+    const pct = parseFloat(document.getElementById('escTaxaAgencia')?.value || 0);
+
+    let valRepasseFinal = selectedAny ? totalRepasseCalculado : (parseFloat(inputRepasse?.value || 0) || vr);
+    let valClienteFinal = vc;
+
+    if (baseCalculo === 'repasse' || (!valClienteFinal && valRepasseFinal > 0)) {
+      if (pct > 0 && pct < 100) {
+        valClienteFinal = valRepasseFinal / (1 - (pct / 100));
+        if (inputCliente) {
+          inputCliente.value = valClienteFinal.toFixed(2);
+        }
+      }
+    } else if (baseCalculo === 'cliente' && valClienteFinal > 0) {
+      if (pct > 0 && pct < 100 && !selectedAny) {
+        valRepasseFinal = valClienteFinal * (1 - (pct / 100));
+        if (inputRepasse) {
+          inputRepasse.value = valRepasseFinal.toFixed(2);
+        }
+      }
+    }
     
-    const vr_total = selectedAny ? totalRepasseCalculado : vr;
-    const res = calcularValoresEscala(deVal || new Date(), ateVal || new Date(), tipo, vc, vr_total);
+    const res = calcularValoresEscala(deVal || new Date(), ateVal || new Date(), tipo, valClienteFinal, valRepasseFinal);
     updateKPIs(res);
   }
 }
