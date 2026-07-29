@@ -2318,6 +2318,7 @@ function renderIdosos(list) {
         </div>
         <div class="flex gap-1">
           <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();editIdoso('${id.id}')" data-tooltip="Editar"><i data-lucide="edit-2"></i></button>
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="event.stopPropagation();deleteIdoso('${id.id}')" data-tooltip="Excluir"><i data-lucide="trash-2" style="color:var(--danger)"></i></button>
         </div>
       </div>
       <div class="idoso-tags">${tags.map(t=>`<span class="idoso-tag">${t.trim()}</span>`).join('')}</div>
@@ -2345,6 +2346,7 @@ function renderIdosos(list) {
         <td>
           <div class="flex gap-1">
             <button class="btn btn-ghost btn-icon btn-sm" onclick="editIdoso('${id.id}')" data-tooltip="Editar"><i data-lucide="edit-2"></i></button>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="deleteIdoso('${id.id}')" data-tooltip="Excluir"><i data-lucide="trash-2" style="color:var(--danger)"></i></button>
           </div>
         </td>
       </tr>`;
@@ -2377,7 +2379,10 @@ function renderFamilias(list) {
         </button>
       </td>
       <td>
-        <button class="btn btn-ghost btn-icon btn-sm" onclick="editFamilia('${f.id}')"><i data-lucide="edit-2"></i></button>
+        <div class="flex gap-1">
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="editFamilia('${f.id}')" data-tooltip="Editar"><i data-lucide="edit-2"></i></button>
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="deleteFamilia('${f.id}')" data-tooltip="Excluir"><i data-lucide="trash-2" style="color:var(--danger)"></i></button>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -4491,6 +4496,37 @@ window.deleteEscala = async (id) => {
   }
 };
 
+window.deleteIdoso = async (id) => {
+  if (confirm('Deseja realmente excluir este assistido? Esta ação removerá o assistido e suas escalas vinculadas.')) {
+    try {
+      if (!DEMO_MODE) {
+        await supabase.from('plantoes_diarios').delete().eq('assistido_id', id);
+        await supabase.from('escalas_servicos').delete().eq('id_idoso', id);
+        const { error } = await supabase.from('idosos').delete().eq('id', id);
+        if (error) throw error;
+
+        showToast('Assistido excluído com sucesso.', 'success');
+        await loadAllData();
+        loadDashboard();
+        return;
+      }
+
+      allIdosos = allIdosos.filter(x => x.id !== id);
+      allEscalas = (allEscalas || []).filter(e => e.id_idoso !== id && e.assistido_id !== id);
+      if (allPlantoesDiarios) {
+        allPlantoesDiarios = allPlantoesDiarios.filter(p => p.assistido_id !== id);
+      }
+      renderIdosos(allIdosos);
+      renderEscalas(allEscalas);
+      populateSelects();
+      loadDashboard();
+      showToast('Assistido excluído com sucesso.', 'success');
+    } catch(err) {
+      showToast('Erro ao excluir assistido: ' + err.message, 'error');
+    }
+  }
+};
+
 window.editFamilia = (id) => {
   const f = allFamilias.find(x => x.id === id);
   if (!f) return;
@@ -4503,6 +4539,36 @@ window.editFamilia = (id) => {
   document.getElementById('famCidade').value = f.cidade || '';
   document.getElementById('famEstado').value = f.estado || '';
   openModal('modalFamilia');
+};
+
+window.deleteFamilia = async (id) => {
+  if (confirm('Deseja realmente excluir esta família?')) {
+    try {
+      if (!DEMO_MODE) {
+        const fam = allFamilias.find(x => x.id === id);
+        if (fam) {
+          await supabase.from('idosos').update({ id_cliente_familia: null }).eq('id_cliente_familia', id);
+          const { error } = await supabase.from('clientes_familia').delete().eq('id', id);
+          if (error) throw error;
+          if (fam.id_usuario) {
+            await supabase.from('usuarios').delete().eq('id', fam.id_usuario);
+          }
+        }
+        showToast('Família excluída com sucesso.', 'success');
+        await loadAllData();
+        loadDashboard();
+        return;
+      }
+
+      allFamilias = allFamilias.filter(x => x.id !== id);
+      renderFamilias(allFamilias);
+      populateSelects();
+      loadDashboard();
+      showToast('Família excluída com sucesso.', 'success');
+    } catch(err) {
+      showToast('Erro ao excluir família: ' + err.message, 'error');
+    }
+  }
 };
 
 document.getElementById('escBaseCalculo')?.addEventListener('change', handleBaseCalculoChange);
