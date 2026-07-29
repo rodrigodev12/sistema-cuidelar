@@ -1703,10 +1703,8 @@ function autoGerarPlantoesRodizioSeNecessario() {
           deveGerar = (dayOfWeek >= 1 && dayOfWeek <= 5);
         } else if (freq === 'fim_semana') {
           deveGerar = (dayOfWeek === 0 || dayOfWeek === 6);
-        } else if (freq === '24x48') {
-          deveGerar = (diaIndex % 3 === 0);
-        } else if (freq === '24x36') {
-          deveGerar = (diaIndex % 2 === 0);
+        } else if (is24h || freq === '24x48' || freq === '24x36') {
+          deveGerar = true;
         }
 
         if (deveGerar) {
@@ -3493,41 +3491,58 @@ window.submitSubstituicao = async (e) => {
     const startHour = parentStart.getHours();
     const startMin = parentStart.getMinutes();
 
-    let shiftSize = 12; // padrão
     const freq = esc.frequencia_escala || '12x36';
-    if (freq === '24x48' || freq === '24x36') {
-      shiftSize = 24;
-    }
+    const is24h = freq === '24x48' || freq === '24x36' || (freq && freq.includes('24'));
+    let shiftSize = is24h ? 24 : 12;
 
+    let activeShiftIndex = 0;
     while (curr <= endDt) {
-      // Alterna entre C1 (Dia Sim) e C2 (Dia Não), C3/C4 se fornecidas
-      const cuidadorDaVezId = (diaIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
-      const cuidadorDaVezObj = allCuidadores.find(c => c.id === cuidadorDaVezId);
+      const dayOfWeek = curr.getDay();
+      let deveGerar = true;
+      if (freq === 'segunda_sexta') {
+        deveGerar = (dayOfWeek >= 1 && dayOfWeek <= 5);
+      } else if (freq === 'fim_semana') {
+        deveGerar = (dayOfWeek === 0 || dayOfWeek === 6);
+      }
 
-      const pIni = new Date(curr);
-      pIni.setHours(startHour, startMin, 0, 0);
-      const pFim = new Date(pIni);
-      pFim.setHours(pIni.getHours() + shiftSize);
+      if (deveGerar) {
+        let cuidadorDaVezId = null;
+        if (is24h) {
+          const equipeIds = [c1, c2, c3, c4].filter(Boolean);
+          if (equipeIds.length > 0) {
+            cuidadorDaVezId = equipeIds[activeShiftIndex % equipeIds.length];
+          }
+        } else {
+          cuidadorDaVezId = (activeShiftIndex % 2 === 0) ? (c1 || c2) : (c2 || c1);
+        }
+        const cuidadorDaVezObj = allCuidadores.find(c => c.id === cuidadorDaVezId);
 
-      if (cuidadorDaVezObj) {
-        allPlantoesDiarios.push({
-          id: 'p_rod_' + Date.now() + '_' + diaIndex,
-          escala_pai_id: pId,
-          id_escala: pId,
-          assistido_id: esc.id_idoso,
-          idosos: esc.idosos,
-          cuidador_id: cuidadorDaVezId,
-          id_cuidador: cuidadorDaVezId,
-          cuidadores: cuidadorDaVezObj,
-          data_inicio: pIni.toISOString(),
-          data_termino: pFim.toISOString(),
-          data_fim: pFim.toISOString(),
-          tipo_cobranca: 'Por Plantão (12h)',
-          valor_repasse_cuidador: repassePorPlantao,
-          valor_cliente: clientePorPlantao,
-          valor_total: clientePorPlantao,
-          status: 'agendado'
-        });
+        const pIni = new Date(curr);
+        pIni.setHours(startHour, startMin, 0, 0);
+        const pFim = new Date(pIni);
+        pFim.setHours(pIni.getHours() + shiftSize);
+
+        if (cuidadorDaVezObj) {
+          allPlantoesDiarios.push({
+            id: 'p_rod_' + Date.now() + '_' + diaIndex,
+            escala_pai_id: pId,
+            id_escala: pId,
+            assistido_id: esc.id_idoso,
+            idosos: esc.idosos,
+            cuidador_id: cuidadorDaVezId,
+            id_cuidador: cuidadorDaVezId,
+            cuidadores: cuidadorDaVezObj,
+            data_inicio: pIni.toISOString(),
+            data_termino: pFim.toISOString(),
+            data_fim: pFim.toISOString(),
+            tipo_cobranca: is24h ? 'Por Plantão (24h)' : 'Por Plantão (12h)',
+            valor_repasse_cuidador: is24h ? 280 : repassePorPlantao,
+            valor_cliente: clientePorPlantao,
+            valor_total: clientePorPlantao,
+            status: 'agendado'
+          });
+        }
+        activeShiftIndex++;
       }
 
       curr.setDate(curr.getDate() + 1);
@@ -4701,10 +4716,8 @@ function calcularPlantoesEquipeDetalhado(dataInicio, dataFim, frequencia, c1, c2
       deveGerar = (dayOfWeek >= 1 && dayOfWeek <= 5);
     } else if (frequencia === 'fim_semana') {
       deveGerar = (dayOfWeek === 0 || dayOfWeek === 6);
-    } else if (frequencia === '24x48') {
-      deveGerar = (diaIndex % 3 === 0);
-    } else if (frequencia === '24x36') {
-      deveGerar = (diaIndex % 2 === 0);
+    } else if (is24h || frequencia === '24x48' || frequencia === '24x36') {
+      deveGerar = true;
     }
 
     if (deveGerar) {
