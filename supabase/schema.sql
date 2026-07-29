@@ -279,12 +279,16 @@ DECLARE
 BEGIN
   -- Verificar se o usuário autenticado que está chamando a função é administrador
   SELECT EXISTS (
-    SELECT 1 FROM public.usuarios
-    WHERE auth_id = auth.uid() AND tipo = 'administrador'
+    SELECT 1 FROM public.usuarios u
+    WHERE (
+      u.auth_id = auth.uid() OR 
+      u.id = auth.uid() OR 
+      (auth.jwt()->>'email' IS NOT NULL AND lower(u.email) = lower(auth.jwt()->>'email'))
+    ) AND u.tipo = 'administrador'
   ) INTO v_is_admin;
 
-  -- Se não for o primeiro admin sendo criado, valida privilégios
-  IF EXISTS (SELECT 1 FROM public.usuarios WHERE tipo = 'administrador') AND NOT v_is_admin THEN
+  -- Se houver administradores cadastrados e o chamador for autenticado mas não for admin, bloqueia
+  IF (auth.uid() IS NOT NULL OR auth.jwt() IS NOT NULL) AND EXISTS (SELECT 1 FROM public.usuarios WHERE tipo = 'administrador') AND NOT v_is_admin THEN
     RAISE EXCEPTION 'Apenas administradores podem criar novos usuários.';
   END IF;
 

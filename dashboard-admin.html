@@ -3635,8 +3635,20 @@ window.submitCuidador = async (e) => {
             p_tipo: 'cuidador',
             p_senha: senha
           });
-          if (rpcErr) throw rpcErr;
-          newUserUuid = createdUuid;
+
+          if (rpcErr) {
+            console.warn('Erro ao chamar RPC criar_usuario_com_senha, realizando inserção direta:', rpcErr);
+            const { data: insertedUser, error: insErr } = await supabase
+              .from('usuarios')
+              .insert({ nome, email, tipo: 'cuidador', ativo: true })
+              .select('id')
+              .single();
+
+            if (insErr) throw rpcErr;
+            newUserUuid = insertedUser.id;
+          } else {
+            newUserUuid = createdUuid;
+          }
         }
 
         // Insere na tabela public.cuidadores
@@ -3730,14 +3742,38 @@ window.submitFamilia = async (e) => {
 
         showToast('Família atualizada com sucesso!', 'success');
       } else {
-        // RPC: Cria usuário na autenticação Supabase (com identidades) e na tabela public.usuarios
-        const { data: newUserUuid, error: rpcErr } = await supabase.rpc('criar_usuario_com_senha', {
-          p_nome: nome,
-          p_email: email,
-          p_tipo: 'cliente',
-          p_senha: senha
-        });
-        if (rpcErr) throw rpcErr;
+        let newUserUuid = null;
+        const { data: existingUser } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (existingUser && existingUser.id) {
+          newUserUuid = existingUser.id;
+        } else {
+          // RPC: Cria usuário na autenticação Supabase (com identidades) e na tabela public.usuarios
+          const { data: createdUuid, error: rpcErr } = await supabase.rpc('criar_usuario_com_senha', {
+            p_nome: nome,
+            p_email: email,
+            p_tipo: 'cliente',
+            p_senha: senha
+          });
+
+          if (rpcErr) {
+            console.warn('Erro ao chamar RPC criar_usuario_com_senha, realizando inserção direta:', rpcErr);
+            const { data: insertedUser, error: insErr } = await supabase
+              .from('usuarios')
+              .insert({ nome, email, tipo: 'cliente', ativo: true })
+              .select('id')
+              .single();
+
+            if (insErr) throw rpcErr;
+            newUserUuid = insertedUser.id;
+          } else {
+            newUserUuid = createdUuid;
+          }
+        }
 
         // Insere na tabela public.clientes_familia
         const { error: famErr } = await supabase
