@@ -805,18 +805,32 @@ function restoreChecklist() {
   try {
     const saved = JSON.parse(localStorage.getItem(getLSChecklistKey()) || 'null');
     if (!saved || saved.day !== new Date().toDateString()) return;
-    saved.items.forEach(si => {
-      const item = checklistData.find(i => i.id === si.id);
-      if (item) item.done = si.done;
-    });
+
+    if (saved.customItems && saved.customItems.length > 0) {
+      saved.customItems.forEach(ci => {
+        if (!checklistData.some(i => i.id === ci.id)) {
+          checklistData.push(ci);
+        }
+      });
+    }
+
+    if (saved.items && saved.items.length > 0) {
+      saved.items.forEach(si => {
+        const item = checklistData.find(i => i.id === si.id);
+        if (item) item.done = si.done;
+      });
+    }
     sortChecklistByHorario();
     renderChecklist();
   } catch(e) { console.error('restoreChecklist:', e); }
 }
 
 function saveChecklistState() {
-  const data = { day: new Date().toDateString(),
-    items: checklistData.map(i => ({ id: i.id, done: i.done })) };
+  const data = { 
+    day: new Date().toDateString(),
+    items: checklistData.map(i => ({ id: i.id, done: i.done })),
+    customItems: checklistData.filter(i => String(i.id).length > 10)
+  };
   localStorage.setItem(getLSChecklistKey(), JSON.stringify(data));
 }
 
@@ -1319,10 +1333,14 @@ function getLocation() {
 // CHECKLIST
 // ============================================================
 function sortChecklistByHorario() {
+  if (!checklistData || !checklistData.length) return;
   checklistData.sort((a, b) => {
-    if (a.horario === '—') return 1;
-    if (b.horario === '—') return -1;
-    return a.horario.localeCompare(b.horario);
+    const hA = a.horario || '—';
+    const hB = b.horario || '—';
+    if (hA === '—' && hB === '—') return 0;
+    if (hA === '—') return 1;
+    if (hB === '—') return -1;
+    return hA.localeCompare(hB);
   });
 }
 
