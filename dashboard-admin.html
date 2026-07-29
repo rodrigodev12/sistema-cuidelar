@@ -4250,13 +4250,13 @@ window.editEscala = (id) => {
   document.getElementById('escValorCliente').value = unitCliente ? parseFloat(unitCliente.toFixed(2)) : '';
   document.getElementById('escValorRepasse').value = unitRepasse ? parseFloat(unitRepasse.toFixed(2)) : '';
   
-  // Calcula o markup real baseando-se nos valores carregados da escala
-  // Fórmula Markup: Taxa = (ValorCliente / ValorRepasse - 1) * 100
+  // Calcula a taxa real (margem por dentro) baseando-se nos valores carregados
+  // Fórmula: Taxa = (Cliente - Repasse) / Cliente × 100
   const cVal = parseFloat(unitCliente || 0);
   const rVal = parseFloat(unitRepasse || 0);
   let loadedPct = 20.0;
   if (cVal > 0 && rVal > 0) {
-    loadedPct = parseFloat(((cVal / rVal - 1) * 100).toFixed(1));
+    loadedPct = parseFloat(((cVal - rVal) / cVal * 100).toFixed(1));
   } else if (cuid) {
     // Se não há valores, pega a porcentagem cadastrada da cuidadora
     if (cuid.porcentagem_agencia !== undefined && cuid.porcentagem_agencia !== null) {
@@ -4595,9 +4595,9 @@ function recalcularCamposValores(origem) {
     if (!valCliente || isNaN(valCliente) || valCliente <= 0) {
       if (valRepasseEl) valRepasseEl.value = '';
     } else {
-      // Modelo Markup inverso: Repasse = Cliente / (1 + Taxa/100)
-      // Ex: Cliente R$252 com markup 40% → Repasse = 252 / 1.4 = R$180
-      const valRepasse = valCliente / (1 + (pct / 100));
+      // Margem por Dentro: Repasse = Cliente × (1 - Taxa/100)
+      // Ex: Cliente R$300 com margem 40% → Repasse = 300 × 0,60 = R$180
+      const valRepasse = valCliente * (1 - (pct / 100));
       if (valRepasseEl) valRepasseEl.value = valRepasse.toFixed(2);
     }
   } 
@@ -4606,10 +4606,14 @@ function recalcularCamposValores(origem) {
     if (!valRepasse || isNaN(valRepasse) || valRepasse <= 0) {
       if (valClienteEl) valClienteEl.value = '';
     } else {
-      // Modelo Markup: Valor Cliente = Repasse * (1 + Taxa/100)
-      // Ex: Repasse R$180 + 40% markup = R$252 cobrado do cliente
-      const valCliente = valRepasse * (1 + (pct / 100));
-      if (valClienteEl) valClienteEl.value = valCliente.toFixed(2);
+      // Margem por Dentro: Cliente = Repasse ÷ (1 - Taxa/100)
+      // Ex: Repasse R$180 com margem 40% → Cliente = 180 ÷ 0,60 = R$300
+      if (pct >= 100) {
+        if (valClienteEl) valClienteEl.value = '';
+      } else {
+        const valCliente = valRepasse / (1 - (pct / 100));
+        if (valClienteEl) valClienteEl.value = valCliente.toFixed(2);
+      }
     }
   }
 
