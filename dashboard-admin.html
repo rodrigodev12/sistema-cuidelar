@@ -744,12 +744,12 @@
         <div class="form-grid-2" style="align-items: start; gap: var(--space-4); margin-top: var(--space-3); margin-bottom: var(--space-3);">
           <div class="form-group" style="margin-bottom: 0; gap: 0;">
             <label class="form-label" for="escValorCliente" id="labelValorCliente" style="margin-bottom: 4px; font-weight: 600; white-space: nowrap; font-size: 0.82rem;">Valor Cliente (R$) *</label>
-            <input type="number" class="form-input" id="escValorCliente" step="0.01" placeholder="0,00" required />
+            <input type="text" class="form-input" id="escValorCliente" placeholder="0,00" required />
             <span id="escValorClienteHelper" style="display:none; font-size:0.75rem; color:var(--primary); margin-top:4px; padding: 5px var(--space-3); background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius-sm); text-align: center; font-weight: 500; box-sizing: border-box;"></span>
           </div>
           <div class="form-group" style="margin-bottom: 0; gap: 0;">
             <label class="form-label" for="escValorRepasse" id="labelValorRepasse" style="margin-bottom: 4px; font-weight: 600; white-space: nowrap; font-size: 0.82rem;">Repasse Cuidador (R$) *</label>
-            <input type="number" class="form-input" id="escValorRepasse" step="0.01" placeholder="0,00" required />
+            <input type="text" class="form-input" id="escValorRepasse" placeholder="0,00" required />
             <span id="escValorRepasseHelper" style="display:none; font-size:0.75rem; color:rgb(219, 39, 119); margin-top:4px; padding: 5px var(--space-3); background: rgba(219,39,119,0.08); border: 1px solid rgba(219,39,119,0.15); border-radius: var(--radius-sm); text-align: center; font-weight: 500; box-sizing: border-box;"></span>
           </div>
         </div>
@@ -2641,8 +2641,8 @@ window.submitEscala = async (e) => {
     const inicio  = document.getElementById('escInicio').value;
     const termino = document.getElementById('escTermino').value;
     const tipoCobranca = document.getElementById('escTipoCobranca').value;
-    const valorCliente = parseFloat(document.getElementById('escValorCliente').value || 0);
-    const valorRepasse = parseFloat(document.getElementById('escValorRepasse').value || 0);
+    const valorCliente = parseBRLInput(document.getElementById('escValorCliente').value);
+    const valorRepasse = parseBRLInput(document.getElementById('escValorRepasse').value);
     const horas = (new Date(termino) - new Date(inicio)) / 3600000;
     const valorHora = horas > 0 ? (valorRepasse / horas) : 0;
 
@@ -4809,6 +4809,29 @@ function handleBaseCalculoChange() {
   recalcularCamposValores('taxa');
 }
 
+function parseBRLInput(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  if (typeof val === 'number') return val;
+  const clean = val.toString().replace(/\./g, '').replace(',', '.').trim();
+  const parsed = parseFloat(clean);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+function formatBRLInput(num) {
+  if (num === null || num === undefined || isNaN(num) || num === '') return '';
+  return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+document.getElementById('escValorCliente')?.addEventListener('blur', () => {
+  const val = parseBRLInput(document.getElementById('escValorCliente').value);
+  if (val > 0) document.getElementById('escValorCliente').value = formatBRLInput(val);
+});
+
+document.getElementById('escValorRepasse')?.addEventListener('blur', () => {
+  const val = parseBRLInput(document.getElementById('escValorRepasse').value);
+  if (val > 0) document.getElementById('escValorRepasse').value = formatBRLInput(val);
+});
+
 function atualizarTaxaPorCuidador() {
   recalcularCamposValores('cuid');
 }
@@ -4816,7 +4839,7 @@ function atualizarTaxaPorCuidador() {
 function recalcularCamposValores(origem) {
   const tipo = document.getElementById('escTipoCobranca').value;
   if (tipo === 'Mensal Fixado') {
-    calcularFinanceiro();
+    calcularFinanceiro(origem);
     return;
   }
 
@@ -4828,58 +4851,44 @@ function recalcularCamposValores(origem) {
   const pct = parseFloat(taxaAgenciaEl?.value || 0);
 
   if (baseCalculo === 'cliente') {
-    // FONTE é o Cliente → recalcula Repasse APENAS quando:
-    // - usuário digitou no campo Cliente (origem === 'cliente')
-    // - ou taxa/cuidadora mudaram (origem === 'taxa' | 'cuid')
-    // Se usuário editou o Repasse diretamente → só atualiza a Margem, sem tocar no Cliente
     if (origem === 'cliente' || origem === 'taxa' || origem === 'cuid') {
-      let valCliente = parseFloat(valClienteEl?.value || 0);
-      if (!valCliente || isNaN(valCliente) || valCliente <= 0) {
+      let valCliente = parseBRLInput(valClienteEl?.value);
+      if (!valCliente || valCliente <= 0) {
         if (valRepasseEl) valRepasseEl.value = '';
       } else {
-        // Margem por Dentro: Repasse = Cliente × (1 - Taxa/100)
         const valRepasse = valCliente * (1 - (pct / 100));
-        if (valRepasseEl) valRepasseEl.value = valRepasse.toFixed(2);
+        if (valRepasseEl) valRepasseEl.value = formatBRLInput(valRepasse);
       }
     }
-    // origem === 'repasse': usuário ajustou o Repasse manualmente → só atualiza Margem
-
   } else if (baseCalculo === 'repasse') {
-    // FONTE é o Repasse → recalcula Cliente APENAS quando:
-    // - usuário digitou no campo Repasse (origem === 'repasse')
-    // - ou taxa/cuidadora mudaram (origem === 'taxa' | 'cuid')
-    // Se usuário editou o Cliente diretamente (arredondou) → só atualiza a Margem, sem tocar no Repasse
     if (origem === 'repasse' || origem === 'taxa' || origem === 'cuid') {
-      let valRepasse = parseFloat(valRepasseEl?.value || 0);
-      if (!valRepasse || isNaN(valRepasse) || valRepasse <= 0) {
+      let valRepasse = parseBRLInput(valRepasseEl?.value);
+      if (!valRepasse || valRepasse <= 0) {
         if (valClienteEl) valClienteEl.value = '';
       } else {
-        // Margem por Dentro: Cliente = Repasse ÷ (1 - Taxa/100)
         if (pct >= 100) {
           if (valClienteEl) valClienteEl.value = '';
         } else {
           const valCliente = valRepasse / (1 - (pct / 100));
-          if (valClienteEl) valClienteEl.value = valCliente.toFixed(2);
+          if (valClienteEl) valClienteEl.value = formatBRLInput(valCliente);
         }
       }
     }
-    // origem === 'cliente': usuário arredondou o Cliente → só atualiza a Margem
   }
-  // baseCalculo === 'manual': ambos os campos livres, só atualiza Margem
 
-  calcularFinanceiro();
+  calcularFinanceiro(origem);
 }
 
 function calcularValoresPadrao() {
   recalcularCamposValores('taxa');
 }
 
-function calcularFinanceiro() {
+function calcularFinanceiro(origem) {
   const deVal = document.getElementById('escInicio').value;
   const ateVal = document.getElementById('escTermino').value;
   const tipo = document.getElementById('escTipoCobranca').value;
-  const vc = parseFloat(document.getElementById('escValorCliente').value || 0);
-  const vr = parseFloat(document.getElementById('escValorRepasse').value || 0);
+  const vc = parseBRLInput(document.getElementById('escValorCliente')?.value);
+  const vr = parseBRLInput(document.getElementById('escValorRepasse')?.value);
   
   const labelCliente = document.getElementById('labelValorCliente');
   const labelRepasse = document.getElementById('labelValorRepasse');
@@ -5014,7 +5023,7 @@ function calcularFinanceiro() {
         </div>`;
       }
       if (inputRepasse) {
-        inputRepasse.value = totalRepasseCalculado.toFixed(2);
+        inputRepasse.value = formatBRLInput(totalRepasseCalculado);
       }
     }
 
@@ -5030,21 +5039,32 @@ function calcularFinanceiro() {
     const baseCalculo = document.getElementById('escBaseCalculo')?.value || 'repasse';
     const pct = parseFloat(document.getElementById('escTaxaAgencia')?.value || 0);
 
-    let valRepasseFinal = selectedAny ? totalRepasseCalculado : (parseFloat(inputRepasse?.value || 0) || vr);
-    let valClienteFinal = vc;
+    let valRepasseFinal = selectedAny ? totalRepasseCalculado : (parseBRLInput(inputRepasse?.value) || vr);
+    let valClienteFinal = parseBRLInput(inputCliente?.value);
 
-    if (baseCalculo === 'repasse' || (!valClienteFinal && valRepasseFinal > 0)) {
+    // Quando altera a taxa da agência (origem === 'taxa'), ou baseCalculo === 'repasse', ou se valor cliente estiver zerado
+    if (baseCalculo === 'repasse' || (!valClienteFinal && valRepasseFinal > 0) || (origem === 'taxa' && selectedAny) || (origem === 'taxa' && baseCalculo === 'repasse')) {
       if (pct > 0 && pct < 100) {
         valClienteFinal = valRepasseFinal / (1 - (pct / 100));
         if (inputCliente) {
-          inputCliente.value = valClienteFinal.toFixed(2);
+          inputCliente.value = formatBRLInput(valClienteFinal);
         }
       }
-    } else if (baseCalculo === 'cliente' && valClienteFinal > 0) {
-      if (pct > 0 && pct < 100 && !selectedAny) {
-        valRepasseFinal = valClienteFinal * (1 - (pct / 100));
-        if (inputRepasse) {
-          inputRepasse.value = valRepasseFinal.toFixed(2);
+    } else if (baseCalculo === 'cliente' || (origem === 'taxa' && baseCalculo === 'cliente')) {
+      if (pct > 0 && pct < 100) {
+        if (selectedAny || origem === 'taxa') {
+          // Quando a equipe é selecionada (repasse fixo), alterar a taxa da agência RECALCULA O CLIENTE!
+          if (selectedAny && valRepasseFinal > 0) {
+            valClienteFinal = valRepasseFinal / (1 - (pct / 100));
+            if (inputCliente) {
+              inputCliente.value = formatBRLInput(valClienteFinal);
+            }
+          } else if (valClienteFinal > 0) {
+            valRepasseFinal = valClienteFinal * (1 - (pct / 100));
+            if (inputRepasse) {
+              inputRepasse.value = formatBRLInput(valRepasseFinal);
+            }
+          }
         }
       }
     }
